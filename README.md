@@ -1,5 +1,3 @@
-<div align="center">
-
 # HydrAI: Generalized Plug Flow Reactor Simulation System
 
 [![Python Version](https://img.shields.io/badge/python-3.8%2B-blue.svg)](https://www.python.org/downloads/)
@@ -9,19 +7,7 @@
 
 *A comprehensive simulation framework for modeling steam cracking reactions in plug flow reactors using Cantera*
 
-</div>
-
 ---
-
-## Overview
-
-HydrAI is a powerful, user-friendly simulation system designed for chemical engineers and researchers working with steam cracking processes. The system provides:
-
-- **Multi-Reactant Support** - Ethane, propane, naphtha, and n-hexane
-- **Automatic Configuration** - Dynamic setup for each reactant type
-- **Professional Output** - Systematic file naming and comprehensive analysis
-- **Rich Visualizations** - Customizable plots and data export formats
-- **Extensible Design** - Easy addition of new reactants and mechanisms
 
 ## Key Features
 
@@ -92,16 +78,12 @@ python Main_GeneralizedPFR.py --reactant n-hexane
 
 ## Available Reactants
 
-<div align="center">
-
 | Reactant | Formula | Mechanism File | Species | Reactions | Description |
-|:--------:|:-------:|:--------------:|:-------:|:---------:|:------------|
+|----------|---------|----------------|---------|-----------|-------------|
 | **ethane** | C₂H₆ | `Ethane_Kinetic-Model_species_35.yaml` | 35 | 135 | Ethane steam cracking for ethylene production |
 | **propane** | C₃H₈ | `Propane_Kinetic-Model_species_53.yaml` | 53 | 325 | Propane steam cracking for olefins production |
 | **naphtha** | Mixed C₅-C₁₂ | `Naphtha_Kinetic-Model_species_1951.yaml` | 1,951 | 82,557 | Naphtha steam cracking for petrochemicals production |
 | **n-hexane** | C₆H₁₄ | `n-Hexane_Kinetic-Model_species_153.yaml` | 153 | 2,146 | n-Hexane steam cracking for olefins production |
-
-</div>
 
 > **Performance Note:** The naphtha mechanism is significantly larger and will take longer to simulate due to its complexity (1,951 species, 82,557 reactions).
 
@@ -200,17 +182,6 @@ done
 cat DIRECTORY_STRUCTURE.md
 ```
 
----
-
-## Available Reactants
-
-| Reactant | Formula | Mechanism File | Species | Reactions | Description |
-|----------|---------|----------------|---------|-----------|-------------|
-| **ethane** | C₂H₆ | `Ethane_Kinetic-Model_species_35.yaml` | 35 | 135 | Ethane for steam cracking |
-| **propane** | C₃H₈ | `Propane_Kinetic-Model_species_53.yaml` | 53 | 325 | Propane for steam cracking |
-| **naphtha** | Mixed C₅-C₁₂ | `Naphtha_Kinetic-Model_species_1951.yaml` | 1,951 | 82,557 | Naphtha for steam cracking  |
-| **n-hexane** | C₆H₁₄ | `n-Hexane_Kinetic-Model_species_153.yaml` | 153 | 2,146 | n-Hexane for steam cracking |
-
 ### Performance Notes:
 - **Naphtha mechanism is significantly slower** due to its large size (1,951 species, 82,557 reactions)
 - **Simulation time scales with mechanism complexity** - expect longer runtimes for larger mechanisms
@@ -220,50 +191,6 @@ cat DIRECTORY_STRUCTURE.md
 All kinetic mechanisms in this system were generated using [**Reaction Mechanism Generator (RMG)**](https://reactionmechanismgenerator.github.io/RMG-Py/), an automatic chemical reaction mechanism generator developed by the RMG team at MIT. RMG constructs kinetic models composed of elementary chemical reaction steps using a general understanding of how molecules react.
 
 **Naming Convention:** Mechanism files follow the pattern `[Reactant]_Kinetic-Model_species_[Count].yaml` where `[Count]` indicates the number of species in the mechanism (e.g., `Ethane_Kinetic-Model_species_35.yaml` contains 35 species).
-
-## Usage Examples
-
-### Basic Simulation
-```bash
-# Method 1: Using convenience script (recommended)
-./run_simulation.sh ethane
-
-# Method 2: Direct execution
-source ct-env/bin/activate && python Main_GeneralizedPFR.py --reactant ethane
-
-# Expected output:
-# - Temperature and pressure profiles
-# - Species concentration profiles
-# - Conversion and yield calculations
-# - CSV data export
-# - Summary report
-```
-
-### Batch Processing
-```bash
-# Using convenience script
-for reactant in ethane propane n-hexane; do
-    ./run_simulation.sh $reactant
-done
-
-# Or direct execution
-source ct-env/bin/activate
-for reactant in ethane propane n-hexane; do
-    python Main_GeneralizedPFR.py --reactant $reactant
-done
-```
-
-### Project Management
-```bash
-# View clean project structure
-./show_structure.sh
-
-# List available reactants
-./run_simulation.sh --list
-
-# Check project compatibility
-cat DIRECTORY_STRUCTURE.md
-```
 
 ### Custom Analysis
 ```python
@@ -578,8 +505,6 @@ For questions, issues, or contributions:
 
 ---
 
-<div align="center">
-
 **Version:** 2.1  
 **Last Updated:** January 15, 2025  
 **Maintainer:** Chemical Engineering Simulation Team
@@ -590,6 +515,4 @@ For questions, issues, or contributions:
 - **Enhanced project structure documentation** with clean visual presentation
 - **Updated installation and usage instructions** with step-by-step guidance
 - **Added comprehensive troubleshooting guide** with quick fixes
-
-</div>
 
