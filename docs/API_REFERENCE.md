@@ -125,9 +125,7 @@ def generate_config_for_reactant(reactant_key: str, database: dict) -> dict
     },
     'simulation_settings': {
         'n_steps': int,
-        'step_size_m': float,
-        'reactor_volume_m3': float,
-        'wall_surface_area_m2': float
+        'step_size_m': float
     }
 }
 ```
@@ -232,6 +230,10 @@ hf, z_profile, heatflux_profile = setup_heat_flux(config)
 ### `run_simulation(gas, config, reactant_info, hf, T_0, p_0, length, diam, area, roughness, mass_flow_rate, u_0)`
 
 Runs the main simulation loop for the PFR.
+
+**Note:** Reactor volume and wall surface area are automatically calculated from geometry:
+- Volume per step = cross-sectional area × step size
+- Wall surface area per step = perimeter × step size
 
 **Signature:**
 ```python
@@ -453,9 +455,7 @@ u, dpdz = dp_churchill(thermo, mass_flow_rate, area, diam, roughness)
     },
     "simulation_settings": {
         "n_steps": int,
-        "step_size_m": float,
-        "reactor_volume_m3": float,
-        "wall_surface_area_m2": float
+        "step_size_m": float
     },
     "heat_flux_profile": {
         "n_points": int,

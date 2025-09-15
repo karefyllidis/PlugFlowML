@@ -17,17 +17,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Enhanced error handling** - Robust error handling with informative messages
 - **Flexible product tracking** - Configurable target products for each reactant
 - **Batch processing support** - Easy execution of multiple simulations
+- **Automatic geometry calculations** - Reactor volume and surface area calculated from geometry
+- **Realistic heat flux profiles** - Heat flux based on 900°C wall temperature (47,516 W/m²)
+- **Enhanced plotting system** - Individual plots for each variable with expanded product species
+- **GitHub repository** - Public repository at https://github.com/karefyllidis/HydrAI
 
 ### Changed
 - **Mechanism file naming** - Standardized to `[Reactant]_Kinetic-Model.yaml` format
 - **Configuration system** - Moved from hardcoded to template-based configuration
 - **Output structure** - Enhanced CSV and summary file formats
 - **Code organization** - Modular design with clear separation of concerns
+- **Heat flux profile** - Updated to realistic values (47,516 W/m²) with 12 data points
+- **Reactor geometry** - Volume and surface area now calculated automatically per step
+- **Pressure specification** - Clarified as absolute pressure (2.0 bar absolute)
 
 ### Fixed
 - **Species name mismatches** - Resolved issues with different naming conventions
 - **Configuration inconsistencies** - Standardized configuration across all reactants
 - **File path issues** - Fixed relative path problems in different environments
+- **Numerical stability** - Fixed reactor volume/surface area calculation for solver stability
+- **Simulation length** - Fixed simulation to stop at configured reactor length
+- **Transport properties** - Added handling for mechanisms without transport properties
 
 ### Technical Details
 - **New files**: `Main_GeneralizedPFR.py`, `run_simulation.py`, `reactant_database.json`, `config_template.json`

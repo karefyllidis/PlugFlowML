@@ -43,8 +43,8 @@ A comprehensive simulation framework for modeling steam cracking reactions in pl
 
 1. **Clone or download the repository**
    ```bash
-   git clone <repository-url>
-   cd naphtha-pyrolisi-pfr
+   git clone https://github.com/karefyllidis/HydrAI.git
+   cd HydrAI
    ```
 
 2. **Install dependencies**
@@ -165,12 +165,14 @@ The system uses `reactant_database.json` to define all available reactants:
 Key parameters that can be adjusted:
 
 - **Temperature**: Initial reactor temperature (K)
-- **Pressure**: Initial reactor pressure (Pa)
+- **Pressure**: Initial reactor pressure (Pa) - **absolute pressure**
 - **Reactor Length**: Total reactor length (m)
-- **Reactor Diameter**: Reactor diameter (m)
+- **Reactor Diameter**: Reactor diameter (m) - **3 cm (0.03 m)**
 - **Mass Flow Rate**: Feed mass flow rate (kg/s)
 - **Number of Steps**: Simulation resolution
-- **Heat Flux Profile**: External heating profile
+- **Heat Flux Profile**: External heating profile (47,516 W/m² for 900°C wall)
+- **Reactor Volume**: **Automatically calculated** from geometry (area × step_size)
+- **Wall Surface Area**: **Automatically calculated** from geometry (perimeter × step_size)
 
 ## Output Files
 
@@ -205,7 +207,8 @@ The DAT files contain:
 
 ### Heat Flux Profile
 The JSON heat flux profile (`heat_flux_profile.json`) contains:
-- Two-section heating profile: inlet heating (0.0m) and outlet cooling (10.0m)
+- **12 data points** distributed from 0.0m to 5.0m reactor length
+- **Realistic heat flux**: 47,516 W/m² (corresponds to 900°C wall temperature)
 - Position-based heat flux data points (position in meters, heat flux in W/m²)
 - Helpful comments for each heating zone
 - Simple structure with essential data and documentation
@@ -375,9 +378,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 For questions, issues, or contributions:
 
-- **Issues**: [GitHub Issues](https://github.com/your-repo/issues)
-- **Documentation**: [Wiki](https://github.com/your-repo/wiki)
-- **Email**: your-email@domain.com
+- **Repository**: [GitHub Repository](https://github.com/karefyllidis/HydrAI)
+- **Issues**: [GitHub Issues](https://github.com/karefyllidis/HydrAI/issues)
+- **Documentation**: [API Reference](docs/API_REFERENCE.md)
 
 ## Acknowledgments
 
