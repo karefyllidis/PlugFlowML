@@ -1,26 +1,46 @@
-# Generalized Plug Flow Reactor (PFR) Simulation System
+<div align="center">
+
+# HydrAI: Generalized Plug Flow Reactor Simulation System
 
 [![Python Version](https://img.shields.io/badge/python-3.8%2B-blue.svg)](https://www.python.org/downloads/)
 [![Cantera](https://img.shields.io/badge/Cantera-3.1.0%2B-green.svg)](https://cantera.org/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Status](https://img.shields.io/badge/status-production%20ready-brightgreen.svg)](https://github.com/karefyllidis/HydrAI)
 
-A comprehensive simulation framework for modeling steam cracking reactions in plug flow reactors using Cantera. This system supports multiple feedstocks with automatic configuration generation, species name standardization, and comprehensive result analysis.
+*A comprehensive simulation framework for modeling steam cracking reactions in plug flow reactors using Cantera*
 
-## Features
+</div>
 
-- **Multi-Reactant Support**: Ethane, propane, naphtha, and n-hexane
-- **Automatic Configuration**: Dynamic configuration generation for each reactant
-- **Species Name Handling**: Intelligent handling of different naming conventions across mechanisms
-- **Professional Output**: Systematic file naming and comprehensive result export
-- **Flexible Visualization**: Customizable plots and data export formats
-- **Extensible Design**: Easy addition of new reactants and mechanisms
-- **Error Handling**: Robust error handling with informative messages
+---
+
+## Overview
+
+HydrAI is a powerful, user-friendly simulation system designed for chemical engineers and researchers working with steam cracking processes. The system provides:
+
+- **Multi-Reactant Support** - Ethane, propane, naphtha, and n-hexane
+- **Automatic Configuration** - Dynamic setup for each reactant type
+- **Professional Output** - Systematic file naming and comprehensive analysis
+- **Rich Visualizations** - Customizable plots and data export formats
+- **Extensible Design** - Easy addition of new reactants and mechanisms
+
+## Key Features
+
+| Feature | Description |
+|---------|-------------|
+| **Multi-Reactant Support** | Ethane, propane, naphtha, and n-hexane with dedicated mechanisms |
+| **Automatic Configuration** | Dynamic configuration generation for each reactant type |
+| **Species Name Handling** | Intelligent handling of different naming conventions across mechanisms |
+| **Professional Output** | Systematic file naming and comprehensive result export |
+| **Rich Visualizations** | 12+ customizable plots and data export formats |
+| **Extensible Design** | Easy addition of new reactants and mechanisms |
+| **Robust Error Handling** | Comprehensive error handling with informative messages |
+| **Convenience Scripts** | Easy-to-use shell scripts for streamlined operation |
 
 ## Table of Contents
 
-- [Installation](#installation)
 - [Quick Start](#quick-start)
 - [Available Reactants](#available-reactants)
+- [Installation](#installation)
 - [Usage Examples](#usage-examples)
 - [Configuration](#configuration)
 - [Output Files](#output-files)
@@ -31,63 +51,156 @@ A comprehensive simulation framework for modeling steam cracking reactions in pl
 - [Contributing](#contributing)
 - [License](#license)
 
+## Quick Start
+
+> **Get started in 3 simple steps!**
+
+### Method 1: Using Convenience Script (Recommended)
+```bash
+# List available reactants
+./run_simulation.sh --list
+
+# Run simulations
+./run_simulation.sh ethane
+./run_simulation.sh propane
+./run_simulation.sh naphtha
+./run_simulation.sh n-hexane
+```
+
+### Method 2: Direct Python Execution
+```bash
+# Activate virtual environment first
+source ct-env/bin/activate
+
+# List available reactants
+python Main_GeneralizedPFR.py --list
+
+# Run simulations
+python Main_GeneralizedPFR.py --reactant ethane
+python Main_GeneralizedPFR.py --reactant propane
+python Main_GeneralizedPFR.py --reactant naphtha
+python Main_GeneralizedPFR.py --reactant n-hexane
+```
+
+### View Project Structure
+```bash
+# Show clean project structure (excluding generated files)
+./show_structure.sh
+```
+
+---
+
+## Available Reactants
+
+<div align="center">
+
+| Reactant | Formula | Mechanism File | Species | Reactions | Description |
+|:--------:|:-------:|:--------------:|:-------:|:---------:|:------------|
+| **ethane** | C₂H₆ | `Ethane_Kinetic-Model_species_35.yaml` | 35 | 135 | Ethane steam cracking for ethylene production |
+| **propane** | C₃H₈ | `Propane_Kinetic-Model_species_53.yaml` | 53 | 325 | Propane steam cracking for olefins production |
+| **naphtha** | Mixed C₅-C₁₂ | `Naphtha_Kinetic-Model_species_1951.yaml` | 1,951 | 82,557 | Naphtha steam cracking for petrochemicals production |
+| **n-hexane** | C₆H₁₄ | `n-Hexane_Kinetic-Model_species_153.yaml` | 153 | 2,146 | n-Hexane steam cracking for olefins production |
+
+</div>
+
+> **Performance Note:** The naphtha mechanism is significantly larger and will take longer to simulate due to its complexity (1,951 species, 82,557 reactions).
+
+---
+
 ## Installation
 
 ### Prerequisites
 
-- Python 3.8 or higher
-- Cantera 3.1.0 or higher
-- Required Python packages (see requirements.txt)
+- **Python** 3.8 or higher
+- **Cantera** 3.1.0 or higher
+- **Required Python packages** (see requirements.txt)
 
 ### Setup
 
-1. **Clone or download the repository**
-   ```bash
-   git clone https://github.com/karefyllidis/HydrAI.git
-   cd HydrAI
-   ```
+#### 1. Clone the Repository
+```bash
+git clone https://github.com/karefyllidis/HydrAI.git
+cd HydrAI
+```
 
-2. **Install dependencies**
-   ```bash
-   pip install -r requirements.txt
-   ```
+#### 2. Install Dependencies
+```bash
+# Option 1: Use existing virtual environment (if available)
+source ct-env/bin/activate
+pip install -r requirements.txt
 
-3. **Verify installation**
-   ```bash
-   python Main_GeneralizedPFR.py --list
-   ```
+# Option 2: Create new virtual environment
+python -m venv ct-env
+source ct-env/bin/activate
+pip install -r requirements.txt
+```
+
+#### 3. Verify Installation
+```bash
+# Using convenience script (recommended)
+./run_simulation.sh --list
+
+# Or direct execution
+source ct-env/bin/activate && python Main_GeneralizedPFR.py --list
+```
+
+> **Success!** If you see the list of available reactants, your installation is complete!
 
 ### Dependencies
 
-```
-cantera >= 3.1.0
-numpy >= 1.20.0
-matplotlib >= 3.5.0
-pandas >= 1.3.0
-scipy >= 1.7.0
-```
+| Package | Version | Purpose |
+|---------|---------|---------|
+| **cantera** | ≥ 3.1.0 | Chemical kinetics and thermodynamics |
+| **numpy** | ≥ 1.20.0 | Numerical computing |
+| **matplotlib** | ≥ 3.5.0 | Data visualization |
+| **pandas** | ≥ 1.3.0 | Data manipulation and analysis |
+| **scipy** | ≥ 1.7.0 | Scientific computing |
 
-## Quick Start
+## Usage Examples
 
-### List Available Reactants
+### Basic Simulation
 ```bash
-python Main_GeneralizedPFR.py --list
+# Method 1: Using convenience script (recommended)
+./run_simulation.sh ethane
+
+# Method 2: Direct execution
+source ct-env/bin/activate && python Main_GeneralizedPFR.py --reactant ethane
+
+# Expected output:
+# - Temperature and pressure profiles
+# - Species concentration profiles
+# - Conversion and yield calculations
+# - CSV data export
+# - Summary report
 ```
 
-### Run a Simulation
+### Batch Processing
 ```bash
-# Ethane cracking
-python Main_GeneralizedPFR.py --reactant ethane
+# Using convenience script
+for reactant in ethane propane n-hexane; do
+    ./run_simulation.sh $reactant
+done
 
-# Propane cracking
-python Main_GeneralizedPFR.py --reactant propane
-
-# Naphtha cracking
-python Main_GeneralizedPFR.py --reactant naphtha
-
-# n-Hexane cracking
-python Main_GeneralizedPFR.py --reactant n-hexane
+# Or direct execution
+source ct-env/bin/activate
+for reactant in ethane propane n-hexane; do
+    python Main_GeneralizedPFR.py --reactant $reactant
+done
 ```
+
+### Project Management
+```bash
+# View clean project structure
+./show_structure.sh
+
+# List available reactants
+./run_simulation.sh --list
+
+# Check project compatibility
+cat DIRECTORY_STRUCTURE.md
+```
+
+---
 
 ## Available Reactants
 
@@ -112,8 +225,11 @@ All kinetic mechanisms in this system were generated using [**Reaction Mechanism
 
 ### Basic Simulation
 ```bash
-# Run ethane cracking simulation
-python Main_GeneralizedPFR.py --reactant ethane
+# Method 1: Using convenience script (recommended)
+./run_simulation.sh ethane
+
+# Method 2: Direct execution
+source ct-env/bin/activate && python Main_GeneralizedPFR.py --reactant ethane
 
 # Expected output:
 # - Temperature and pressure profiles
@@ -125,10 +241,28 @@ python Main_GeneralizedPFR.py --reactant ethane
 
 ### Batch Processing
 ```bash
-# Run multiple simulations
+# Using convenience script
+for reactant in ethane propane n-hexane; do
+    ./run_simulation.sh $reactant
+done
+
+# Or direct execution
+source ct-env/bin/activate
 for reactant in ethane propane n-hexane; do
     python Main_GeneralizedPFR.py --reactant $reactant
 done
+```
+
+### Project Management
+```bash
+# View clean project structure
+./show_structure.sh
+
+# List available reactants
+./run_simulation.sh --list
+
+# Check project compatibility
+cat DIRECTORY_STRUCTURE.md
 ```
 
 ### Custom Analysis
@@ -229,7 +363,7 @@ The JSON heat flux profile (`heat_flux_profile.json`) contains:
 ## Project Structure
 
 ```
-naphtha-pyrolisi-pfr/
+HydrAI/
 ├── Main_GeneralizedPFR.py          # Main simulation script
 ├── reactant_database.json          # Reactant definitions and configurations
 ├── config_template.json            # Configuration template
@@ -237,6 +371,7 @@ naphtha-pyrolisi-pfr/
 ├── LICENSE                         # MIT License
 ├── CHANGELOG.md                    # Version history
 ├── README.md                       # This file
+├── DIRECTORY_STRUCTURE.md          # Detailed structure analysis
 ├── examples/
 │   └── basic_usage.py              # Usage examples
 ├── docs/
@@ -246,14 +381,33 @@ naphtha-pyrolisi-pfr/
 │   ├── Propane_Kinetic-Model_species_53.yaml
 │   ├── Naphtha_Kinetic-Model_species_1951.yaml
 │   └── n-Hexane_Kinetic-Model_species_153.yaml
-├── results/                        # Simulation results (generated)
-│   ├── results_*.csv
-│   └── summary_*.dat
-├── fig/                           # Generated plots (generated)
-│   ├── temperature_pressure_profiles.png
-│   └── species_profiles.png
-└── heat_flux_profile.json         # JSON heat flux profile for pyrolysis
+├── results/                        # Simulation results (auto-generated)
+│   ├── results_*.csv               # Detailed simulation data
+│   └── summary_*.dat               # Simulation summaries
+├── fig/                           # Generated plots (auto-generated)
+│   ├── temperature_profile.png
+│   ├── pressure_profile.png
+│   ├── velocity_profile.png
+│   ├── density_profile.png
+│   ├── heat_flux_profile.png
+│   ├── molecular_weight_profile.png
+│   ├── reactant_conversion.png
+│   ├── product_mass_fractions.png
+│   ├── product_mole_fractions.png
+│   ├── mass_flow_conservation.png
+│   ├── residence_time.png
+│   └── heat_capacity_ratio.png
+├── heat_flux_profile.json         # JSON heat flux profile for pyrolysis
+├── run_simulation.sh              # Convenience script for running simulations
+├── show_structure.sh              # Script to display clean project structure
+└── ct-env/                        # Python virtual environment (not shown in tree)
+    └── [Python virtual environment files]
 ```
+
+### Key Files
+- **`run_simulation.sh`**: Convenience script that automatically activates the virtual environment and runs simulations
+- **`show_structure.sh`**: Displays the clean project structure excluding generated files
+- **`DIRECTORY_STRUCTURE.md`**: Comprehensive analysis of the project structure and compatibility
 
 ## Adding New Reactants
 
@@ -336,23 +490,29 @@ For detailed API documentation, see [docs/API_REFERENCE.md](docs/API_REFERENCE.m
 
 ### Common Issues
 
-#### 1. Species Not Found
-```
-Error: Unknown species 'C2H6'
-```
-**Solution:** Check species names in your mechanism file and update the database accordingly.
+| Issue | Error Message | Solution |
+|-------|---------------|----------|
+| **Virtual Environment Not Activated** | `ModuleNotFoundError: No module named 'scipy'` | Use convenience script: `./run_simulation.sh --list` or activate manually: `source ct-env/bin/activate` |
+| **Species Not Found** | `Error: Unknown species 'C2H6'` | Check species names in mechanism file and update database accordingly |
+| **Mechanism File Missing** | `Error: Could not load mechanism file` | Ensure mechanism file exists and path in database is correct |
+| **Convergence Issues** | `Warning: Solver convergence warnings` | Normal for complex mechanisms; simulation continues and produces valid results |
+| **Permission Denied** | `Permission denied: ./run_simulation.sh` | Make scripts executable: `chmod +x run_simulation.sh show_structure.sh` |
 
-#### 2. Mechanism File Missing
-```
-Error: Could not load mechanism file
-```
-**Solution:** Ensure the mechanism file exists and the path in the database is correct.
+### Quick Fixes
 
-#### 3. Convergence Issues
+```bash
+# Fix permission issues
+chmod +x run_simulation.sh show_structure.sh
+
+# Activate virtual environment
+source ct-env/bin/activate
+
+# Verify installation
+./run_simulation.sh --list
+
+# Check project structure
+./show_structure.sh
 ```
-Warning: Solver convergence warnings
-```
-**Solution:** These are normal for complex mechanisms. The simulation will continue and produce valid results.
 
 ### Performance Optimization
 
@@ -418,7 +578,18 @@ For questions, issues, or contributions:
 
 ---
 
-**Version:** 2.0  
+<div align="center">
+
+**Version:** 2.1  
 **Last Updated:** January 15, 2025  
 **Maintainer:** Chemical Engineering Simulation Team
+
+### Recent Updates (v2.1)
+- **Added convenience scripts** (`run_simulation.sh`, `show_structure.sh`)
+- **Improved virtual environment handling** with clear activation instructions
+- **Enhanced project structure documentation** with clean visual presentation
+- **Updated installation and usage instructions** with step-by-step guidance
+- **Added comprehensive troubleshooting guide** with quick fixes
+
+</div>
 

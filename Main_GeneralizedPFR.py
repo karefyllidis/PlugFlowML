@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Generalized Plug Flow Reactor (PFR) Simulation System
-=====================================================
+Generalized Plug Flow Reactor (PFR) Simulation Workflow
+=======================================================
 
 A comprehensive simulation framework for modeling steam cracking reactions
 in plug flow reactors using Cantera. Supports multiple feedstocks including
