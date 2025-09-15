@@ -8,9 +8,8 @@ in plug flow reactors using Cantera. Supports multiple feedstocks including
 ethane, propane, naphtha, and n-hexane with automatic configuration generation
 and species name handling.
 
-Author: Chemical Engineering Simulation Team
-Version: 2.0
-Date: 2025-01-15
+Author: Nikolas Karefyllidis PhD
+Development Started: 2025-01-15
 License: MIT
 
 Features:

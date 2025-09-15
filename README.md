@@ -91,12 +91,22 @@ python Main_GeneralizedPFR.py --reactant n-hexane
 
 ## Available Reactants
 
-| Reactant | Formula | Mechanism File | Description |
-|----------|---------|----------------|-------------|
-| **ethane** | C₂H₆ | `Ethane_Kinetic-Model.yaml` | Ethane steam cracking for ethylene production |
-| **propane** | C₃H₈ | `Propane_Kinetic-Model.yaml` | Propane steam cracking for olefins production |
-| **naphtha** | Mixed C₅-C₁₂ | `Naphtha_Kinetic-Model.yaml` | Naphtha steam cracking for petrochemicals |
-| **n-hexane** | C₆H₁₄ | `n-Hexane_Kinetic-Model.yaml` | n-Hexane steam cracking for olefins |
+| Reactant | Formula | Mechanism File | Species | Reactions | Description |
+|----------|---------|----------------|---------|-----------|-------------|
+| **ethane** | C₂H₆ | `Ethane_Kinetic-Model_species_35.yaml` | 35 | 135 | Ethane for steam cracking |
+| **propane** | C₃H₈ | `Propane_Kinetic-Model_species_53.yaml` | 53 | 325 | Propane for steam cracking |
+| **naphtha** | Mixed C₅-C₁₂ | `Naphtha_Kinetic-Model_species_1951.yaml` | 1,951 | 82,557 | Naphtha for steam cracking  |
+| **n-hexane** | C₆H₁₄ | `n-Hexane_Kinetic-Model_species_153.yaml` | 153 | 2,146 | n-Hexane for steam cracking |
+
+### Performance Notes:
+- **Naphtha mechanism is significantly slower** due to its large size (1,951 species, 82,557 reactions)
+- **Simulation time scales with mechanism complexity** - expect longer runtimes for larger mechanisms
+- **Consider reducing step count** for faster naphtha simulations if needed
+
+### Mechanism Generation:
+All kinetic mechanisms in this system were generated using [**Reaction Mechanism Generator (RMG)**](https://reactionmechanismgenerator.github.io/RMG-Py/), an automatic chemical reaction mechanism generator developed by the RMG team at MIT. RMG constructs kinetic models composed of elementary chemical reaction steps using a general understanding of how molecules react.
+
+**Naming Convention:** Mechanism files follow the pattern `[Reactant]_Kinetic-Model_species_[Count].yaml` where `[Count]` indicates the number of species in the mechanism (e.g., `Ethane_Kinetic-Model_species_35.yaml` contains 35 species).
 
 ## Usage Examples
 
@@ -148,7 +158,7 @@ The system uses `reactant_database.json` to define all available reactants:
         "ethane": {
             "name": "Ethane",
             "formula": "C2H6",
-            "mechanism_file": "mechanism/Ethane_Kinetic-Model.yaml",
+            "mechanism_file": "mechanism/Ethane_Kinetic-Model_species_35.yaml",
             "feed_species": "ethane(1)",
             "diluent": "Water",
             "diluent_ratio": 0.326,
@@ -232,10 +242,10 @@ naphtha-pyrolisi-pfr/
 ├── docs/
 │   └── API_REFERENCE.md            # Detailed API documentation
 ├── mechanism/                      # Chemical kinetic mechanisms
-│   ├── Ethane_Kinetic-Model.yaml
-│   ├── Propane_Kinetic-Model.yaml
-│   ├── Naphtha_Kinetic-Model.yaml
-│   └── n-Hexane_Kinetic-Model.yaml
+│   ├── Ethane_Kinetic-Model_species_35.yaml
+│   ├── Propane_Kinetic-Model_species_53.yaml
+│   ├── Naphtha_Kinetic-Model_species_1951.yaml
+│   └── n-Hexane_Kinetic-Model_species_153.yaml
 ├── results/                        # Simulation results (generated)
 │   ├── results_*.csv
 │   └── summary_*.dat
@@ -250,8 +260,10 @@ naphtha-pyrolisi-pfr/
 ### Step 1: Add Mechanism File
 Place your mechanism file in the `mechanism/` directory following the naming convention:
 ```
-mechanism/[Reactant]_Kinetic-Model.yaml
+mechanism/[Reactant]_Kinetic-Model_species_[Count].yaml
 ```
+
+**Note:** The `[Count]` should be the number of species in your mechanism (e.g., `Ethane_Kinetic-Model_species_35.yaml` for a mechanism with 35 species).
 
 ### Step 2: Update Database
 Add your reactant to `reactant_database.json`:
@@ -262,7 +274,7 @@ Add your reactant to `reactant_database.json`:
         "your-reactant": {
             "name": "Your Reactant Name",
             "formula": "Chemical Formula",
-            "mechanism_file": "mechanism/YourReactant_Kinetic-Model.yaml",
+            "mechanism_file": "mechanism/YourReactant_Kinetic-Model_species_X.yaml",
             "feed_species": "SpeciesName",
             "diluent": "H2O",
             "diluent_ratio": 0.5,
@@ -342,6 +354,20 @@ Warning: Solver convergence warnings
 ```
 **Solution:** These are normal for complex mechanisms. The simulation will continue and produce valid results.
 
+### Performance Optimization
+
+#### For Faster Simulations:
+```python
+# Reduce number of steps for faster computation
+config['simulation_settings']['n_steps'] = 100  # Instead of 200
+```
+
+#### For Better Accuracy:
+```python
+# Increase number of steps for higher resolution
+config['simulation_settings']['n_steps'] = 500  # More detailed profiles
+```
+
 ### Debug Mode
 For detailed debugging information, modify the simulation parameters:
 ```python
@@ -386,6 +412,7 @@ For questions, issues, or contributions:
 ## Acknowledgments
 
 - **Cantera Team** for the excellent chemical kinetics library
+- **RMG Team at MIT** for the [Reaction Mechanism Generator](https://reactionmechanismgenerator.github.io/RMG-Py/) used to generate the kinetic mechanisms
 - **Chemical Engineering Community** for feedback and testing
 - **Contributors** who have helped improve this system
 

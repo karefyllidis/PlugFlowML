@@ -3,7 +3,7 @@
         "ethane": {
             "name": "Ethane",
             "formula": "C2H6",
-            "mechanism_file": "mechanism/Ethane_Kinetic-Model.yaml",
+            "mechanism_file": "mechanism/Ethane_Kinetic-Model_species_35.yaml",
             "feed_species": "ethane(1):1",
             "diluent": "Water",
             "diluent_ratio": 0.326,
@@ -14,7 +14,7 @@
         "propane": {
             "name": "Propane", 
             "formula": "C3H8",
-            "mechanism_file": "mechanism/Propane_Kinetic-Model.yaml",
+            "mechanism_file": "mechanism/Propane_Kinetic-Model_species_53.yaml",
             "feed_species": "C3H8:1",
             "diluent": "H2O",
             "diluent_ratio": 0.326,
@@ -25,7 +25,7 @@
         "naphtha": {
             "name": "Naphtha",
             "formula": "Mixed C5-C12",
-            "mechanism_file": "mechanism/Naphtha_Kinetic-Model.yaml",
+            "mechanism_file": "mechanism/Naphtha_Kinetic-Model_species_1951.yaml",
             "feed_species": "C6H14(692):1",
             "diluent": "H2O(1)",
             "diluent_ratio": 0.5,
@@ -36,7 +36,7 @@
         "n-hexane": {
             "name": "n-Hexane",
             "formula": "C6H14", 
-            "mechanism_file": "mechanism/n-Hexane_Kinetic-Model.yaml",
+            "mechanism_file": "mechanism/n-Hexane_Kinetic-Model_species_153.yaml",
             "feed_species": "C6H14(1):1",
             "diluent": "Water",
             "diluent_ratio": 0.4,

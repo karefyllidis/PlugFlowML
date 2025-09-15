@@ -515,20 +515,36 @@ except Exception as e:
 
 ## Performance Considerations
 
+### Mechanism Generation
+All kinetic mechanisms in this system were generated using [**Reaction Mechanism Generator (RMG)**](https://reactionmechanismgenerator.github.io/RMG-Py/), an automatic chemical reaction mechanism generator developed by the RMG team at MIT. RMG constructs kinetic models composed of elementary chemical reaction steps using a general understanding of how molecules react.
+
+### Mechanism Complexity Impact
+
+| Mechanism | Species | Reactions | Relative Speed | Memory Usage |
+|-----------|---------|-----------|----------------|--------------|
+| Ethane | 35 | 135 | Very Fast | Low |
+| Propane | 53 | 325 | Fast | Low |
+| n-Hexane | 153 | 2,146 | Moderate | Medium |
+| Naphtha | 1,951 | 82,557 | **Very Slow** | High |
+
 ### Memory Usage
 - Large mechanisms (>1000 species) may require significant memory
 - Solution arrays scale with number of species and simulation steps
 - Consider reducing step count for memory-constrained systems
+- **Naphtha mechanism requires ~4GB RAM** for full simulation
 
 ### Computational Performance
-- Simulation time scales with number of reactions and species
+- Simulation time scales **exponentially** with number of reactions and species
 - Complex mechanisms may require longer convergence times
+- **Naphtha simulations can take 10-30 minutes** vs. seconds for simpler mechanisms
 - Consider mechanism reduction for faster simulations
 
 ### Optimization Tips
+- **For naphtha**: Reduce `n_steps` to 50-100 for faster computation
 - Use appropriate step sizes for convergence vs. speed trade-off
 - Monitor solver warnings for convergence issues
 - Consider parallel processing for batch simulations
+- **Memory warning**: Naphtha mechanism may cause memory issues on systems with <8GB RAM
 
 ---
 
