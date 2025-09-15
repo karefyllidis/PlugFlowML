@@ -1,0 +1,69 @@
+{
+  "_comment": "Heat flux profile for steam cracking pyrolysis in plug flow reactor",
+  "_units": "position: meters, heat_flux: W/m²",
+  "_interpolation": "Linear interpolation between data points",
+  "heat_flux_profile": {
+    "data_points": [
+      {
+        "position": 0.0,
+        "heat_flux": 47516,
+        "_comment": "Inlet region"
+      },
+      {
+        "position": 1.0,
+        "heat_flux": 47516,
+        "_comment": "Position 1m"
+      },
+      {
+        "position": 1.4,
+        "heat_flux": 47516,
+        "_comment": "Position 1.4m"
+      },
+      {
+        "position": 1.8,
+        "heat_flux": 47516,
+        "_comment": "Position 1.8m"
+      },
+      {
+        "position": 2.2,
+        "heat_flux": 47516,
+        "_comment": "Position 2.2m"
+      },
+      {
+        "position": 2.6,
+        "heat_flux": 47516,
+        "_comment": "Position 2.6m"
+      },
+      {
+        "position": 3.0,
+        "heat_flux": 47516,
+        "_comment": "Position 3.0m"
+      },
+      {
+        "position": 3.4,
+        "heat_flux": 47516,
+        "_comment": "Position 3.4m"
+      },
+      {
+        "position": 3.8,
+        "heat_flux": 47516,
+        "_comment": "Position 3.8m"
+      },
+      {
+        "position": 4.2,
+        "heat_flux": 47516,
+        "_comment": "Position 4.2m"
+      },
+      {
+        "position": 4.6,
+        "heat_flux": 47516,
+        "_comment": "Position 4.6m"
+      },
+      {
+        "position": 5.0,
+        "heat_flux": 47516,
+        "_comment": "Outlet region"
+      }
+    ]
+  }
+}
