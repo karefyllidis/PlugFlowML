@@ -27,8 +27,7 @@
         "mass_flow_rate_kgps": 0.0700
     },
     "simulation_settings": {
-        "n_steps": 200,
-        "step_size_m": 0.0525
+        "n_steps": 200
     },
     "pressure_drop": {
         "method": "Churchill correlation",

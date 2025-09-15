@@ -337,7 +337,8 @@ def calculate_product_yields(gas: ct.Solution, states, reactant_info: dict):
 def run_simulation(gas, config, reactant_info, hf, T_0, p_0, length, diameter, area, roughness, mass_flow_rate, u_0):
     """Run the main simulation loop."""
     n_steps = config['simulation_settings']['n_steps']
-    dz = config['simulation_settings']['step_size_m']
+    # Calculate step size from reactor length and number of steps
+    dz = length / n_steps
     # Calculate reactor volume and wall surface area for a single step
     # Volume per step = cross-sectional area × step size
     r_vol = area * dz

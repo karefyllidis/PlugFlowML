@@ -169,7 +169,8 @@ Key parameters that can be adjusted:
 - **Reactor Length**: Total reactor length (m)
 - **Reactor Diameter**: Reactor diameter (m) - **3 cm (0.03 m)**
 - **Mass Flow Rate**: Feed mass flow rate (kg/s)
-- **Number of Steps**: Simulation resolution
+- **Number of Steps**: Simulation resolution (200 steps)
+- **Step Size**: **Automatically calculated** from reactor length ÷ number of steps (0.025 m)
 - **Heat Flux Profile**: External heating profile (47,516 W/m² for 900°C wall)
 - **Reactor Volume**: **Automatically calculated** from geometry (area × step_size)
 - **Wall Surface Area**: **Automatically calculated** from geometry (perimeter × step_size)

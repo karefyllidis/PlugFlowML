@@ -124,8 +124,7 @@ def generate_config_for_reactant(reactant_key: str, database: dict) -> dict
         'residence_time_s': float
     },
     'simulation_settings': {
-        'n_steps': int,
-        'step_size_m': float
+        'n_steps': int
     }
 }
 ```
@@ -231,7 +230,8 @@ hf, z_profile, heatflux_profile = setup_heat_flux(config)
 
 Runs the main simulation loop for the PFR.
 
-**Note:** Reactor volume and wall surface area are automatically calculated from geometry:
+**Note:** Step size, reactor volume, and wall surface area are automatically calculated:
+- Step size = reactor length ÷ number of steps
 - Volume per step = cross-sectional area × step size
 - Wall surface area per step = perimeter × step size
 
