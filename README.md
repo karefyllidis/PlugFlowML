@@ -55,8 +55,8 @@
 
 ### Method 2: Direct Python Execution
 ```bash
-# Activate external virtual environment first
-source /Users/nikolaskarefyllidis/ct-env/bin/activate
+# Activate your virtual environment first
+source /path/to/your/ct-env/bin/activate
 
 # List available reactants
 python Main_GeneralizedPFR.py --list
@@ -97,7 +97,19 @@ python Main_GeneralizedPFR.py --reactant n-hexane
 - **Cantera** 3.1.0 or higher
 - **Required Python packages** (see requirements.txt)
 
-> **Note:** This project is configured to use an external virtual environment located at `/Users/nikolaskarefyllidis/ct-env/`. The convenience script `run_simulation.sh` automatically uses this environment, eliminating the need for local environment setup.
+> **Note:** This project is configured to use an external virtual environment. The convenience script `run_simulation.sh` automatically uses this environment, eliminating the need for local environment setup.
+
+#### Configure Environment Path
+
+Before using the project, update the `CT_ENV_PATH` variable in `run_simulation.sh` to point to your virtual environment location:
+
+```bash
+# Edit the run_simulation.sh file
+nano run_simulation.sh
+
+# Update this line to your environment path:
+CT_ENV_PATH="/path/to/your/ct-env"
+```
 
 ### Setup
 
@@ -110,7 +122,7 @@ cd HydrAI
 #### 2. Install Dependencies
 ```bash
 # Option 1: Use existing external virtual environment (recommended)
-source /Users/nikolaskarefyllidis/ct-env/bin/activate
+source /path/to/your/ct-env/bin/activate
 pip install -r requirements.txt
 
 # Option 2: Create new virtual environment
@@ -125,7 +137,7 @@ pip install -r requirements.txt
 ./run_simulation.sh --list
 
 # Or direct execution
-source /Users/nikolaskarefyllidis/ct-env/bin/activate && python Main_GeneralizedPFR.py --list
+source /path/to/your/ct-env/bin/activate && python Main_GeneralizedPFR.py --list
 ```
 
 > **Success!** If you see the list of available reactants, your installation is complete!
@@ -148,7 +160,7 @@ source /Users/nikolaskarefyllidis/ct-env/bin/activate && python Main_Generalized
 ./run_simulation.sh ethane
 
 # Method 2: Direct execution
-source /Users/nikolaskarefyllidis/ct-env/bin/activate && python Main_GeneralizedPFR.py --reactant ethane
+source /path/to/your/ct-env/bin/activate && python Main_GeneralizedPFR.py --reactant ethane
 
 # Expected output:
 # - Temperature and pressure profiles
@@ -166,7 +178,7 @@ for reactant in ethane propane n-hexane; do
 done
 
 # Or direct execution
-source /Users/nikolaskarefyllidis/ct-env/bin/activate
+source /path/to/your/ct-env/bin/activate
 for reactant in ethane propane n-hexane; do
     python Main_GeneralizedPFR.py --reactant $reactant
 done
@@ -419,7 +431,7 @@ For detailed API documentation, see [docs/API_REFERENCE.md](docs/API_REFERENCE.m
 
 | Issue | Error Message | Solution |
 |-------|---------------|----------|
-| **Virtual Environment Not Activated** | `ModuleNotFoundError: No module named 'scipy'` | Use convenience script: `./run_simulation.sh --list` or activate manually: `source /Users/nikolaskarefyllidis/ct-env/bin/activate` |
+| **Virtual Environment Not Activated** | `ModuleNotFoundError: No module named 'scipy'` | Use convenience script: `./run_simulation.sh --list` or activate manually: `source /path/to/your/ct-env/bin/activate` |
 | **Species Not Found** | `Error: Unknown species 'C2H6'` | Check species names in mechanism file and update database accordingly |
 | **Mechanism File Missing** | `Error: Could not load mechanism file` | Ensure mechanism file exists and path in database is correct |
 | **Convergence Issues** | `Warning: Solver convergence warnings` | Normal for complex mechanisms; simulation continues and produces valid results |
@@ -432,7 +444,7 @@ For detailed API documentation, see [docs/API_REFERENCE.md](docs/API_REFERENCE.m
 chmod +x run_simulation.sh show_structure.sh
 
 # Activate virtual environment
-source /Users/nikolaskarefyllidis/ct-env/bin/activate
+source /path/to/your/ct-env/bin/activate
 
 # Verify installation
 ./run_simulation.sh --list
