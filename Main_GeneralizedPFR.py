@@ -690,9 +690,9 @@ def export_results(gas, states1, config, reactant_info, conversion, yields, T_0,
     print(f"Saved complete results to {csv_filename}")
     
     # Create summary
-    create_summary_file(config, reactant_info, conversion, yields, states1, T_0, p_0, u_0, csv_filename)
+    create_summary_file(config, reactant_info, conversion, yields, states1, T_0, p_0, u_0, csv_filename, hf)
 
-def create_summary_file(config, reactant_info, conversion, yields, states1, T_0, p_0, u_0, csv_filename):
+def create_summary_file(config, reactant_info, conversion, yields, states1, T_0, p_0, u_0, csv_filename, hf):
     """Create summary file with key results."""
     reactant_name = reactant_info['name'].replace(' ', '').replace('-', '')
     temp_str = f"{T_0:.0f}"
@@ -711,6 +711,21 @@ def create_summary_file(config, reactant_info, conversion, yields, states1, T_0,
         f.write(f"# Reactant: {reactant_info['name']} ({reactant_info['formula']})\n")
         f.write(f"# Mechanism File: {config['mechanism']['reaction_mechanism_file']}\n")
         f.write(f"# Description: {reactant_info['description']}\n")
+        f.write("#\n")
+        f.write("# SIMULATION CONFIGURATION\n")
+        f.write("# ========================\n")
+        f.write(f"# Initial Temperature: {T_0:.1f} K\n")
+        f.write(f"# Initial Pressure: {p_0/1e5:.1f} bar\n")
+        f.write(f"# Feed Composition: {config['initial_conditions']['composition']}\n")
+        f.write(f"# Reactor Length: {config['reactor_geometry']['length_m']:.1f} m\n")
+        f.write(f"# Reactor Diameter: {config['reactor_geometry']['diameter_m']*1000:.1f} mm\n")
+        f.write(f"# Mass Flow Rate: {config['operating_conditions']['mass_flow_rate_kgps']:.4f} kg/s\n")
+        f.write(f"# Number of Integration Steps: {config['simulation_settings']['n_steps']}\n")
+        f.write(f"# Solver Tolerance: {config['simulation_settings'].get('solver_tolerance', 1e-6):.2e}\n")
+        f.write(f"# Heat Flux File: {config['mechanism']['heat_flux_file']}\n")
+        f.write(f"# Initial Heat Flux: {hf(0.0):.0f} W/m²\n")
+        f.write(f"# Final Heat Flux: {hf(states1.z[-1]):.0f} W/m²\n")
+        f.write(f"# Average Heat Flux: {np.mean([hf(z) for z in states1.z]):.0f} W/m²\n")
         f.write("#\n")
         f.write("# SIMULATION RESULTS\n")
         f.write("# ==================\n")
