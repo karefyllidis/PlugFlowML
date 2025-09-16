@@ -3,7 +3,7 @@
 [![Python Version](https://img.shields.io/badge/python-3.8%2B-blue.svg)](https://www.python.org/downloads/)
 [![Cantera](https://img.shields.io/badge/Cantera-3.1.0%2B-green.svg)](https://cantera.org/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Status](https://img.shields.io/badge/status-production%20ready-brightgreen.svg)](https://github.com/karefyllidis/HydrAI)
+[![Status](https://img.shields.io/badge/status-work%20in%20progress-yellow.svg)](https://github.com/karefyllidis/HydrAI)
 
 *A comprehensive simulation framework for modeling steam cracking reactions in plug flow reactors using Cantera*
 
@@ -55,8 +55,8 @@
 
 ### Method 2: Direct Python Execution
 ```bash
-# Activate virtual environment first
-source ct-env/bin/activate
+# Activate external virtual environment first
+source /Users/nikolaskarefyllidis/ct-env/bin/activate
 
 # List available reactants
 python Main_GeneralizedPFR.py --list
@@ -78,12 +78,12 @@ python Main_GeneralizedPFR.py --reactant n-hexane
 
 ## Available Reactants
 
-| Reactant | Formula | Mechanism File | Species | Reactions | Description |
-|----------|---------|----------------|---------|-----------|-------------|
-| **ethane** | C₂H₆ | `Ethane_Kinetic-Model_species_35.yaml` | 35 | 135 | Ethane steam cracking for ethylene production |
-| **propane** | C₃H₈ | `Propane_Kinetic-Model_species_53.yaml` | 53 | 325 | Propane steam cracking for olefins production |
-| **naphtha** | Mixed C₅-C₁₂ | `Naphtha_Kinetic-Model_species_1951.yaml` | 1,951 | 82,557 | Naphtha steam cracking for petrochemicals production |
-| **n-hexane** | C₆H₁₄ | `n-Hexane_Kinetic-Model_species_153.yaml` | 153 | 2,146 | n-Hexane steam cracking for olefins production |
+| Reactant | Formula | Mechanism File | Species | Reactions |
+|----------|---------|----------------|---------|-----------|
+| **ethane** | C₂H₆ | `Ethane_Kinetic-Model_species_35.yaml` | 35 | 135 |
+| **propane** | C₃H₈ | `Propane_Kinetic-Model_species_53.yaml` | 53 | 325 |
+| **naphtha** | Mixed C₅-C₁₂ | `Naphtha_Kinetic-Model_species_1951.yaml` | 1,951 | 82,557 |
+| **n-hexane** | C₆H₁₄ | `n-Hexane_Kinetic-Model_species_153.yaml` | 153 | 2,146 |
 
 > **Performance Note:** The naphtha mechanism is significantly larger and will take longer to simulate due to its complexity (1,951 species, 82,557 reactions).
 
@@ -97,6 +97,8 @@ python Main_GeneralizedPFR.py --reactant n-hexane
 - **Cantera** 3.1.0 or higher
 - **Required Python packages** (see requirements.txt)
 
+> **Note:** This project is configured to use an external virtual environment located at `/Users/nikolaskarefyllidis/ct-env/`. The convenience script `run_simulation.sh` automatically uses this environment, eliminating the need for local environment setup.
+
 ### Setup
 
 #### 1. Clone the Repository
@@ -107,8 +109,8 @@ cd HydrAI
 
 #### 2. Install Dependencies
 ```bash
-# Option 1: Use existing virtual environment (if available)
-source ct-env/bin/activate
+# Option 1: Use existing external virtual environment (recommended)
+source /Users/nikolaskarefyllidis/ct-env/bin/activate
 pip install -r requirements.txt
 
 # Option 2: Create new virtual environment
@@ -123,7 +125,7 @@ pip install -r requirements.txt
 ./run_simulation.sh --list
 
 # Or direct execution
-source ct-env/bin/activate && python Main_GeneralizedPFR.py --list
+source /Users/nikolaskarefyllidis/ct-env/bin/activate && python Main_GeneralizedPFR.py --list
 ```
 
 > **Success!** If you see the list of available reactants, your installation is complete!
@@ -146,7 +148,7 @@ source ct-env/bin/activate && python Main_GeneralizedPFR.py --list
 ./run_simulation.sh ethane
 
 # Method 2: Direct execution
-source ct-env/bin/activate && python Main_GeneralizedPFR.py --reactant ethane
+source /Users/nikolaskarefyllidis/ct-env/bin/activate && python Main_GeneralizedPFR.py --reactant ethane
 
 # Expected output:
 # - Temperature and pressure profiles
@@ -164,7 +166,7 @@ for reactant in ethane propane n-hexane; do
 done
 
 # Or direct execution
-source ct-env/bin/activate
+source /Users/nikolaskarefyllidis/ct-env/bin/activate
 for reactant in ethane propane n-hexane; do
     python Main_GeneralizedPFR.py --reactant $reactant
 done
@@ -326,9 +328,7 @@ HydrAI/
 │   └── heat_capacity_ratio.png
 ├── heat_flux_profile.json         # JSON heat flux profile for pyrolysis
 ├── run_simulation.sh              # Convenience script for running simulations
-├── show_structure.sh              # Script to display clean project structure
-└── ct-env/                        # Python virtual environment (not shown in tree)
-    └── [Python virtual environment files]
+└── show_structure.sh              # Script to display clean project structure
 ```
 
 ### Key Files
@@ -419,7 +419,7 @@ For detailed API documentation, see [docs/API_REFERENCE.md](docs/API_REFERENCE.m
 
 | Issue | Error Message | Solution |
 |-------|---------------|----------|
-| **Virtual Environment Not Activated** | `ModuleNotFoundError: No module named 'scipy'` | Use convenience script: `./run_simulation.sh --list` or activate manually: `source ct-env/bin/activate` |
+| **Virtual Environment Not Activated** | `ModuleNotFoundError: No module named 'scipy'` | Use convenience script: `./run_simulation.sh --list` or activate manually: `source /Users/nikolaskarefyllidis/ct-env/bin/activate` |
 | **Species Not Found** | `Error: Unknown species 'C2H6'` | Check species names in mechanism file and update database accordingly |
 | **Mechanism File Missing** | `Error: Could not load mechanism file` | Ensure mechanism file exists and path in database is correct |
 | **Convergence Issues** | `Warning: Solver convergence warnings` | Normal for complex mechanisms; simulation continues and produces valid results |
@@ -432,7 +432,7 @@ For detailed API documentation, see [docs/API_REFERENCE.md](docs/API_REFERENCE.m
 chmod +x run_simulation.sh show_structure.sh
 
 # Activate virtual environment
-source ct-env/bin/activate
+source /Users/nikolaskarefyllidis/ct-env/bin/activate
 
 # Verify installation
 ./run_simulation.sh --list
