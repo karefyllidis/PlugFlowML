@@ -32,9 +32,7 @@ HydrAI/
 ├── README.md                            # Main documentation
 ├── requirements.txt                     # Python dependencies
 ├── results/                             # Simulation results directory (auto-created)
-├── run_simulation.sh                    # Convenience script (NEW)
-└── ct-env/                              # Virtual environment (not shown)
-    └── [Python virtual environment files]
+└── run_simulation.sh                    # Convenience script (uses external environment)
 ```
 
 ### 📊 Generated Files (Excluded from Core Structure)
@@ -87,9 +85,9 @@ HydrAI/
 
 ### **Method 2: Manual Virtual Environment Activation**
 ```bash
-# Activate virtual environment and run
-source ct-env/bin/activate && python Main_GeneralizedPFR.py --list
-source ct-env/bin/activate && python Main_GeneralizedPFR.py --reactant ethane
+# Activate external virtual environment and run
+source /path/to/your/ct-env/bin/activate && python Main_GeneralizedPFR.py --list
+source /path/to/your/ct-env/bin/activate && python Main_GeneralizedPFR.py --reactant ethane
 ```
 
 ---
@@ -143,7 +141,7 @@ SIMULATION COMPLETED SUCCESSFULLY!
 
 ## 📝 Notes
 
-- **Virtual Environment**: The `ct-env/` directory contains the Python virtual environment with all required dependencies
+- **Virtual Environment**: Uses external virtual environment (configured in `run_simulation.sh`)
 - **Generated Files**: The `fig/` and `results/` directories contain output from previous simulations
 - **Compatibility**: The directory structure exactly matches the README specifications
 - **Functionality**: All core features are working and tested
