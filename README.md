@@ -16,8 +16,8 @@
 | **Multi-Reactant Support** | Ethane, propane, naphtha, and n-hexane with dedicated mechanisms |
 | **Automatic Configuration** | Dynamic configuration generation for each reactant type |
 | **Species Name Handling** | Intelligent handling of different naming conventions across mechanisms |
-| **Professional Output** | Systematic file naming and comprehensive result export |
-| **Rich Visualizations** | 12+ customizable plots and data export formats |
+| **Professional Output** | Systematic file naming and comprehensive result export (245+ columns) |
+| **Visualizations** | 18+ customizable plots and comprehensive data export |
 | **Extensible Design** | Easy addition of new reactants and mechanisms |
 | **Robust Error Handling** | Comprehensive error handling with informative messages |
 | **Convenience Scripts** | Easy-to-use shell scripts for streamlined operation |
@@ -269,21 +269,51 @@ results/
 └── summary_[Reactant]_T[Temp]K_P[Press]bar_L[Length]m_D[Diam]mm_M[MassFlow]kgps_n[Steps].dat
 
 fig/
-├── temperature_pressure_profiles.png
+├── temperature_profile.png
+├── pressure_profile.png
+├── velocity_profile.png
+├── density_profile.png
+├── heat_flux_profile.png
 ├── heat_flux_vs_relative_position.png
-└── species_profiles.png
+├── molecular_weight_profile.png
+├── heat_capacity_cp.png
+├── heat_capacity_cv.png
+├── heat_capacity_ratio.png
+├── enthalpy_profile.png
+├── entropy_profile.png
+├── viscosity_profile.png
+├── thermal_conductivity_profile.png
+├── residence_time.png
+├── reactant_conversion.png
+├── product_mass_fractions.png
+└── product_mole_fractions.png
 
 heat_flux_profile.json
 └── JSON heat flux profile for pyrolysis simulations
 ```
 
 ### CSV Data Export
-The CSV files contain:
+The CSV files contain comprehensive data from Cantera (245 columns total):
+
+**Basic Properties (7):**
 - Axial position (z)
 - Temperature and pressure profiles
 - Velocity and density
 - Heat flux profile
-- All species mass and mole fractions
+
+**Thermodynamic Properties (8):**
+- Heat capacity (Cp, Cv) and heat capacity ratio
+- Enthalpy, entropy, internal energy, Gibbs free energy
+- Mean molecular weight
+
+**Transport Properties (2):**
+- Dynamic viscosity
+- Thermal conductivity
+
+**Composition Data (228):**
+- Mass and mole fractions for all 114 species (Y_species, X_species)
+
+**Note:** Advanced reaction kinetics and transport properties are not available in this Cantera version but the core simulation data is fully exported.
 
 ### Summary Reports
 The DAT files contain:
@@ -294,12 +324,10 @@ The DAT files contain:
 
 ### Heat Flux Profile
 The JSON heat flux profile (`heat_flux_profile.json`) contains:
-- **12 data points** distributed from 0.0 to 1.0 (relative positions)
-- **Realistic heat flux**: 150,000 W/m² (corresponds to high-temperature wall conditions)
+- **6 data points** distributed from 0.0 to 1.0 (relative positions)
+- **Constant heat flux**: 150,000 W/m² (corresponds to high-temperature wall conditions)
 - **Relative position format**: 0.0 = inlet, 1.0 = outlet (automatically scaled to reactor length)
-- **Two interpolation methods**:
-  - `"linear"` (default): Smooth linear interpolation between data points
-  - `"step"`: Step-wise interpolation - heat flux remains constant between data points
+- **Step interpolation method**: Heat flux remains constant between data points
 - Helpful comments for each heating zone
 - Simple structure with essential data and documentation
 - Optimized for steam cracking pyrolysis conditions
@@ -308,11 +336,14 @@ The JSON heat flux profile (`heat_flux_profile.json`) contains:
 ```json
 {
   "heat_flux_profile": {
-    "interpolation_method": "linear",
+    "interpolation_method": "step",
     "data_points": [
       {"position": 0.0, "heat_flux": 150000, "_comment": "Inlet region"},
-      {"position": 0.5, "heat_flux": 200000, "_comment": "Middle region"},
-      {"position": 1.0, "heat_flux": 100000, "_comment": "Outlet region"}
+      {"position": 0.2, "heat_flux": 150000, "_comment": "Position 20% of reactor length"},
+      {"position": 0.4, "heat_flux": 150000, "_comment": "Position 40% of reactor length"},
+      {"position": 0.6, "heat_flux": 150000, "_comment": "Position 60% of reactor length"},
+      {"position": 0.8, "heat_flux": 150000, "_comment": "Position 80% of reactor length"},
+      {"position": 1.0, "heat_flux": 150000, "_comment": "Outlet region"}
     ]
   }
 }

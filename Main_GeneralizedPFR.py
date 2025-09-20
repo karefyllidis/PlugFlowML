@@ -681,23 +681,33 @@ def create_species_plots(gas, states1, config, reactant_info):
     plt.close()
     print("Saved product mole fractions to fig/product_mole_fractions.png")
     
-    # Total mass flow rate (should be constant)
+    # Mean heat capacity at constant pressure (Cp)
     plt.figure(figsize=(10, 6))
-    mass_flow_rate = config['operating_conditions']['mass_flow_rate_kgps']
-    area = np.pi * (config['reactor_geometry']['diameter_m']/2)**2
-    mass_flux = states1.density * states1.velocity
-    plt.plot(states1.z, mass_flux * area, 'k-', linewidth=2, label='Mass Flow Rate')
-    plt.axhline(y=mass_flow_rate, color='r', linestyle='--', alpha=0.7, label='Set Point')
+    plt.plot(states1.z, states1.cp, 'purple', linewidth=2, label='Cp [J/kg·K]')
     plt.xlabel('$z$ [m]')
-    plt.ylabel('$\\dot{m}$ [kg/s]')
-    plt.title('Mass Flow Rate Conservation')
+    plt.ylabel('$C_p$ [J/kg·K]')
+    plt.title('Mean Heat Capacity at Constant Pressure')
     plt.legend(loc=0)
     plt.xlim(left=0)
     plt.grid(True, alpha=0.3)
     plt.tight_layout()
-    plt.savefig('fig/mass_flow_conservation.png', dpi=150, bbox_inches='tight')
+    plt.savefig('fig/heat_capacity_cp.png', dpi=150, bbox_inches='tight')
     plt.close()
-    print("Saved mass flow conservation to fig/mass_flow_conservation.png")
+    print("Saved heat capacity Cp to fig/heat_capacity_cp.png")
+    
+    # Mean heat capacity at constant volume (Cv)
+    plt.figure(figsize=(10, 6))
+    plt.plot(states1.z, states1.cv, 'orange', linewidth=2, label='Cv [J/kg·K]')
+    plt.xlabel('$z$ [m]')
+    plt.ylabel('$C_v$ [J/kg·K]')
+    plt.title('Mean Heat Capacity at Constant Volume')
+    plt.legend(loc=0)
+    plt.xlim(left=0)
+    plt.grid(True, alpha=0.3)
+    plt.tight_layout()
+    plt.savefig('fig/heat_capacity_cv.png', dpi=150, bbox_inches='tight')
+    plt.close()
+    print("Saved heat capacity Cv to fig/heat_capacity_cv.png")
     
     # Residence time
     plt.figure(figsize=(10, 6))
@@ -739,21 +749,99 @@ def create_species_plots(gas, states1, config, reactant_info):
         plt.savefig('fig/heat_capacity_ratio.png', dpi=150, bbox_inches='tight')
         plt.close()
         print("Saved heat capacity ratio to fig/heat_capacity_ratio.png")
+    
+    # Enthalpy profile
+    plt.figure(figsize=(10, 6))
+    plt.plot(states1.z, states1.h, 'darkgreen', linewidth=2, label='Enthalpy')
+    plt.xlabel('$z$ [m]')
+    plt.ylabel('$h$ [J/kg]')
+    plt.title('Specific Enthalpy Profile')
+    plt.legend(loc=0)
+    plt.xlim(left=0)
+    plt.grid(True, alpha=0.3)
+    plt.tight_layout()
+    plt.savefig('fig/enthalpy_profile.png', dpi=150, bbox_inches='tight')
+    plt.close()
+    print("Saved enthalpy profile to fig/enthalpy_profile.png")
+    
+    # Entropy profile
+    plt.figure(figsize=(10, 6))
+    plt.plot(states1.z, states1.s, 'darkred', linewidth=2, label='Entropy')
+    plt.xlabel('$z$ [m]')
+    plt.ylabel('$s$ [J/kg·K]')
+    plt.title('Specific Entropy Profile')
+    plt.legend(loc=0)
+    plt.xlim(left=0)
+    plt.grid(True, alpha=0.3)
+    plt.tight_layout()
+    plt.savefig('fig/entropy_profile.png', dpi=150, bbox_inches='tight')
+    plt.close()
+    print("Saved entropy profile to fig/entropy_profile.png")
+    
+    # Viscosity profile
+    plt.figure(figsize=(10, 6))
+    plt.plot(states1.z, states1.viscosity, 'navy', linewidth=2, label='Viscosity')
+    plt.xlabel('$z$ [m]')
+    plt.ylabel('$\\mu$ [Pa·s]')
+    plt.title('Dynamic Viscosity Profile')
+    plt.legend(loc=0)
+    plt.xlim(left=0)
+    plt.grid(True, alpha=0.3)
+    plt.tight_layout()
+    plt.savefig('fig/viscosity_profile.png', dpi=150, bbox_inches='tight')
+    plt.close()
+    print("Saved viscosity profile to fig/viscosity_profile.png")
+    
+    # Thermal conductivity profile
+    plt.figure(figsize=(10, 6))
+    plt.plot(states1.z, states1.thermal_conductivity, 'teal', linewidth=2, label='Thermal Conductivity')
+    plt.xlabel('$z$ [m]')
+    plt.ylabel('$k$ [W/m·K]')
+    plt.title('Thermal Conductivity Profile')
+    plt.legend(loc=0)
+    plt.xlim(left=0)
+    plt.grid(True, alpha=0.3)
+    plt.tight_layout()
+    plt.savefig('fig/thermal_conductivity_profile.png', dpi=150, bbox_inches='tight')
+    plt.close()
+    print("Saved thermal conductivity profile to fig/thermal_conductivity_profile.png")
+    
+    # Note: compressibility_factor not available in this Cantera version
 
 def export_results(gas, states1, config, reactant_info, conversion, yields, T_0, p_0, u_0, hf):
     """Export results to CSV and summary files."""
     print("\nExporting results to CSV...")
     
-    # Create results DataFrame
+    # Create results DataFrame with comprehensive Cantera data
     results_data = {
+        # Basic properties
         'z_position_m': states1.z,
         'temperature_K': states1.T,
         'pressure_Pa': states1.P,
         'pressure_bar': states1.P / 1e5,
         'velocity_ms': states1.velocity,
         'density_kgm3': states1.density,
-        'heat_flux_Wm2': [hf(z) for z in states1.z]
+        'heat_flux_Wm2': [hf(z) for z in states1.z],
+        
+        # Thermodynamic properties
+        'heat_capacity_cp_JkgK': states1.cp,
+        'heat_capacity_cv_JkgK': states1.cv,
+        'heat_capacity_ratio_cp_cv': states1.cp / states1.cv,
+        'mean_molecular_weight_kgkmol': states1.mean_molecular_weight,
+        'enthalpy_Jkg': states1.h,
+        'entropy_JkgK': states1.s,
+        'internal_energy_Jkg': states1.u,
+        'gibbs_free_energy_Jkg': states1.g,
+        
+        # Transport properties
+        'viscosity_Pas': states1.viscosity,
+        'thermal_conductivity_WmK': states1.thermal_conductivity
     }
+    
+    # Note: compressibility_factor not available in this Cantera version
+    
+    # Note: Advanced reaction and transport properties not available in this Cantera version
+    # Only basic properties are exported to ensure compatibility
     
     # Add all species mass fractions
     for i, species in enumerate(gas.species_names):

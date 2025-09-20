@@ -5,6 +5,28 @@ All notable changes to the Generalized PFR Simulation System will be documented 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] - 2025-01-15
+
+### Added
+- **Comprehensive data export** - 245+ columns of simulation data including all thermodynamic and transport properties
+- **Enhanced visualization** - 18+ professional plots including viscosity, thermal conductivity, and heat capacity profiles
+- **Relative position heat flux** - Heat flux profiles now use relative positions (0.0-1.0) for universal applicability
+- **Step-wise interpolation** - Option for step-wise heat flux interpolation in addition to linear
+- **Automatic heat flux plotting** - Heat flux vs. relative position figure generated automatically
+- **Complete species data** - Mass and mole fractions for all species in CSV export
+- **Transport properties** - Viscosity and thermal conductivity data export and visualization
+- **Thermodynamic completeness** - Internal energy, Gibbs free energy, and heat capacity ratio export
+
+### Changed
+- **Heat flux profile format** - Updated to use relative positions (0.0-1.0) instead of absolute meters
+- **Export compatibility** - Removed properties not available in current Cantera version to ensure stability
+- **Documentation updates** - Updated README and API documentation to reflect comprehensive export capabilities
+
+### Fixed
+- **Export stability** - Fixed issues with unavailable Cantera properties causing simulation crashes
+- **Figure generation** - Ensured all 18 plots are generated successfully
+- **CSV export** - Guaranteed 245+ columns of data export without errors
+
 ## [2.0.0] - 2025-01-15
 
 ### Added

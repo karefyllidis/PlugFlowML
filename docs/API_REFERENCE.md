@@ -22,7 +22,7 @@ The main simulation module containing all core functionality.
 
 ```python
 # Version information
-__version__ = "2.0.0"
+__version__ = "2.1.0"
 __author__ = "Chemical Engineering Simulation Team"
 __date__ = "2025-01-15"
 ```
@@ -230,6 +230,11 @@ hf, z_profile, heatflux_profile = setup_heat_flux(config)
 # hf(z) returns heat flux at position z (in meters)
 ```
 
+**Interpolation Methods:**
+The heat flux profile JSON file supports two interpolation methods:
+- `"linear"` (default): Linear interpolation between data points
+- `"step"`: Step-wise interpolation - heat flux remains constant between data points
+
 **Note:** The heat flux profile JSON file should contain relative positions (0.0 to 1.0) that are automatically scaled to the reactor length specified in `config['reactor_geometry']['length_m']`.
 
 ### `run_simulation(gas, config, reactant_info, hf, T_0, p_0, length, diam, area, roughness, mass_flow_rate, u_0)`
@@ -283,6 +288,64 @@ states = run_simulation(gas, config, reactant_info, hf, T_0, p_0,
 ```
 
 ## Analysis Functions
+
+### `export_results(gas, states1, config, reactant_info, conversion, yields, T_0, p_0, u_0, hf)`
+
+Exports comprehensive simulation results to CSV and summary files.
+
+**Signature:**
+```python
+def export_results(gas, states1, config, reactant_info, conversion, yields, T_0, p_0, u_0, hf) -> None
+```
+
+**Parameters:**
+- `gas` (ct.Solution): Cantera gas solution object
+- `states1` (ct.SolutionArray): Solution array containing reactor states
+- `config` (dict): Simulation configuration dictionary
+- `reactant_info` (dict): Reactant information dictionary
+- `conversion` (float): Reactant conversion percentage
+- `yields` (dict): Product yield dictionary
+- `T_0` (float): Initial temperature
+- `p_0` (float): Initial pressure
+- `u_0` (float): Initial velocity
+- `hf` (ct.Func1): Heat flux function
+
+**Exported Data (245 columns total):**
+- **Basic Properties (7):** Position, temperature, pressure, velocity, density, heat flux
+- **Thermodynamic Properties (8):** Heat capacity (Cp, Cv), enthalpy, entropy, internal energy, Gibbs free energy, molecular weight
+- **Transport Properties (2):** Viscosity, thermal conductivity
+- **Composition Data (228):** Mass and mole fractions for all species
+
+**Output Files:**
+- `results/results_[Reactant]_T[Temp]K_P[Press]bar_L[Length]m_D[Diam]mm_M[MassFlow]kgps_n[Steps].csv`
+- `results/summary_[Reactant]_T[Temp]K_P[Press]bar_L[Length]m_D[Diam]mm_M[MassFlow]kgps_n[Steps].dat`
+
+### `create_visualizations(gas, states1, config, reactant_info, hf, conversion, yields)`
+
+Creates comprehensive visualization plots for the simulation results.
+
+**Signature:**
+```python
+def create_visualizations(gas, states1, config, reactant_info, hf, conversion, yields) -> None
+```
+
+**Parameters:**
+- `gas` (ct.Solution): Cantera gas solution object
+- `states1` (ct.SolutionArray): Solution array containing reactor states
+- `config` (dict): Simulation configuration dictionary
+- `reactant_info` (dict): Reactant information dictionary
+- `hf` (ct.Func1): Heat flux function
+- `conversion` (float): Reactant conversion percentage
+- `yields` (dict): Product yield dictionary
+
+**Generated Plots (18 total):**
+- Temperature, pressure, velocity, density profiles
+- Heat flux profiles (absolute and relative position)
+- Thermodynamic properties (Cp, Cv, enthalpy, entropy, molecular weight)
+- Transport properties (viscosity, thermal conductivity)
+- Process analysis (residence time, conversion, product fractions)
+
+**Output Directory:** `fig/`
 
 ### `calculate_conversion(gas, states, reactant_info)`
 
@@ -536,6 +599,7 @@ All kinetic mechanisms in this system were generated using [**Reaction Mechanism
 ### Memory Usage
 - Large mechanisms (>1000 species) may require significant memory
 - Solution arrays scale with number of species and simulation steps
+- CSV export scales with species count (245+ columns for propane, 1000+ for naphtha)
 - Consider reducing step count for memory-constrained systems
 - **Naphtha mechanism requires ~4GB RAM** for full simulation
 
