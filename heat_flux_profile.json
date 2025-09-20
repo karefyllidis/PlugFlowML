@@ -1,67 +1,39 @@
 {
   "_comment": "Heat flux profile for steam cracking pyrolysis in plug flow reactor",
   "_units": "position: relative (0.0=inlet, 1.0=outlet), heat_flux: W/m²",
-  "_interpolation": "Linear interpolation between data points",
+  "_interpolation": "Step-wise interpolation between data points",
   "heat_flux_profile": {
+    "interpolation_method": "step",
+    "_interpolation_options": ["linear", "step"],
     "data_points": [
       {
         "position": 0.0,
-        "heat_flux": 27000,
+        "heat_flux": 150000,
         "_comment": "Inlet region"
       },
       {
         "position": 0.2,
-        "heat_flux": 27000,
+        "heat_flux": 150000,
         "_comment": "Position 20% of reactor length"
       },
       {
-        "position": 0.28,
-        "heat_flux": 27000,
-        "_comment": "Position 28% of reactor length"
-      },
-      {
-        "position": 0.36,
-        "heat_flux": 27000,
-        "_comment": "Position 36% of reactor length"
-      },
-      {
-        "position": 0.44,
-        "heat_flux": 27000,
-        "_comment": "Position 44% of reactor length"
-      },
-      {
-        "position": 0.52,
-        "heat_flux": 27000,
-        "_comment": "Position 52% of reactor length"
+        "position": 0.4,
+        "heat_flux": 150000,
+        "_comment": "Position 40% of reactor length"
       },
       {
         "position": 0.6,
-        "heat_flux": 27000,
+        "heat_flux": 150000,
         "_comment": "Position 60% of reactor length"
       },
       {
-        "position": 0.68,
-        "heat_flux": 27000,
-        "_comment": "Position 68% of reactor length"
-      },
-      {
-        "position": 0.76,
-        "heat_flux": 27000,
-        "_comment": "Position 76% of reactor length"
-      },
-      {
-        "position": 0.84,
-        "heat_flux": 27000,
-        "_comment": "Position 84% of reactor length"
-      },
-      {
-        "position": 0.92,
-        "heat_flux": 27000,
-        "_comment": "Position 92% of reactor length"
+        "position": 0.8,
+        "heat_flux": 150000,
+        "_comment": "Position 80% of reactor length"
       },
       {
         "position": 1.0,
-        "heat_flux": 27000,
+        "heat_flux": 150000,
         "_comment": "Outlet region"
       }
     ]

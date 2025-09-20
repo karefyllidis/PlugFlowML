@@ -240,8 +240,10 @@ def setup_heat_flux(config: dict):
     with open(heat_flux_file, 'r') as f:
         heat_flux_data = json.load(f)
     
-    # Extract data points (ignore comment fields)
+    # Extract data points and interpolation method
     data_points = heat_flux_data['heat_flux_profile']['data_points']
+    interpolation_method = heat_flux_data['heat_flux_profile'].get('interpolation_method', 'linear')
+    
     z_profile_relative = np.array([point['position'] for point in data_points])
     heatflux_profile = np.array([point['heat_flux'] for point in data_points])
     
@@ -249,7 +251,18 @@ def setup_heat_flux(config: dict):
     z_profile_absolute = z_profile_relative * reactor_length
     
     # Create Cantera function for heat flux interpolation
-    hf = ct.Func1(lambda z: np.interp(z, z_profile_absolute, heatflux_profile))
+    if interpolation_method == 'step':
+        # Step-wise interpolation: use the value from the previous data point
+        def step_interp(z):
+            # Find the index where z would be inserted to maintain order
+            idx = np.searchsorted(z_profile_absolute, z, side='right')
+            # Clamp index to valid range
+            idx = max(0, min(idx - 1, len(heatflux_profile) - 1))
+            return heatflux_profile[idx]
+        
+        hf = ct.Func1(step_interp)
+    else:  # Default to linear interpolation
+        hf = ct.Func1(lambda z: np.interp(z, z_profile_absolute, heatflux_profile))
     
     return hf, z_profile_absolute, heatflux_profile
 
@@ -489,7 +502,7 @@ def create_visualizations(gas, states1, config, reactant_info, hf, conversion, y
     # Heat flux profile
     plt.figure(figsize=(10, 6))
     heat_flux_values = [hf(z) for z in states1.z]
-    plt.plot(states1.z, heat_flux_values, 'orange', linewidth=2, label='Heat Flux')
+    plt.plot(states1.z, heat_flux_values, 'red', linewidth=5, label='Heat Flux')
     plt.xlabel('$z$ [m]')
     plt.ylabel('$q$ [W/m²]')
     plt.title('Heat Flux Profile')
@@ -515,8 +528,77 @@ def create_visualizations(gas, states1, config, reactant_info, hf, conversion, y
     plt.close()
     print("Saved molecular weight profile to fig/molecular_weight_profile.png")
     
+    # Heat flux vs relative position
+    create_heat_flux_relative_figure(config, hf)
+    
     # Species profiles
     create_species_plots(gas, states1, config, reactant_info)
+
+def create_heat_flux_relative_figure(config, hf):
+    """Create heat flux vs relative position figure."""
+    import json
+    
+    # Load the heat flux profile to get the original data points
+    heat_flux_file = config['mechanism']['heat_flux_file']
+    with open(heat_flux_file, 'r') as f:
+        heat_flux_data = json.load(f)
+    
+    # Extract data points and interpolation method
+    data_points = heat_flux_data['heat_flux_profile']['data_points']
+    interpolation_method = heat_flux_data['heat_flux_profile'].get('interpolation_method', 'linear')
+    
+    z_profile_relative = np.array([point['position'] for point in data_points])
+    heatflux_profile = np.array([point['heat_flux'] for point in data_points])
+    
+    # Create fine resolution for smooth plotting
+    z_fine = np.linspace(0.0, 1.0, 1000)
+    
+    # Calculate heat flux values for the current interpolation method
+    if interpolation_method == 'step':
+        # Step-wise interpolation
+        heat_flux_fine = np.zeros_like(z_fine)
+        for i, z in enumerate(z_fine):
+            idx = np.searchsorted(z_profile_relative, z, side='right')
+            idx = max(0, min(idx - 1, len(heatflux_profile) - 1))
+            heat_flux_fine[i] = heatflux_profile[idx]
+    else:
+        # Linear interpolation
+        heat_flux_fine = np.interp(z_fine, z_profile_relative, heatflux_profile)
+    
+    # Create the figure
+    plt.figure(figsize=(12, 8))
+    
+    # Plot the interpolated curve
+    plt.plot(z_fine, heat_flux_fine, 'b-', linewidth=2, 
+             label=f'{interpolation_method.capitalize()} interpolation')
+    
+    # Plot the data points
+    plt.plot(z_profile_relative, heatflux_profile, 'rs', markersize=8, 
+             label='Data points', markeredgecolor='darkred', markeredgewidth=1)
+    
+    # Customize the plot
+    plt.xlabel('Relative Position', fontsize=14)
+    plt.ylabel('Heat Flux [W/m²]', fontsize=14)
+    plt.title('Heat Flux Profile vs Relative Position', fontsize=16, fontweight='bold')
+    plt.grid(True, alpha=0.3)
+    plt.legend(fontsize=12)
+    
+    # Set axis limits and ticks
+    plt.xlim(0, 1)
+    plt.xticks(np.arange(0, 1.1, 0.1), fontsize=12)
+    plt.yticks(fontsize=12)
+    
+    # Add text box with interpolation method info
+    textstr = f'Interpolation Method: {interpolation_method.capitalize()}\nData Points: {len(data_points)}'
+    props = dict(boxstyle='round', facecolor='wheat', alpha=0.8)
+    plt.text(0.02, 0.98, textstr, transform=plt.gca().transAxes, fontsize=10,
+             verticalalignment='top', bbox=props)
+    
+    # Tight layout and save
+    plt.tight_layout()
+    plt.savefig('fig/heat_flux_vs_relative_position.png', dpi=150, bbox_inches='tight')
+    plt.close()
+    print("Saved heat flux vs relative position to fig/heat_flux_vs_relative_position.png")
 
 def create_species_plots(gas, states1, config, reactant_info):
     """Create comprehensive species concentration plots."""
