@@ -234,6 +234,7 @@ def setup_heat_flux(config: dict):
     import json
     
     heat_flux_file = config['mechanism']['heat_flux_file']
+    reactor_length = config['reactor_geometry']['length_m']
     
     # Load heat flux profile from JSON
     with open(heat_flux_file, 'r') as f:
@@ -241,13 +242,16 @@ def setup_heat_flux(config: dict):
     
     # Extract data points (ignore comment fields)
     data_points = heat_flux_data['heat_flux_profile']['data_points']
-    z_profile = np.array([point['position'] for point in data_points])
+    z_profile_relative = np.array([point['position'] for point in data_points])
     heatflux_profile = np.array([point['heat_flux'] for point in data_points])
     
-    # Create Cantera function for heat flux interpolation
-    hf = ct.Func1(lambda z: np.interp(z, z_profile, heatflux_profile))
+    # Convert relative positions (0.0-1.0) to absolute positions (0 to reactor_length)
+    z_profile_absolute = z_profile_relative * reactor_length
     
-    return hf, z_profile, heatflux_profile
+    # Create Cantera function for heat flux interpolation
+    hf = ct.Func1(lambda z: np.interp(z, z_profile_absolute, heatflux_profile))
+    
+    return hf, z_profile_absolute, heatflux_profile
 
 # =============================================================================
 # PRESSURE DROP CALCULATION

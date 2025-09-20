@@ -1,67 +1,67 @@
 {
   "_comment": "Heat flux profile for steam cracking pyrolysis in plug flow reactor",
-  "_units": "position: meters, heat_flux: W/m²",
+  "_units": "position: relative (0.0=inlet, 1.0=outlet), heat_flux: W/m²",
   "_interpolation": "Linear interpolation between data points",
   "heat_flux_profile": {
     "data_points": [
       {
         "position": 0.0,
-        "heat_flux": 47516,
+        "heat_flux": 27000,
         "_comment": "Inlet region"
       },
       {
+        "position": 0.2,
+        "heat_flux": 27000,
+        "_comment": "Position 20% of reactor length"
+      },
+      {
+        "position": 0.28,
+        "heat_flux": 27000,
+        "_comment": "Position 28% of reactor length"
+      },
+      {
+        "position": 0.36,
+        "heat_flux": 27000,
+        "_comment": "Position 36% of reactor length"
+      },
+      {
+        "position": 0.44,
+        "heat_flux": 27000,
+        "_comment": "Position 44% of reactor length"
+      },
+      {
+        "position": 0.52,
+        "heat_flux": 27000,
+        "_comment": "Position 52% of reactor length"
+      },
+      {
+        "position": 0.6,
+        "heat_flux": 27000,
+        "_comment": "Position 60% of reactor length"
+      },
+      {
+        "position": 0.68,
+        "heat_flux": 27000,
+        "_comment": "Position 68% of reactor length"
+      },
+      {
+        "position": 0.76,
+        "heat_flux": 27000,
+        "_comment": "Position 76% of reactor length"
+      },
+      {
+        "position": 0.84,
+        "heat_flux": 27000,
+        "_comment": "Position 84% of reactor length"
+      },
+      {
+        "position": 0.92,
+        "heat_flux": 27000,
+        "_comment": "Position 92% of reactor length"
+      },
+      {
         "position": 1.0,
-        "heat_flux": 47516,
-        "_comment": "Position 1m"
-      },
-      {
-        "position": 1.4,
-        "heat_flux": 47516,
-        "_comment": "Position 1.4m"
-      },
-      {
-        "position": 1.8,
-        "heat_flux": 47516,
-        "_comment": "Position 1.8m"
-      },
-      {
-        "position": 2.2,
-        "heat_flux": 47516,
-        "_comment": "Position 2.2m"
-      },
-      {
-        "position": 2.6,
-        "heat_flux": 47516,
-        "_comment": "Position 2.6m"
-      },
-      {
-        "position": 3.0,
-        "heat_flux": 47516,
-        "_comment": "Position 3.0m"
-      },
-      {
-        "position": 3.4,
-        "heat_flux": 47516,
-        "_comment": "Position 3.4m"
-      },
-      {
-        "position": 3.8,
-        "heat_flux": 47516,
-        "_comment": "Position 3.8m"
-      },
-      {
-        "position": 4.2,
-        "heat_flux": 47516,
-        "_comment": "Position 4.2m"
-      },
-      {
-        "position": 4.6,
-        "heat_flux": 47516,
-        "_comment": "Position 4.6m"
-      },
-      {
-        "position": 5.0,
-        "heat_flux": 47516,
+        "heat_flux": 27000,
         "_comment": "Outlet region"
       }
     ]

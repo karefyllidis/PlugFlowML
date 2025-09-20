@@ -208,7 +208,7 @@ T_0, p_0, comp, length, diam, area, rough, mdot, u_0 = setup_initial_conditions(
 
 ### `setup_heat_flux(config)`
 
-Sets up heat flux profile from file.
+Sets up heat flux profile from file. The heat flux profile uses relative positions (0.0 = inlet, 1.0 = outlet) which are automatically converted to absolute positions based on the reactor length specified in the configuration.
 
 **Signature:**
 ```python
@@ -216,15 +216,21 @@ def setup_heat_flux(config: dict) -> tuple[ct.Func1, np.ndarray, np.ndarray]
 ```
 
 **Parameters:**
-- `config` (dict): Simulation configuration
+- `config` (dict): Simulation configuration containing reactor geometry
 
 **Returns:**
-- `tuple`: (heat_flux_function, z_profile, heatflux_profile)
+- `tuple`: (heat_flux_function, z_profile_absolute, heatflux_profile)
+  - `heat_flux_function`: Cantera function for heat flux interpolation
+  - `z_profile_absolute`: Absolute position array in meters
+  - `heatflux_profile`: Heat flux values array in W/m²
 
 **Example:**
 ```python
 hf, z_profile, heatflux_profile = setup_heat_flux(config)
+# hf(z) returns heat flux at position z (in meters)
 ```
+
+**Note:** The heat flux profile JSON file should contain relative positions (0.0 to 1.0) that are automatically scaled to the reactor length specified in `config['reactor_geometry']['length_m']`.
 
 ### `run_simulation(gas, config, reactant_info, hf, T_0, p_0, length, diam, area, roughness, mass_flow_rate, u_0)`
 

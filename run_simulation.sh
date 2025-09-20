@@ -17,7 +17,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
 # Define the external virtual environment path
-CT_ENV_PATH="/Users/nikolaskarefyllidis/ct-env"
+CT_ENV_PATH="/Users/nikolaskarefyllidis/venv/ct-env"
 
 # Check if virtual environment exists
 if [ ! -d "$CT_ENV_PATH" ]; then

@@ -48,7 +48,7 @@
     "default_reactant": "ethane",
     "simulation_settings": {
         "temperature_range": [800, 1200],
-        "pressure_range": [1.0, 3.0],
+        "pressure_range": [1.9, 2.1],
         "residence_time_range": [0.05, 0.5]
     }
 }
