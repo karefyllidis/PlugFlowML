@@ -7,9 +7,9 @@ This script demonstrates basic usage patterns for the generalized PFR simulation
 system. It shows how to run simulations, access results, and perform basic
 analysis.
 
-Author: Chemical Engineering Simulation Team
-Version: 2.0
-Date: 2025-01-15
+Author: Nikolas Karefyllidis, PhD
+Version: 2.1.0
+Date: 2025-09-20
 License: MIT
 
 Usage:

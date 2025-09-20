@@ -2,10 +2,15 @@
     "simulation_info": {
         "title": "{{REACTANT_NAME}} Pyrolysis PFR Simulation",
         "description": "{{REACTANT_DESCRIPTION}}",
-        "version": "2.1",
+        "version": "2.1.0",
         "date": "{{DATE}}",
-        "author": "User",
+        "author": "Nikolas Karefyllidis, PhD",
         "reactant_type": "{{REACTANT_KEY}}"
+    },
+    "export_controls": {
+        "if_csv_out": 1,
+        "if_plot_out": 1,
+        "_comment": "Export controls: 1 = enable, 0 = disable"
     },
     "mechanism": {
         "reaction_mechanism_file": "{{MECHANISM_FILE}}",

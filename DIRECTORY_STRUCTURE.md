@@ -1,8 +1,9 @@
 # HydrAI Directory Structure Analysis
 ## Complete Project Structure and Compatibility Report
 
-**Date:** January 15, 2025  
+**Date:** September 20, 2025  
 **Status:** ✅ **FULLY COMPATIBLE** with README specifications  
+**Version:** 2.1.0 - Export Controls Added  
 **Tested:** ✅ All functionality verified and working
 
 ---
@@ -145,6 +146,15 @@ SIMULATION COMPLETED SUCCESSFULLY!
 - **Generated Files**: The `fig/` and `results/` directories contain output from previous simulations
 - **Compatibility**: The directory structure exactly matches the README specifications
 - **Functionality**: All core features are working and tested
+- **Export Controls**: New v2.1.0 feature allows optional CSV and plot generation via configuration flags
+
+## 🆕 Version 2.1.0 Features
+
+### Export Controls
+- **`if_csv_out`**: Control CSV data export (245+ columns)
+- **`if_plot_out`**: Control plot generation (18+ figures)
+- **Flexible Workflows**: Support for data-only, plots-only, or simulation-only modes
+- **Performance Optimization**: Faster parameter studies without export overhead
 
 ---
 

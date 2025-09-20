@@ -5,7 +5,7 @@ All notable changes to the Generalized PFR Simulation System will be documented 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.1.0] - 2025-01-15
+## [2.1.0] - 2025-09-20
 
 ### Added
 - **Comprehensive data export** - 245+ columns of simulation data including all thermodynamic and transport properties
@@ -16,18 +16,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Complete species data** - Mass and mole fractions for all species in CSV export
 - **Transport properties** - Viscosity and thermal conductivity data export and visualization
 - **Thermodynamic completeness** - Internal energy, Gibbs free energy, and heat capacity ratio export
+- **Export controls** - Optional CSV and plot generation control with `if_csv_out` and `if_plot_out` flags
+- **Flexible workflows** - Support for data-only, plots-only, or simulation-only modes
 
 ### Changed
 - **Heat flux profile format** - Updated to use relative positions (0.0-1.0) instead of absolute meters
 - **Export compatibility** - Removed properties not available in current Cantera version to ensure stability
 - **Documentation updates** - Updated README and API documentation to reflect comprehensive export capabilities
+- **Configuration system** - Added export controls section to configuration template
+- **Performance optimization** - Export operations now optional for faster parameter studies
 
 ### Fixed
 - **Export stability** - Fixed issues with unavailable Cantera properties causing simulation crashes
 - **Figure generation** - Ensured all 18 plots are generated successfully
 - **CSV export** - Guaranteed 245+ columns of data export without errors
 
-## [2.0.0] - 2025-01-15
+## [2.0.0] - 2025-09-20
 
 ### Added
 - **Generalized multi-reactant support** - System now supports ethane, propane, naphtha, and n-hexane

@@ -23,8 +23,8 @@ The main simulation module containing all core functionality.
 ```python
 # Version information
 __version__ = "2.1.0"
-__author__ = "Chemical Engineering Simulation Team"
-__date__ = "2025-01-15"
+__author__ = "Nikolas Karefyllidis, PhD"
+__date__ = "2025-09-20"
 ```
 
 ## Configuration Functions
@@ -44,6 +44,11 @@ def load_reactant_database() -> dict
 **Structure:**
 ```python
 {
+    'export_controls': {
+        'if_csv_out': int,         # 1 = enable CSV export, 0 = disable
+        'if_plot_out': int,        # 1 = enable plot generation, 0 = disable
+        '_comment': str            # Documentation comment
+    },
     'reactants': {
         'reactant_key': {
             'name': str,           # Human-readable name
@@ -346,6 +351,18 @@ def create_visualizations(gas, states1, config, reactant_info, hf, conversion, y
 - Process analysis (residence time, conversion, product fractions)
 
 **Output Directory:** `fig/`
+
+**Export Control:**
+The function respects the `if_plot_out` configuration flag:
+- `if_plot_out: 1` (default): Generates all plots
+- `if_plot_out: 0`: Skips plot generation
+
+### `export_results(gas, states1, config, reactant_info, conversion, yields, T_0, p_0, u_0, hf)`
+
+**Export Control:**
+The function respects the `if_csv_out` configuration flag:
+- `if_csv_out: 1` (default): Exports CSV and summary files
+- `if_csv_out: 0`: Skips CSV export
 
 ### `calculate_conversion(gas, states, reactant_info)`
 

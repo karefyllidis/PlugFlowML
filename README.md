@@ -18,6 +18,7 @@
 | **Species Name Handling** | Intelligent handling of different naming conventions across mechanisms |
 | **Professional Output** | Systematic file naming and comprehensive result export (245+ columns) |
 | **Visualizations** | 18+ customizable plots and comprehensive data export |
+| **Export Controls** | Optional CSV and plot generation with flexible workflow options |
 | **Extensible Design** | Easy addition of new reactants and mechanisms |
 | **Robust Error Handling** | Comprehensive error handling with informative messages |
 | **Convenience Scripts** | Easy-to-use shell scripts for streamlined operation |
@@ -259,6 +260,9 @@ Key parameters that can be adjusted:
 - **Heat Flux Profile**: External heating profile (47,516 W/m² for 900°C wall)
 - **Reactor Volume**: **Automatically calculated** from geometry (area × step_size)
 - **Wall Surface Area**: **Automatically calculated** from geometry (perimeter × step_size)
+- **Export Controls**: Optional CSV and plot generation control
+  - `if_csv_out`: 1 = enable CSV export, 0 = disable (default: 1)
+  - `if_plot_out`: 1 = enable plot generation, 0 = disable (default: 1)
 
 ## Output Files
 
@@ -348,6 +352,34 @@ The JSON heat flux profile (`heat_flux_profile.json`) contains:
   }
 }
 ```
+
+### Export Controls
+
+The system provides flexible export controls to optimize performance and storage:
+
+```json
+{
+  "export_controls": {
+    "if_csv_out": 1,
+    "if_plot_out": 1,
+    "_comment": "Export controls: 1 = enable, 0 = disable"
+  }
+}
+```
+
+**Options:**
+- **`if_csv_out`**: Controls CSV data export (245+ columns)
+  - `1` (default): Export comprehensive CSV data
+  - `0`: Skip CSV export (simulation only)
+- **`if_plot_out`**: Controls plot generation (18+ figures)
+  - `1` (default): Generate all visualization plots
+  - `0`: Skip plot generation (simulation only)
+
+**Use Cases:**
+- **Full Export** (`if_csv_out: 1, if_plot_out: 1`): Complete analysis with data and plots
+- **Data Only** (`if_csv_out: 1, if_plot_out: 0`): Export data for external analysis
+- **Plots Only** (`if_csv_out: 0, if_plot_out: 1`): Quick visualization without large CSV files
+- **Simulation Only** (`if_csv_out: 0, if_plot_out: 0`): Fast simulation for parameter studies
 
 ## Project Structure
 
@@ -566,8 +598,8 @@ For questions, issues, or contributions:
 ---
 
 **Version:** 2.1  
-**Last Updated:** January 15, 2025  
-**Maintainer:** Chemical Engineering Simulation Team
+**Last Updated:** September 20, 2025  
+**Maintainer:** Nikolas Karefyllidis, PhD
 
 ### Recent Updates (v2.1)
 - **Added convenience scripts** (`run_simulation.sh`, `show_structure.sh`)

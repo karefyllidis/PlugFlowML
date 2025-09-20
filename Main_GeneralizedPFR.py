@@ -8,8 +8,8 @@ in plug flow reactors using Cantera. Supports multiple feedstocks including
 ethane, propane, naphtha, and n-hexane with automatic configuration generation
 and species name handling.
 
-Author: Nikolas Karefyllidis PhD
-Development Started: 2025-01-15
+Author: Nikolas Karefyllidis, PhD
+Development Started: 2025-09-20
 License: MIT
 
 Features:
@@ -433,11 +433,17 @@ def process_and_visualize_results(gas, states1, config, reactant_info, hf, T_0, 
     for product, yield_val in yields.items():
         print(f"  {product}: {yield_val:.2f}% (mass)")
     
-    # Create visualizations
-    create_visualizations(gas, states1, config, reactant_info, hf, conversion, yields)
+    # Create visualizations (if enabled)
+    if config.get('export_controls', {}).get('if_plot_out', 1):
+        create_visualizations(gas, states1, config, reactant_info, hf, conversion, yields)
+    else:
+        print("Plot generation disabled by configuration")
     
-    # Export data
-    export_results(gas, states1, config, reactant_info, conversion, yields, T_0, p_0, u_0, hf)
+    # Export data (if enabled)
+    if config.get('export_controls', {}).get('if_csv_out', 1):
+        export_results(gas, states1, config, reactant_info, conversion, yields, T_0, p_0, u_0, hf)
+    else:
+        print("CSV export disabled by configuration")
     
     return conversion, yields
 
@@ -864,6 +870,7 @@ def export_results(gas, states1, config, reactant_info, conversion, yields, T_0,
     print(f"Saved complete results to {csv_filename}")
     
     # Create summary
+    # Create summary file (always created when CSV export is enabled)
     create_summary_file(config, reactant_info, conversion, yields, states1, T_0, p_0, u_0, csv_filename, hf)
 
 def create_summary_file(config, reactant_info, conversion, yields, states1, T_0, p_0, u_0, csv_filename, hf):
