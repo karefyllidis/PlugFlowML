@@ -250,14 +250,15 @@ The system uses `reactant_database.json` to define all available reactants:
 
 Key parameters that can be adjusted:
 
-- **Temperature**: Initial reactor temperature (K)
-- **Pressure**: Initial reactor pressure (Pa) - **absolute pressure**
-- **Reactor Length**: Total reactor length (m)
-- **Reactor Diameter**: Reactor diameter (m) - **3 cm (0.03 m)**
-- **Mass Flow Rate**: Feed mass flow rate (kg/s)
+- **Temperature**: Initial reactor temperature (925.15 K)
+- **Pressure**: Initial reactor pressure (2.0 bar = 200,000 Pa) - **absolute pressure**
+- **Reactor Length**: Total reactor length (5.0 m)
+- **Reactor Diameter**: Reactor diameter (30.0 mm = 0.03 m)
+- **Mass Flow Rate**: Feed mass flow rate (0.07 kg/s)
 - **Number of Steps**: Simulation resolution (200 steps)
 - **Step Size**: **Automatically calculated** from reactor length ÷ number of steps (0.025 m)
-- **Heat Flux Profile**: External heating profile (47,516 W/m² for 900°C wall)
+- **Heat Flux Profile**: External heating profile (150,000 W/m² constant)
+- **Wall Roughness**: Surface roughness (0.0 m - smooth wall)
 - **Reactor Volume**: **Automatically calculated** from geometry (area × step_size)
 - **Wall Surface Area**: **Automatically calculated** from geometry (perimeter × step_size)
 - **Export Controls**: Optional CSV and plot generation control
@@ -329,7 +330,7 @@ The DAT files contain:
 ### Heat Flux Profile
 The JSON heat flux profile (`heat_flux_profile.json`) contains:
 - **6 data points** distributed from 0.0 to 1.0 (relative positions)
-- **Constant heat flux**: 150,000 W/m² (corresponds to high-temperature wall conditions)
+- **Constant heat flux**: 150,000 W/m² (high-temperature pyrolysis conditions)
 - **Relative position format**: 0.0 = inlet, 1.0 = outlet (automatically scaled to reactor length)
 - **Step interpolation method**: Heat flux remains constant between data points
 - Helpful comments for each heating zone

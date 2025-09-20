@@ -10,17 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - **Comprehensive data export** - 245+ columns of simulation data including all thermodynamic and transport properties
 - **Enhanced visualization** - 18+ professional plots including viscosity, thermal conductivity, and heat capacity profiles
-- **Relative position heat flux** - Heat flux profiles now use relative positions (0.0-1.0) for universal applicability
-- **Step-wise interpolation** - Option for step-wise heat flux interpolation in addition to linear
-- **Automatic heat flux plotting** - Heat flux vs. relative position figure generated automatically
-- **Complete species data** - Mass and mole fractions for all species in CSV export
-- **Transport properties** - Viscosity and thermal conductivity data export and visualization
-- **Thermodynamic completeness** - Internal energy, Gibbs free energy, and heat capacity ratio export
 - **Export controls** - Optional CSV and plot generation control with `if_csv_out` and `if_plot_out` flags
 - **Flexible workflows** - Support for data-only, plots-only, or simulation-only modes
 
 ### Changed
-- **Heat flux profile format** - Updated to use relative positions (0.0-1.0) instead of absolute meters
 - **Export compatibility** - Removed properties not available in current Cantera version to ensure stability
 - **Documentation updates** - Updated README and API documentation to reflect comprehensive export capabilities
 - **Configuration system** - Added export controls section to configuration template
@@ -31,7 +24,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Figure generation** - Ensured all 18 plots are generated successfully
 - **CSV export** - Guaranteed 245+ columns of data export without errors
 
-## [2.0.0] - 2025-09-20
+## [2.0.1] - 2025-09-20
+
+### Added
+- **Relative position heat flux** - Heat flux profiles now use relative positions (0.0-1.0) for universal applicability
+- **Step-wise interpolation** - Option for step-wise heat flux interpolation in addition to linear
+- **Automatic heat flux plotting** - Heat flux vs. relative position figure generated automatically
+- **Complete species data** - Mass and mole fractions for all species in CSV export
+- **Transport properties** - Viscosity and thermal conductivity data export and visualization
+- **Thermodynamic completeness** - Internal energy, Gibbs free energy, and heat capacity ratio export
+
+### Changed
+- **Heat flux profile format** - Updated to use relative positions (0.0-1.0) instead of absolute meters
+
+## [2.0.0] - 2025-09-18
 
 ### Added
 - **Generalized multi-reactant support** - System now supports ethane, propane, naphtha, and n-hexane
@@ -44,7 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Flexible product tracking** - Configurable target products for each reactant
 - **Batch processing support** - Easy execution of multiple simulations
 - **Automatic geometry calculations** - Reactor volume and surface area calculated from geometry
-- **Realistic heat flux profiles** - Heat flux based on 900°C wall temperature (47,516 W/m²)
+- **Realistic heat flux profiles** - Heat flux for high-temperature pyrolysis (150,000 W/m²)
 - **Enhanced plotting system** - Individual plots for each variable with expanded product species
 - **GitHub repository** - Public repository at https://github.com/karefyllidis/HydrAI
 
@@ -53,7 +59,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Configuration system** - Moved from hardcoded to template-based configuration
 - **Output structure** - Enhanced CSV and summary file formats
 - **Code organization** - Modular design with clear separation of concerns
-- **Heat flux profile** - Updated to realistic values (47,516 W/m²) with 12 data points
+- **Heat flux profile** - Updated to realistic values (150,000 W/m²) with 6 data points
 - **Reactor geometry** - Volume and surface area now calculated automatically per step
 - **Pressure specification** - Clarified as absolute pressure (2.0 bar absolute)
 
@@ -70,7 +76,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Updated files**: All mechanism files renamed for consistency
 - **Dependencies**: Updated to require Cantera 3.1.0+, Python 3.8+
 
-## [1.0.0] - 2024-12-01
+## [1.2.0] - 2025-09-16
+
+### Added
+- **External environment support** - Refactored to use external virtual environment
+- **Enhanced documentation** - Improved project structure and documentation
+- **Heat flux profile information** - Added heat flux data to summary files
+
+### Changed
+- **Project structure** - Cleaned up and organized project files
+- **Documentation** - Removed personal paths and improved clarity
+
+## [1.1.0] - 2025-09-15
+
+### Added
+- **Automatic step size calculation** - Step size now calculated from reactor geometry
+- **Species count in filenames** - Mechanism files include species count
+- **Enhanced project structure** - Improved documentation and organization
+
+### Changed
+- **Mechanism file naming** - Standardized naming convention
+- **Documentation** - Enhanced project structure documentation
+
+## [1.0.0] - 2025-09-15
 
 ### Added
 - **Initial PFR simulation system** - Basic plug flow reactor simulation for propane cracking
