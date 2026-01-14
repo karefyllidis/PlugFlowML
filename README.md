@@ -167,9 +167,12 @@ jupyter notebook run_pfr.ipynb
 # - Temperature and pressure profiles
 # - Species concentration profiles
 # - Conversion and yield calculations
+# - Combined reactant consumption and product formation plot
 # - CSV data export
 # - Summary report
 ```
+
+**Note:** The Jupyter notebook (`run_pfr.ipynb`) automatically handles import order correctly. If you're creating custom scripts, ensure you import `cantera` before adding `src` to `sys.path` to avoid namespace conflicts.
 
 ### Batch Processing
 ```bash
@@ -544,6 +547,8 @@ For detailed API documentation, see [docs/API_REFERENCE.md](docs/API_REFERENCE.m
 | **Mechanism File Missing** | `Error: Could not load mechanism file` | Ensure mechanism file exists and path in database is correct |
 | **Convergence Issues** | `Warning: Solver convergence warnings` | Normal for complex mechanisms; simulation continues and produces valid results |
 | **Permission Denied** | `Permission denied: ./run_simulation.sh` | Make scripts executable: `chmod +x run_simulation.sh show_structure.sh` |
+| **Cantera Import Error** | `AttributeError: module 'cantera' has no attribute 'Solution'` | Import `cantera` before adding `src` to `sys.path` in custom scripts |
+| **Species Access Error** | `IndexError: only integers, slices...` | Use `states1.Y[:, species_idx]` instead of string indexing for SolutionArray |
 
 ### Quick Fixes
 
@@ -664,4 +669,6 @@ See `styles/README.md` for detailed documentation.
 - **Centralized figure aesthetics** - Consistent styling via `styles/figure_aesthetics.json`
 - **Improved code organization** - Modular package structure following Python best practices
 - **Enhanced documentation** - Updated all docs to reflect new structure and features
+- **Jupyter notebook improvements** - Fixed import order, added combined conversion/product plots
+- **Better visualization** - Combined reactant consumption and product formation in single plot
 
