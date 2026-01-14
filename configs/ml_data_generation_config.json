@@ -1,0 +1,16 @@
+{
+    "_comment": "Configuration for training data generation",
+    "reactants": ["ethane", "propane"],
+    "max_combinations_per_reactant": 100,
+    "output_dir": "data/training",
+    "save_interval": 10,
+    "random_sample": true,
+    "parameter_ranges": {
+        "temperature_K": [800, 1200, 10],
+        "pressure_bar": [1.5, 3.0, 8],
+        "length_m": [3.0, 7.0, 6],
+        "diameter_mm": [20.0, 40.0, 5],
+        "mass_flow_rate_kgps": [0.05, 0.10, 6],
+        "heat_flux_Wm2": [100000, 200000, 5]
+    }
+}

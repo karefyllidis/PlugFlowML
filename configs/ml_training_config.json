@@ -1,0 +1,25 @@
+{
+    "_comment": "Configuration for ML model training",
+    "data_file": "data/training/training_data_complete_*.csv",
+    "output_dir": "models",
+    "target_types": ["primary"],
+    "models": ["all"],
+    "test_size": 0.2,
+    "random_state": 42,
+    "neural_network": {
+        "epochs": 50,
+        "batch_size": 256
+    },
+    "random_forest": {
+        "n_estimators": 100,
+        "max_depth": 20
+    },
+    "xgboost": {
+        "n_estimators": 100,
+        "max_depth": 6
+    },
+    "gradient_boosting": {
+        "n_estimators": 100,
+        "max_depth": 5
+    }
+}

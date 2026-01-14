@@ -1,0 +1,23 @@
+{
+    "_comment": "Configuration for ML inference/prediction",
+    "model_dir": "models",
+    "model_type": "neural_network",
+    "target_type": "primary",
+    "simulation_parameters": {
+        "initial_temperature_K": 925.0,
+        "initial_pressure_bar": 2.0,
+        "reactor_length_m": 5.0,
+        "reactor_diameter_mm": 30.0,
+        "mass_flow_rate_kgps": 0.07,
+        "heat_flux_Wm2": 150000.0
+    },
+    "prediction_settings": {
+        "n_points": 200,
+        "adaptive_step": false,
+        "max_step_size": 0.1
+    },
+    "output": {
+        "file": "outputs/predictions.csv",
+        "format": "csv"
+    }
+}
