@@ -39,7 +39,8 @@ ct-env/
 *~
 
 # Jupyter Notebook
-.ipynb_checkpoints
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/
 
 # pyenv
 .python-version
@@ -79,6 +80,7 @@ dmypy.json
 .pyre/
 
 # Project specific - simulation outputs
+outputs/
 results/
 fig/
 *.log
@@ -89,18 +91,28 @@ summary_*.dat
 *_profiles.png
 *_comprehensive.png
 
+# ML training data and models
+data/training/
+data/raw/
+models/
+*.pkl
+*.h5
+*.joblib
+training_data_*.csv
+metadata_*.json
+
 # Temporary files
 *.tmp
 *.temp
 .DS_Store
 Thumbs.db
 
-# Scientific computing
-*.h5
+# Scientific computing (but allow committed model files if needed)
 *.hdf5
 *.mat
 *.npy
 *.npz
+# Note: *.h5 is already covered above for ML models
 
 # Cantera specific
 *.cti
@@ -110,3 +122,6 @@ Thumbs.db
 # Backup files
 *.bak
 *.backup
+
+# Mechanisms
+*.yaml
