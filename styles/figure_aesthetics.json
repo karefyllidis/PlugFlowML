@@ -1,0 +1,191 @@
+{
+    "_comment": "Centralized figure aesthetics configuration for all plots",
+    "_description": "Modify these settings to maintain consistent styling across all generated figures",
+    
+    "figure": {
+        "figsize": [10, 6],
+        "dpi": 150,
+        "facecolor": "white",
+        "edgecolor": "none"
+    },
+    
+    "axes": {
+        "grid": true,
+        "grid_alpha": 0.3,
+        "grid_style": "-",
+        "grid_color": "gray",
+        "spines_top": false,
+        "spines_right": false
+    },
+    
+    "font": {
+        "family": "sans-serif",
+        "size": 12,
+        "weight": "normal",
+        "title_size": 14,
+        "title_weight": "bold",
+        "label_size": 12,
+        "tick_size": 10
+    },
+    
+    "colors": {
+        "primary": "#1f77b4",
+        "secondary": "#ff7f0e",
+        "tertiary": "#2ca02c",
+        "quaternary": "#d62728",
+        "quinary": "#9467bd",
+        "senary": "#8c564b",
+        "septenary": "#e377c2",
+        "octonary": "#7f7f7f",
+        "nonary": "#bcbd22",
+        "denary": "#17becf",
+        
+        "temperature": "#d62728",
+        "pressure": "#1f77b4",
+        "velocity": "#2ca02c",
+        "density": "#9467bd",
+        "heat_flux": "#ff7f0e",
+        "molecular_weight": "#17becf",
+        "enthalpy": "#2ca02c",
+        "entropy": "#d62728",
+        "viscosity": "#1f77b4",
+        "thermal_conductivity": "#9467bd",
+        "heat_capacity": "#ff7f0e",
+        "residence_time": "#8c564b",
+        "conversion": "#e377c2",
+        "products": "#7f7f7f"
+    },
+    
+    "line": {
+        "width": 2,
+        "style": "-",
+        "alpha": 1.0,
+        "marker": "none",
+        "markersize": 6
+    },
+    
+    "legend": {
+        "show": true,
+        "location": "best",
+        "frameon": true,
+        "fancybox": true,
+        "shadow": false,
+        "ncol": 1,
+        "fontsize": 10,
+        "framealpha": 0.9
+    },
+    
+    "layout": {
+        "tight_layout": true,
+        "pad": 1.08,
+        "hspace": 0.3,
+        "wspace": 0.3
+    },
+    
+    "save": {
+        "format": "png",
+        "dpi": 150,
+        "bbox_inches": "tight",
+        "facecolor": "white",
+        "edgecolor": "none",
+        "transparent": false
+    },
+    
+    "profiles": {
+        "temperature": {
+            "color": "#d62728",
+            "label": "Temperature",
+            "ylabel": "$T$ [K]",
+            "title": "Temperature Profile"
+        },
+        "pressure": {
+            "color": "#1f77b4",
+            "label": "Pressure",
+            "ylabel": "$p$ [bar]",
+            "title": "Pressure Profile"
+        },
+        "velocity": {
+            "color": "#2ca02c",
+            "label": "Velocity",
+            "ylabel": "$u$ [m/s]",
+            "title": "Velocity Profile"
+        },
+        "density": {
+            "color": "#9467bd",
+            "label": "Density",
+            "ylabel": "$\\rho$ [kg/m³]",
+            "title": "Density Profile"
+        },
+        "heat_flux": {
+            "color": "#ff7f0e",
+            "label": "Heat Flux",
+            "ylabel": "$q$ [W/m²]",
+            "title": "Heat Flux Profile"
+        },
+        "molecular_weight": {
+            "color": "#17becf",
+            "label": "Mean Molecular Weight",
+            "ylabel": "$MW$ [kg/kmol]",
+            "title": "Mean Molecular Weight"
+        },
+        "enthalpy": {
+            "color": "#2ca02c",
+            "label": "Enthalpy",
+            "ylabel": "$h$ [J/kg]",
+            "title": "Specific Enthalpy Profile"
+        },
+        "entropy": {
+            "color": "#d62728",
+            "label": "Entropy",
+            "ylabel": "$s$ [J/kg·K]",
+            "title": "Specific Entropy Profile"
+        },
+        "viscosity": {
+            "color": "#1f77b4",
+            "label": "Viscosity",
+            "ylabel": "$\\mu$ [Pa·s]",
+            "title": "Dynamic Viscosity Profile"
+        },
+        "thermal_conductivity": {
+            "color": "#9467bd",
+            "label": "Thermal Conductivity",
+            "ylabel": "$k$ [W/m·K]",
+            "title": "Thermal Conductivity Profile"
+        },
+        "heat_capacity_cp": {
+            "color": "#ff7f0e",
+            "label": "Heat Capacity (Cp)",
+            "ylabel": "$C_p$ [J/kg·K]",
+            "title": "Mean Heat Capacity at Constant Pressure"
+        },
+        "heat_capacity_cv": {
+            "color": "#ff7f0e",
+            "label": "Heat Capacity (Cv)",
+            "ylabel": "$C_v$ [J/kg·K]",
+            "title": "Mean Heat Capacity at Constant Volume"
+        },
+        "heat_capacity_ratio": {
+            "color": "#9467bd",
+            "label": "Heat Capacity Ratio",
+            "ylabel": "$C_p/C_v$ [-]",
+            "title": "Heat Capacity Ratio"
+        },
+        "residence_time": {
+            "color": "#8c564b",
+            "label": "Residence Time",
+            "ylabel": "$t$ [s]",
+            "title": "Cumulative Residence Time"
+        },
+        "conversion": {
+            "color": "#e377c2",
+            "label": "Reactant Conversion",
+            "ylabel": "Conversion [-]",
+            "title": "Reactant Conversion"
+        },
+        "products": {
+            "colors": ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"],
+            "ylabel": "Mass Fraction [-]",
+            "title": "Product Formation (Mass Fractions)"
+        }
+    }
+}
