@@ -8,8 +8,8 @@
         "reactant_type": "{{REACTANT_KEY}}"
     },
     "export_controls": {
-        "if_csv_out": 1,
-        "if_plot_out": 1,
+        "if_csv_out": 0,
+        "if_plot_out": 0,
         "_comment": "Export controls: 1 = enable, 0 = disable"
     },
     "mechanism": {
@@ -24,7 +24,7 @@
         "pressure_Pa": 200000.0
     },
     "reactor_geometry": {
-        "length_m": 5.0,
+        "length_m": 10.0,
         "diameter_m": 0.0300,
         "roughness_m": 0.0
     },
