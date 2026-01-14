@@ -129,6 +129,8 @@ pip install cantera
 pip install jupyter jupyterlab
 ```
 
+> **Note:** Mechanism YAML files are not tracked in git (they are in `.gitignore`). You need to provide your own mechanism files in the `mechanisms/` directory. See [Adding New Reactants](#adding-new-reactants) for details.
+
 #### 3. Verify Installation
 ```bash
 # Launch Jupyter notebook
@@ -396,18 +398,24 @@ HydrAI/
 │   ├── ml_data_generation_config.json
 │   ├── ml_training_config.json
 │   └── ml_inference_config.json
-├── mechanisms/                     # Chemical kinetic mechanisms
+├── mechanisms/                     # Chemical kinetic mechanisms (not tracked in git)
 │   ├── Ethane_Kinetic-Model_species_35.yaml
 │   ├── Propane_Kinetic-Model_species_53.yaml
 │   ├── Naphtha_Kinetic-Model_species_1951.yaml
 │   └── n-Hexane_Kinetic-Model_species_153.yaml
+│   └── .gitkeep                   # Ensures directory structure is tracked
 ├── data/                           # Data directory
-│   ├── training/                   # Training data (generated)
-│   └── raw/                        # Raw simulation data
-├── models/                         # Trained ML models (generated)
-├── outputs/                        # Simulation outputs
+│   ├── training/                   # Training data (generated, not tracked)
+│   │   └── .gitkeep               # Ensures directory structure is tracked
+│   └── raw/                        # Raw simulation data (not tracked)
+│       └── .gitkeep               # Ensures directory structure is tracked
+├── models/                         # Trained ML models (generated, not tracked)
+│   └── .gitkeep                   # Ensures directory structure is tracked
+├── outputs/                        # Simulation outputs (not tracked)
 │   ├── results/                    # CSV results and summaries
+│   │   └── .gitkeep               # Ensures directory structure is tracked
 │   └── figures/                    # Generated plots
+│       └── .gitkeep               # Ensures directory structure is tracked
 ├── styles/                         # Figure aesthetics
 │   ├── figure_aesthetics.json     # Centralized styling config
 │   └── README.md                  # Aesthetics documentation
@@ -450,7 +458,9 @@ Place your mechanism file in the `mechanisms/` directory following the naming co
 mechanisms/[Reactant]_Kinetic-Model_species_[Count].yaml
 ```
 
-**Note:** The `[Count]` should be the number of species in your mechanism (e.g., `Ethane_Kinetic-Model_species_35.yaml` for a mechanism with 35 species).
+**Notes:**
+- The `[Count]` should be the number of species in your mechanism (e.g., `Ethane_Kinetic-Model_species_35.yaml` for a mechanism with 35 species).
+- Mechanism YAML files are **not tracked in git** (they are in `.gitignore`). This is intentional as they are large files that should remain local to your repository.
 
 ### Step 2: Update Database
 Add your reactant to `configs/reactant_database.json`:
