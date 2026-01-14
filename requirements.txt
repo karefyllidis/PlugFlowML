@@ -34,3 +34,21 @@ time      # Built-in with Python 1.5+
 # pytest>=6.0.0
 # flake8>=3.8.0
 # black>=21.0.0
+
+# ML Surrogate Models: Machine Learning Dependencies
+# ======================================
+# Core ML libraries
+scikit-learn>=1.0.0
+joblib>=1.0.0
+
+# Deep Learning (optional but recommended)
+# tensorflow>=2.8.0
+# or
+# torch>=1.10.0
+
+# Gradient Boosting (optional but recommended)
+# xgboost>=1.5.0
+
+# Additional ML utilities
+# lightgbm>=3.3.0
+# catboost>=1.0.0

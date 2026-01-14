@@ -5,6 +5,49 @@ All notable changes to the Generalized PFR Simulation System will be documented 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.0] - 2025-01-14
+
+### Added
+- **Project restructuring** - Complete reorganization into professional package structure
+  - `src/` directory for all source code (cantera, ml, utils modules)
+  - `configs/` directory for all configuration files
+  - `data/` directory for training data
+  - `models/` directory for trained ML models
+  - `outputs/` directory for simulation results and figures
+  - `styles/` directory for figure aesthetics configuration
+- **ML Surrogate Models** - Complete machine learning framework
+  - Training data generation with parameter sweeps
+  - Multiple ML algorithms (Neural Networks, Random Forest, XGBoost, Gradient Boosting)
+  - Fast inference (100-1000x speedup over Cantera)
+  - JSON-based configuration for all ML workflows
+- **Centralized figure aesthetics** - `styles/figure_aesthetics.json` for consistent styling
+- **JSON configuration system** - All ML scripts use JSON config files instead of command-line arguments
+- **Utility modules** - `src/utils/plot_style.py` for figure styling utilities
+- **Enhanced documentation** - Updated all docs to reflect new structure
+
+### Changed
+- **Directory structure** - Complete reorganization for better scalability
+  - `Main_GeneralizedPFR.py` → `src/cantera/pfr_simulator.py`
+  - `mechanism/` → `mechanisms/`
+  - `results/` and `fig/` → `outputs/results/` and `outputs/figures/`
+  - Config files moved to `configs/`
+- **Entry point** - New `run_pfr.ipynb` as main interactive entry point (Jupyter notebook)
+- **Import paths** - All imports updated to use new package structure
+- **Terminology** - Removed "Phase B" references, now "ML Surrogate Models"
+- **ML workflows** - Switched from command-line arguments to JSON configuration files
+- **File paths** - All paths now relative to project root with helper functions
+
+### Fixed
+- **Path resolution** - All file paths now work regardless of execution location
+- **Import errors** - Fixed all import paths after restructuring
+- **Documentation** - Updated all documentation to reflect new structure
+
+### Technical Details
+- **New structure**: Professional Python package organization
+- **Backward compatibility**: Old paths still work via helper functions
+- **Configuration**: JSON-based configs for reproducibility
+- **Styling**: Centralized aesthetics for consistent figures
+
 ## [2.1.0] - 2025-09-20
 
 ### Added
@@ -79,7 +122,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.2.0] - 2025-09-16
 
 ### Added
-- **External environment support** - Refactored to use external virtual environment
+- **Simplified installation** - Cantera and dependencies installed via pip (no virtual environment required)
 - **Enhanced documentation** - Improved project structure and documentation
 - **Heat flux profile information** - Added heat flux data to summary files
 
@@ -119,19 +162,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 | Version | Date | Major Features |
 |---------|------|----------------|
-| 2.0.0 | 2025-01-15 | Multi-reactant support, automatic configuration, professional documentation |
+| 3.0.0 | 2025-01-14 | Project restructuring, ML Surrogate Models, JSON configuration, centralized aesthetics |
+| 2.1.0 | 2025-09-20 | Comprehensive data export, enhanced visualization, export controls |
+| 2.0.0 | 2025-09-18 | Multi-reactant support, automatic configuration, professional documentation |
 | 1.0.0 | 2024-12-01 | Initial PFR simulation system for propane cracking |
 
 ## Future Roadmap
 
-### Planned Features (v2.1.0)
+### Completed Features (v3.0.0)
+- [x] **Machine Learning** - ML-based surrogate models for fast predictions
+- [x] **Parameter Studies** - Automated parameter sweep for training data generation
+- [x] **JSON Configuration** - Reproducible configuration system
+- [x] **Centralized Styling** - Consistent figure aesthetics
+
+### Planned Features (v3.1.0)
 - [ ] **GUI Interface** - Graphical user interface for easier operation
-- [ ] **Parameter Studies** - Automated parameter sweep capabilities
 - [ ] **Optimization Tools** - Built-in optimization for reactor design
 - [ ] **Advanced Visualization** - Interactive plots and 3D visualizations
 - [ ] **Export Formats** - Additional export formats (Excel, HDF5, etc.)
+- [ ] **Ensemble Models** - Combine multiple ML models for better accuracy
 
-### Planned Features (v2.2.0)
+### Planned Features (v3.2.0)
 - [ ] **Additional Reactants** - Support for more feedstocks (butane, pentane, etc.)
 - [ ] **Reactor Types** - Support for CSTR and other reactor types
 - [ ] **Heat Integration** - Advanced heat integration modeling
@@ -140,7 +191,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Long-term Goals
 - [ ] **Cloud Integration** - Cloud-based simulation capabilities
-- [ ] **Machine Learning** - ML-based mechanism reduction and optimization
+- [ ] **Physics-Informed Neural Networks** - ML models with physics constraints
 - [ ] **Real-time Monitoring** - Integration with process control systems
 - [ ] **Multi-scale Modeling** - Integration with CFD and other simulation tools
 
