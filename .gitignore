@@ -80,7 +80,17 @@ dmypy.json
 .pyre/
 
 # Project specific - simulation outputs
-outputs/
+# Ignore contents but keep directory structure
+outputs/*
+!outputs/.gitkeep
+!outputs/results/
+!outputs/figures/
+outputs/results/*
+!outputs/results/.gitkeep
+outputs/figures/*
+!outputs/figures/.gitkeep
+
+# Legacy paths (for backward compatibility)
 results/
 fig/
 *.log
@@ -92,9 +102,15 @@ summary_*.dat
 *_comprehensive.png
 
 # ML training data and models
-data/training/
-data/raw/
-models/
+# Ignore contents but keep directory structure
+data/training/*
+!data/training/.gitkeep
+data/raw/*
+!data/raw/.gitkeep
+models/*
+!models/.gitkeep
+
+# ML model and data files
 *.pkl
 *.h5
 *.joblib
