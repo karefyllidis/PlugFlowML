@@ -1,16 +1,29 @@
 {
-    "_comment": "Configuration for training data generation",
-    "reactants": ["ethane", "propane"],
-    "max_combinations_per_reactant": 100,
+    "_comment": "Configuration for ML training data generation. See docs/ML_CONFIG_GUIDE.md for detailed documentation.",
+    
+    "reactants": ["n-hexane"],
+    "max_combinations_per_reactant": 10,
     "output_dir": "data/training",
     "save_interval": 10,
     "random_sample": true,
+
+    "random_sample_bounds": {
+        "_comment": "Optional bounds for random sampling (random_sample=true).",
+        "temperature_K": [800, 900],
+        "pressure_bar": [1.5, 2.5],
+        "length_m": [10.0, 15.0],
+        "diameter_mm": [25.0, 40.0],
+        "mass_flow_rate_kgps": [0.05, 0.10],
+        "heat_flux_Wm2": [100000, 200000]
+    },
+
     "parameter_ranges": {
-        "temperature_K": [800, 1200, 10],
-        "pressure_bar": [1.5, 3.0, 8],
-        "length_m": [3.0, 7.0, 6],
-        "diameter_mm": [20.0, 40.0, 5],
-        "mass_flow_rate_kgps": [0.05, 0.10, 6],
-        "heat_flux_Wm2": [100000, 200000, 5]
+        "_comment": "Define the parameter space for simulations (random_sample=false).",
+        "temperature_K": [800, 900, 10],
+        "pressure_bar": [1.5, 3.0, 10],
+        "length_m": [8.0, 15.0, 10],
+        "diameter_mm": [20.0, 40.0, 10],
+        "mass_flow_rate_kgps": [0.05, 0.10, 10],
+        "heat_flux_Wm2": [100000, 200000, 10]
     }
 }

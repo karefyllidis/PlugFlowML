@@ -19,8 +19,25 @@ from itertools import product
 from datetime import datetime
 import time
 from pathlib import Path
+import warnings
+import logging
 
-# Add project root to path
+# IMPORTANT: Import cantera BEFORE adding src to sys.path
+# This prevents namespace conflict: without this, Python would find src/cantera/ 
+# (our package) instead of the actual cantera library when pfr_simulator.py imports it
+import cantera as ct
+
+# Suppress all Cantera/SUNDIALS warnings and messages
+warnings.filterwarnings('ignore', category=UserWarning)
+warnings.filterwarnings('ignore', category=RuntimeWarning)
+warnings.filterwarnings('ignore', message='.*rank.*')
+warnings.filterwarnings('ignore', message='.*CVode.*')
+warnings.filterwarnings('ignore', message='.*SUNDIALS.*')
+warnings.filterwarnings('ignore', message='.*WARNING.*')
+logging.getLogger('cantera').setLevel(logging.CRITICAL)
+logging.getLogger('sundials').setLevel(logging.CRITICAL)
+
+# Add project root to path (after cantera is imported)
 project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, project_root)
 
@@ -53,6 +70,10 @@ class TrainingDataGenerator:
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self.disable_plots = disable_plots
         
+        # Create temporary directory for heat flux files
+        self.temp_dir = Path('temp')  # Temporary files directory
+        self.temp_dir.mkdir(parents=True, exist_ok=True)
+        
         # Load reactant database
         self.database = load_reactant_database()
         
@@ -76,7 +97,8 @@ class TrainingDataGenerator:
             total *= len(values)
         return total * len(self.database['reactants'])
     
-    def generate_parameter_combinations(self, max_combinations=None, random_sample=True):
+    def generate_parameter_combinations(self, max_combinations=None, random_sample=True, 
+                                         random_sample_bounds=None):
         """
         Generate parameter combinations for training data.
         
@@ -86,6 +108,10 @@ class TrainingDataGenerator:
             Maximum number of combinations to generate (for random sampling)
         random_sample : bool
             If True, randomly sample combinations; if False, use all combinations
+        random_sample_bounds : dict, optional
+            Bounds for random sampling. Format: {"param_name": [min, max], ...}
+            If provided, random sampling will only generate values within these bounds.
+            Example: {"temperature_K": [850, 1200], "pressure_bar": [2.0, 3.0]}
         
         Returns:
         --------
@@ -98,12 +124,30 @@ class TrainingDataGenerator:
         
         all_combinations = list(product(*values))
         
-        # Convert to dictionaries
+        # Convert to dictionaries and apply bounds filtering
         param_dicts = []
         for combo in all_combinations:
             param_dict = dict(zip(keys, combo))
-            param_dict['diameter_m'] = param_dict.pop('diameter_mm') / 1000.0  # Convert to meters
-            param_dict['pressure_Pa'] = param_dict.pop('pressure_bar') * 1e5  # Convert to Pa
+            
+            # Apply bounds filtering if provided (check BEFORE unit conversion)
+            if random_sample_bounds:
+                valid = True
+                for param_name, bounds in random_sample_bounds.items():
+                    # Check against original parameter names (before conversion)
+                    if param_name in param_dict:
+                        value = param_dict[param_name]
+                        if value < bounds[0] or value > bounds[1]:
+                            valid = False
+                            break
+                if not valid:
+                    continue  # Skip this combination
+            
+            # Convert units (after bounds check)
+            if 'diameter_mm' in param_dict:
+                param_dict['diameter_m'] = param_dict.pop('diameter_mm') / 1000.0
+            if 'pressure_bar' in param_dict:
+                param_dict['pressure_Pa'] = param_dict.pop('pressure_bar') * 1e5
+            
             param_dicts.append(param_dict)
         
         # Sample if requested
@@ -159,8 +203,9 @@ class TrainingDataGenerator:
         for point in heat_flux_data['heat_flux_profile']['data_points']:
             point['heat_flux'] = heat_flux_value
         
-        # Save temporary heat flux file
-        temp_heat_flux_file = f'temp_heat_flux_{int(time.time())}.json'
+        # Save temporary heat flux file in dedicated temp directory
+        timestamp = int(time.time())
+        temp_heat_flux_file = str(self.temp_dir / f'heat_flux_{timestamp}.json')
         with open(temp_heat_flux_file, 'w') as f:
             json.dump(heat_flux_data, f, indent=2)
         
@@ -191,6 +236,17 @@ class TrainingDataGenerator:
                   f"L={params['length_m']:.1f}m, D={params['diameter_m']*1000:.1f}mm, "
                   f"m={params['mass_flow_rate_kgps']:.4f}kg/s, q={params['heat_flux_Wm2']:.0f}W/m²")
             
+            # Validate parameters before running simulation
+            if params['pressure_Pa'] <= 0:
+                print(f"  [SKIP] Invalid pressure: {params['pressure_Pa']} Pa")
+                return None
+            if params['temperature_K'] <= 0:
+                print(f"  [SKIP] Invalid temperature: {params['temperature_K']} K")
+                return None
+            if params['mass_flow_rate_kgps'] <= 0:
+                print(f"  [SKIP] Invalid mass flow rate: {params['mass_flow_rate_kgps']} kg/s")
+                return None
+            
             # Create configuration
             config = self.create_config_from_params(reactant_key, params)
             reactant_info = self.database['reactants'][reactant_key]
@@ -216,16 +272,35 @@ class TrainingDataGenerator:
             
             # Clean up temporary heat flux file
             temp_file = config['mechanism']['heat_flux_file']
-            if os.path.exists(temp_file) and temp_file.startswith('temp_heat_flux_'):
-                os.remove(temp_file)
+            if os.path.exists(temp_file):
+                # Check if it's a temp file (in temp/ directory or has temp_ prefix)
+                if 'temp' in os.path.dirname(temp_file) or 'heat_flux_' in os.path.basename(temp_file):
+                    try:
+                        os.remove(temp_file)
+                    except:
+                        pass  # Ignore cleanup errors
             
             print(f"  [OK] Simulation completed: {len(training_data)} data points")
             return training_data
             
         except Exception as e:
-            print(f"  [ERROR] Simulation failed: {str(e)}")
-            import traceback
-            traceback.print_exc()
+            error_type = type(e).__name__
+            error_msg = str(e)
+            
+            # Handle specific Cantera errors gracefully
+            if 'CanteraError' in error_type or 'Cantera' in error_msg:
+                if 'density must be positive' in error_msg:
+                    print(f"  [SKIP] Physical constraint violation: negative density")
+                    print(f"         This usually indicates unrealistic parameter combination")
+                    print(f"         (e.g., too high heat flux, pressure drop, or flow rate)")
+                elif 'convergence' in error_msg.lower() or 'solver' in error_msg.lower():
+                    print(f"  [SKIP] Solver convergence failure")
+                else:
+                    print(f"  [SKIP] Cantera error: {error_msg[:150]}")
+            else:
+                # For other errors, show more detail but don't print full traceback
+                print(f"  [SKIP] Simulation error ({error_type}): {error_msg[:150]}")
+            
             return None
     
     def _collect_training_data(self, gas, states, config, reactant_info, params, T_0, p_0, u_0, hf):
@@ -276,7 +351,7 @@ class TrainingDataGenerator:
         return pd.DataFrame(data)
     
     def generate_dataset(self, reactants=None, max_combinations_per_reactant=100, 
-                        random_sample=True, save_interval=10):
+                        random_sample=True, save_interval=10, random_sample_bounds=None):
         """
         Generate complete training dataset.
         
@@ -302,7 +377,8 @@ class TrainingDataGenerator:
         # Generate parameter combinations
         param_combinations = self.generate_parameter_combinations(
             max_combinations=max_combinations_per_reactant,
-            random_sample=random_sample
+            random_sample=random_sample,
+            random_sample_bounds=random_sample_bounds
         )
         
         print(f"\nGenerating training data for {len(reactants)} reactants")
@@ -311,6 +387,7 @@ class TrainingDataGenerator:
         
         all_data = []
         sim_id = 0
+        failed_simulations = 0
         start_time = time.time()
         
         for reactant_key in reactants:
@@ -324,6 +401,8 @@ class TrainingDataGenerator:
                 
                 if training_data is not None:
                     all_data.append(training_data)
+                else:
+                    failed_simulations += 1
                 
                 # Save periodically
                 if sim_id % save_interval == 0:
@@ -336,11 +415,14 @@ class TrainingDataGenerator:
                 
                 # Progress update
                 elapsed = time.time() - start_time
-                avg_time = elapsed / sim_id
-                remaining = (len(reactants) * len(param_combinations) - sim_id) * avg_time
-                print(f"  Progress: {sim_id}/{len(reactants) * len(param_combinations)} "
-                      f"({100*sim_id/(len(reactants)*len(param_combinations)):.1f}%) | "
-                      f"ETA: {remaining/60:.1f} min")
+                if sim_id > 0:
+                    avg_time = elapsed / sim_id
+                    remaining = (len(reactants) * len(param_combinations) - sim_id) * avg_time
+                    success_rate = 100 * (sim_id - failed_simulations) / sim_id if sim_id > 0 else 0
+                    print(f"  Progress: {sim_id}/{len(reactants) * len(param_combinations)} "
+                          f"({100*sim_id/(len(reactants)*len(param_combinations)):.1f}%) | "
+                          f"Success: {success_rate:.1f}% | "
+                          f"ETA: {remaining/60:.1f} min")
         
         # Combine all data
         if all_data:
@@ -354,9 +436,13 @@ class TrainingDataGenerator:
             complete_dataset.to_csv(filename, index=False)
             
             print(f"[OK] Complete dataset saved: {filename}")
-            print(f"  Total rows: {len(complete_dataset)}")
+            print(f"  Total rows: {len(complete_dataset):,}")
             print(f"  Total columns: {len(complete_dataset.columns)}")
             print(f"  File size: {os.path.getsize(filename) / 1e6:.2f} MB")
+            if failed_simulations > 0:
+                print(f"  Successful simulations: {sim_id - failed_simulations}/{sim_id}")
+                print(f"  Failed simulations: {failed_simulations} ({100*failed_simulations/sim_id:.1f}%)")
+                print(f"  Note: Some parameter combinations may be physically unrealistic")
             
             # Save metadata
             metadata = {
@@ -367,7 +453,10 @@ class TrainingDataGenerator:
                 'parameter_ranges': {k: [float(v.min()), float(v.max())] 
                                     for k, v in self.param_ranges.items()},
                 'n_combinations_per_reactant': len(param_combinations),
-                'total_simulations': sim_id
+                'total_simulations': sim_id,
+                'successful_simulations': sim_id - failed_simulations,
+                'failed_simulations': failed_simulations,
+                'success_rate': 100 * (sim_id - failed_simulations) / sim_id if sim_id > 0 else 0
             }
             
             metadata_file = self.output_dir / f'metadata_{timestamp}.json'
@@ -403,6 +492,7 @@ def main():
     output_dir = config.get('output_dir', 'data/training')
     save_interval = config.get('save_interval', 10)
     random_sample = config.get('random_sample', True)
+    random_sample_bounds = config.get('random_sample_bounds', None)
     
     # Create generator
     generator = TrainingDataGenerator(output_dir=output_dir)
@@ -421,7 +511,8 @@ def main():
         reactants=reactants,
         max_combinations_per_reactant=max_combinations,
         random_sample=random_sample,
-        save_interval=save_interval
+        save_interval=save_interval,
+        random_sample_bounds=random_sample_bounds
     )
     
     if dataset is not None:

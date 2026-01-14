@@ -122,6 +122,10 @@ metadata_*.json
 *.temp
 .DS_Store
 Thumbs.db
+temp/
+temp_*.json
+temp_*.yaml
+temp_*.csv
 
 # Scientific computing (but allow committed model files if needed)
 *.hdf5

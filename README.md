@@ -5,6 +5,8 @@
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Status](https://img.shields.io/badge/status-work%20in%20progress-yellow.svg)](https://github.com/karefyllidis/HydrAI)
 
+**HydrAI** = **Hydr**ocarbon + **AI** (Machine Learning)
+
 *A comprehensive simulation framework for modeling steam cracking reactions in plug flow reactors using Cantera*
 
 ---

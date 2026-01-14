@@ -11,10 +11,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Import order** - Fixed namespace conflict by importing `cantera` before adding `src` to `sys.path` in Jupyter notebooks
 - **Species access** - Fixed `IndexError` when accessing species from `SolutionArray` using correct 2D indexing (`states1.Y[:, species_idx]`)
 - **Species name format** - Added handling for species names with `:1` suffix from database vs mechanism files
+- **Temporary files organization** - Moved temporary heat flux files from project root to dedicated `temp/` directory
 
 ### Added
 - **Combined visualization** - New plot showing reactant consumption and product formation together in single graph
 - **Enhanced notebook** - Improved inline visualizations with better error handling and fallback mechanisms
+- **Temporary directory** - Created `temp/` directory for temporary files generated during data generation (automatically cleaned up)
+- **Warning suppression** - Suppressed all `[WARNING]` messages from Cantera's SUNDIALS solver to reduce output noise during data generation
+- **Random sampling bounds** - Added `random_sample_bounds` configuration option to constrain random sampling to specific parameter ranges
+- **Concise configuration** - Simplified config files by moving detailed documentation to `docs/ML_CONFIG_GUIDE.md`
 
 ## [3.0.0] - 2025-01-14
 

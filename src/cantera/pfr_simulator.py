@@ -50,8 +50,41 @@ import time
 import pandas as pd
 import json
 import argparse
+import warnings
+import sys
 from typing import Tuple, List, Dict, Any, Optional
 from datetime import datetime
+
+# Suppress all Cantera/SUNDIALS solver warnings and messages
+# These are common and don't affect simulation results
+warnings.filterwarnings('ignore', category=UserWarning)
+warnings.filterwarnings('ignore', category=RuntimeWarning)
+warnings.filterwarnings('ignore', message='.*rank.*')
+warnings.filterwarnings('ignore', message='.*CVode.*')
+warnings.filterwarnings('ignore', message='.*SUNDIALS.*')
+warnings.filterwarnings('ignore', message='.*WARNING.*')
+
+# Suppress SUNDIALS rank messages (MPI process rank, always 0 for single-threaded)
+# These messages like "[rank 0]" come from the underlying CVode solver
+# They're informational and can clutter output during batch data generation
+class SuppressRankMessages:
+    """Context manager to suppress SUNDIALS rank messages from stderr."""
+    def __init__(self):
+        self.original_stderr = sys.stderr
+        
+    def __enter__(self):
+        sys.stderr = self
+        
+    def __exit__(self, *args):
+        sys.stderr = self.original_stderr
+        
+    def write(self, message):
+        # Filter out rank messages
+        if '[rank' not in message.lower() and 'cvode' not in message.lower():
+            self.original_stderr.write(message)
+        
+    def flush(self):
+        self.original_stderr.flush()
 
 # Import plot style utilities
 from src.utils.plot_style import (
@@ -440,7 +473,9 @@ def run_simulation(gas, config, reactant_info, hf, T_0, p_0, length, diameter, a
         downstream.syncState()
         
         sim1.reinitialize()
-        sim1.advance_to_steady_state()
+        # Suppress SUNDIALS rank messages during solver advance
+        with SuppressRankMessages():
+            sim1.advance_to_steady_state()
         
         states1.append(r1.thermo.state, z=dist, velocity=u)
     

@@ -61,6 +61,9 @@ HydrAI/
 │   ├── figure_aesthetics.json   # Centralized styling config
 │   └── README.md                 # Aesthetics documentation
 │
+├── temp/                         # Temporary files (auto-generated, git-ignored)
+│   └── .gitkeep                  # Preserves directory structure
+│
 ├── run_pfr.ipynb                 # Main entry point - PFR simulations (Jupyter notebook)
 ├── generate_training_data.ipynb  # ML training data generation (Jupyter notebook)
 ├── train_ml_models.ipynb         # ML model training (Jupyter notebook - coming soon)
