@@ -139,5 +139,5 @@ Thumbs.db
 *.bak
 *.backup
 
-# Mechanisms
+# YAML files (mechanisms and all other YAML files)
 *.yaml
