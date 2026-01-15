@@ -2,10 +2,11 @@
     "_comment": "Configuration for ML training data generation. See docs/ML_CONFIG_GUIDE.md for detailed documentation.",
     
     "reactants": ["n-hexane"],
-    "max_combinations_per_reactant": 10,
+    "max_combinations_per_reactant": 1000,
     "output_dir": "data/training",
     "save_interval": 10,
     "random_sample": true,
+    "n_jobs": -1,
 
     "random_sample_bounds": {
         "_comment": "Optional bounds for random sampling (random_sample=true).",

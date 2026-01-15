@@ -22,6 +22,7 @@
 | **Visualizations** | 18+ customizable plots with centralized aesthetics configuration |
 | **Export Controls** | Optional CSV and plot generation with flexible workflow options |
 | **ML Surrogate Models** | Machine learning models for 100-1000x faster predictions |
+| **Parallel Processing** | Multiprocessing support for fast training data generation (use all CPU cores) |
 | **Centralized Styling** | Consistent figure aesthetics via JSON configuration |
 | **JSON Configuration** | All ML workflows use JSON config files for reproducibility |
 | **Extensible Design** | Easy addition of new reactants and mechanisms |
@@ -667,6 +668,7 @@ See `styles/README.md` for detailed documentation.
 ### Recent Updates (v3.0.0)
 - **Project restructuring** - Organized into `src/`, `configs/`, `data/`, `models/`, `outputs/` directories
 - **ML Surrogate Models** - Complete ML framework for fast predictions (100-1000x speedup)
+- **Parallel processing** - Multiprocessing support for training data generation (use all CPU cores for faster generation)
 - **JSON configuration** - All ML workflows use JSON config files instead of command-line arguments
 - **Centralized figure aesthetics** - Consistent styling via `styles/figure_aesthetics.json`
 - **Improved code organization** - Modular package structure following Python best practices

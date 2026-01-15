@@ -44,6 +44,13 @@ python src/ml/data_generation.py configs/ml_data_generation_config.json
 
 - **`save_interval`** (integer): Save progress every N simulations. Prevents data loss if generation is interrupted. Set to `1` to save after every simulation (slower but safer). Recommended: 10-50 for long runs.
 
+- **`n_jobs`** (integer): Number of parallel workers for data generation. 
+  - `1`: Sequential execution (default, safer for debugging)
+  - `2-8`: Use specific number of CPU cores
+  - `-1`: Use all available CPU cores (recommended for large datasets)
+  
+  **Note**: Parallel execution significantly speeds up data generation but uses more memory. Each worker runs a separate Cantera simulation, so ensure you have enough RAM. Recommended: Use `-1` for production runs, `1` for testing.
+
 - **`random_sample`** (boolean): 
   - `true`: Randomly sample from parameter space (recommended for large parameter spaces)
   - `false`: Use full grid search (exhaustive - can be very large). 

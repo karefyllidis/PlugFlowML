@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Warning suppression** - Suppressed all `[WARNING]` messages from Cantera's SUNDIALS solver to reduce output noise during data generation
 - **Random sampling bounds** - Added `random_sample_bounds` configuration option to constrain random sampling to specific parameter ranges
 - **Concise configuration** - Simplified config files by moving detailed documentation to `docs/ML_CONFIG_GUIDE.md`
+- **Parallel processing** - Added multiprocessing support for training data generation with `n_jobs` parameter (1=sequential, -1=all CPUs, N=specific number of cores)
 
 ## [3.0.0] - 2025-01-14
 

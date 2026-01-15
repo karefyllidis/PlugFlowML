@@ -21,6 +21,8 @@ import time
 from pathlib import Path
 import warnings
 import logging
+from multiprocessing import Pool, cpu_count, Manager
+from functools import partial
 
 # IMPORTANT: Import cantera BEFORE adding src to sys.path
 # This prevents namespace conflict: without this, Python would find src/cantera/ 
@@ -280,7 +282,7 @@ class TrainingDataGenerator:
                     except:
                         pass  # Ignore cleanup errors
             
-            print(f"  [OK] Simulation completed: {len(training_data)} data points")
+            print(f"  [OK] Simulation {sim_id} completed: {len(training_data)} data points")
             return training_data
             
         except Exception as e:
@@ -351,7 +353,8 @@ class TrainingDataGenerator:
         return pd.DataFrame(data)
     
     def generate_dataset(self, reactants=None, max_combinations_per_reactant=100, 
-                        random_sample=True, save_interval=10, random_sample_bounds=None):
+                        random_sample=True, save_interval=10, random_sample_bounds=None,
+                        n_jobs=1):
         """
         Generate complete training dataset.
         
@@ -365,6 +368,10 @@ class TrainingDataGenerator:
             Randomly sample parameter combinations
         save_interval : int
             Save data every N simulations
+        random_sample_bounds : dict, optional
+            Bounds for random sampling
+        n_jobs : int
+            Number of parallel jobs. Use -1 for all available CPUs, 1 for sequential
         
         Returns:
         --------
@@ -381,48 +388,124 @@ class TrainingDataGenerator:
             random_sample_bounds=random_sample_bounds
         )
         
+        # Determine number of workers
+        if n_jobs == -1:
+            n_jobs = cpu_count()
+        elif n_jobs < 1:
+            n_jobs = 1
+        
+        total_simulations = len(reactants) * len(param_combinations)
         print(f"\nGenerating training data for {len(reactants)} reactants")
         print(f"  {len(param_combinations)} parameter combinations per reactant")
-        print(f"  Total simulations: {len(reactants) * len(param_combinations)}")
+        print(f"  Total simulations: {total_simulations}")
+        print(f"  Parallel jobs: {n_jobs} {'(sequential)' if n_jobs == 1 else f'(using {n_jobs} CPUs)'}")
         
         all_data = []
-        sim_id = 0
-        failed_simulations = 0
         start_time = time.time()
         
+        # Prepare all simulation tasks
+        all_tasks = []
+        sim_id = 0
         for reactant_key in reactants:
-            print(f"\n{'='*60}")
-            print(f"Processing reactant: {reactant_key}")
-            print(f"{'='*60}")
-            
             for params in param_combinations:
                 sim_id += 1
-                training_data = self.run_single_simulation(reactant_key, params, sim_id)
+                all_tasks.append((reactant_key, params, sim_id))
+        
+        # Run simulations (parallel or sequential)
+        if n_jobs > 1:
+            # Parallel execution
+            print(f"\n{'='*60}")
+            print(f"Running {total_simulations} simulations in parallel ({n_jobs} workers)...")
+            print(f"{'='*60}")
+            
+            # Create a wrapper function that can be pickled
+            # We need to pass instance data as arguments since methods can't be pickled directly
+            def run_simulation_wrapper(args):
+                """Wrapper for parallel execution."""
+                reactant_key, params, sim_id, output_dir, temp_dir = args
+                try:
+                    return _run_single_simulation_parallel_standalone(
+                        reactant_key, params, sim_id, output_dir, temp_dir
+                    )
+                except Exception as e:
+                    return None  # Fail silently in parallel mode
+            
+            # Prepare tasks with necessary data for parallel execution
+            parallel_tasks = [
+                (reactant_key, params, sim_id, str(self.output_dir), str(self.temp_dir))
+                for reactant_key, params, sim_id in all_tasks
+            ]
+            
+            # Use multiprocessing Pool
+            with Pool(processes=n_jobs) as pool:
+                completed = 0
+                failed_simulations = 0
                 
-                if training_data is not None:
-                    all_data.append(training_data)
-                else:
-                    failed_simulations += 1
+                # Process results as they complete
+                for result in pool.imap(run_simulation_wrapper, parallel_tasks):
+                    completed += 1
+                    if result is not None:
+                        all_data.append(result)
+                    else:
+                        failed_simulations += 1
+                    
+                    # Save periodically
+                    if completed % save_interval == 0:
+                        if all_data:
+                            combined_data = pd.concat(all_data, ignore_index=True)
+                            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                            filename = self.output_dir / f'training_data_partial_{timestamp}.csv'
+                            combined_data.to_csv(filename, index=False)
+                            print(f"\n  [SAVED] Partial data saved: {filename} ({len(combined_data)} rows)")
+                    
+                    # Progress update
+                    elapsed = time.time() - start_time
+                    if completed > 0:
+                        avg_time = elapsed / completed
+                        remaining = (total_simulations - completed) * avg_time
+                        success_rate = 100 * (completed - failed_simulations) / completed if completed > 0 else 0
+                        print(f"  Progress: {completed}/{total_simulations} "
+                              f"({100*completed/total_simulations:.1f}%) | "
+                              f"Success: {success_rate:.1f}% | "
+                              f"ETA: {remaining/60:.1f} min")
+        else:
+            # Sequential execution (original code)
+            sim_id = 0
+            failed_simulations = 0
+            
+            for reactant_key in reactants:
+                print(f"\n{'='*60}")
+                print(f"Processing reactant: {reactant_key}")
+                print(f"{'='*60}")
                 
-                # Save periodically
-                if sim_id % save_interval == 0:
-                    if all_data:
-                        combined_data = pd.concat(all_data, ignore_index=True)
-                        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-                        filename = self.output_dir / f'training_data_partial_{timestamp}.csv'
-                        combined_data.to_csv(filename, index=False)
-                        print(f"\n  [SAVED] Partial data saved: {filename} ({len(combined_data)} rows)")
-                
-                # Progress update
-                elapsed = time.time() - start_time
-                if sim_id > 0:
-                    avg_time = elapsed / sim_id
-                    remaining = (len(reactants) * len(param_combinations) - sim_id) * avg_time
-                    success_rate = 100 * (sim_id - failed_simulations) / sim_id if sim_id > 0 else 0
-                    print(f"  Progress: {sim_id}/{len(reactants) * len(param_combinations)} "
-                          f"({100*sim_id/(len(reactants)*len(param_combinations)):.1f}%) | "
-                          f"Success: {success_rate:.1f}% | "
-                          f"ETA: {remaining/60:.1f} min")
+                for params in param_combinations:
+                    sim_id += 1
+                    training_data = self.run_single_simulation(reactant_key, params, sim_id)
+                    
+                    if training_data is not None:
+                        all_data.append(training_data)
+                    else:
+                        failed_simulations += 1
+                    
+                    # Save periodically
+                    if sim_id % save_interval == 0:
+                        if all_data:
+                            combined_data = pd.concat(all_data, ignore_index=True)
+                            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                            filename = self.output_dir / f'training_data_partial_{timestamp}.csv'
+                            combined_data.to_csv(filename, index=False)
+                            print(f"\n  [SAVED] Partial data saved: {filename} ({len(combined_data)} rows)")
+                    
+                    # Progress update
+                    elapsed = time.time() - start_time
+                    if sim_id > 0:
+                        avg_time = elapsed / sim_id
+                        remaining = (total_simulations - sim_id) * avg_time
+                        success_rate = 100 * (sim_id - failed_simulations) / sim_id if sim_id > 0 else 0
+                        print(f"  Progress: {sim_id}/{total_simulations} "
+                              f"({100*sim_id/total_simulations:.1f}%) | "
+                              f"Success: {success_rate:.1f}% | "
+                              f"ETA: {remaining/60:.1f} min")
         
         # Combine all data
         if all_data:
@@ -439,9 +522,13 @@ class TrainingDataGenerator:
             print(f"  Total rows: {len(complete_dataset):,}")
             print(f"  Total columns: {len(complete_dataset.columns)}")
             print(f"  File size: {os.path.getsize(filename) / 1e6:.2f} MB")
+            
+            # Calculate failed simulations
+            failed_simulations = total_simulations - len(all_data)
+            
             if failed_simulations > 0:
-                print(f"  Successful simulations: {sim_id - failed_simulations}/{sim_id}")
-                print(f"  Failed simulations: {failed_simulations} ({100*failed_simulations/sim_id:.1f}%)")
+                print(f"  Successful simulations: {len(all_data)}/{total_simulations}")
+                print(f"  Failed simulations: {failed_simulations} ({100*failed_simulations/total_simulations:.1f}%)")
                 print(f"  Note: Some parameter combinations may be physically unrealistic")
             
             # Save metadata
@@ -453,10 +540,11 @@ class TrainingDataGenerator:
                 'parameter_ranges': {k: [float(v.min()), float(v.max())] 
                                     for k, v in self.param_ranges.items()},
                 'n_combinations_per_reactant': len(param_combinations),
-                'total_simulations': sim_id,
-                'successful_simulations': sim_id - failed_simulations,
+                'total_simulations': total_simulations,
+                'successful_simulations': len(all_data),
                 'failed_simulations': failed_simulations,
-                'success_rate': 100 * (sim_id - failed_simulations) / sim_id if sim_id > 0 else 0
+                'success_rate': 100 * len(all_data) / total_simulations if total_simulations > 0 else 0,
+                'n_jobs': n_jobs
             }
             
             metadata_file = self.output_dir / f'metadata_{timestamp}.json'
@@ -469,6 +557,58 @@ class TrainingDataGenerator:
         else:
             print("[ERROR] No data collected!")
             return None
+
+
+def _run_single_simulation_parallel_standalone(reactant_key, params, sim_id, output_dir, temp_dir):
+    """
+    Standalone function for parallel execution (not a method, so it can be pickled).
+    This function is called by each worker process.
+    """
+    try:
+        # Load database in each process (needed for multiprocessing)
+        database = load_reactant_database()
+        
+        # Create a temporary generator instance for this process
+        temp_gen = TrainingDataGenerator(output_dir=output_dir)
+        temp_gen.temp_dir = Path(temp_dir)
+        
+        # Create configuration
+        config = temp_gen.create_config_from_params(reactant_key, params)
+        reactant_info = database['reactants'][reactant_key]
+        
+        # Setup mechanism
+        gas = setup_mechanism(config)
+        
+        # Setup initial conditions
+        T_0, p_0, composition_0, length, diameter, area, roughness, mass_flow_rate, u_0 = \
+            setup_initial_conditions(gas, config)
+        
+        # Setup heat flux
+        hf, z_profile, heatflux_profile = setup_heat_flux(config)
+        
+        # Run simulation
+        states = run_simulation(gas, config, reactant_info, hf, T_0, p_0, 
+                               length, diameter, area, roughness, mass_flow_rate, u_0)
+        
+        # Collect data
+        training_data = temp_gen._collect_training_data(
+            gas, states, config, reactant_info, params, T_0, p_0, u_0, hf
+        )
+        
+        # Clean up temporary heat flux file
+        temp_file = config['mechanism']['heat_flux_file']
+        if os.path.exists(temp_file):
+            if 'temp' in os.path.dirname(temp_file) or 'heat_flux_' in os.path.basename(temp_file):
+                try:
+                    os.remove(temp_file)
+                except:
+                    pass  # Ignore cleanup errors
+        
+        return training_data
+            
+    except Exception as e:
+        # Fail silently in parallel mode to avoid cluttering output
+        return None
 
 
 def main():
@@ -493,6 +633,7 @@ def main():
     save_interval = config.get('save_interval', 10)
     random_sample = config.get('random_sample', True)
     random_sample_bounds = config.get('random_sample_bounds', None)
+    n_jobs = config.get('n_jobs', 1)  # Default to sequential
     
     # Create generator
     generator = TrainingDataGenerator(output_dir=output_dir)
@@ -512,7 +653,8 @@ def main():
         max_combinations_per_reactant=max_combinations,
         random_sample=random_sample,
         save_interval=save_interval,
-        random_sample_bounds=random_sample_bounds
+        random_sample_bounds=random_sample_bounds,
+        n_jobs=n_jobs
     )
     
     if dataset is not None:

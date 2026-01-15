@@ -22,6 +22,7 @@ The ML Surrogate Models module successfully implements machine learning models t
 - Efficient generation (disables plots/CSV during collection)
 - Periodic saves to prevent data loss
 - Random sampling for large parameter spaces
+- **Parallel processing** - Multiprocessing support for faster data generation (use `n_jobs` to control number of CPU cores)
 
 **Output**: CSV files with features and targets for ML training
 

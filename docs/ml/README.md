@@ -105,6 +105,7 @@ The `generate_training_data.py` script:
    - Disables plots and CSV exports during generation
    - Saves partial data periodically
    - Supports random sampling for large parameter spaces
+   - **Parallel processing** - Use multiple CPU cores simultaneously (configure via `n_jobs` parameter)
 
 ### ML Model Training
 
