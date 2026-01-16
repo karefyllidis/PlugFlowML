@@ -438,8 +438,9 @@ HydrAI/
 │   ├── run_simulation.sh
 │   └── show_structure.sh
 ├── run_pfr.ipynb                  # Main entry point - PFR simulations (Jupyter notebook)
-├── generate_training_data.ipynb   # ML training data generation (Jupyter notebook)
-├── train_ml_models.ipynb          # ML model training (Jupyter notebook - coming soon)
+├── generate_training_data.ipynb              # ML training data generation (Jupyter notebook)
+├── data_exploration_feature_engineering.ipynb # Data exploration and feature engineering (Jupyter notebook)
+├── train_ml_models.ipynb                     # ML model training (Jupyter notebook - coming soon)
 ├── requirements.txt
 ├── README.md                       # This file
 ├── LICENSE
@@ -450,6 +451,7 @@ HydrAI/
 ### Key Files
 - **`run_pfr.ipynb`**: Main interactive entry point for PFR simulations (Jupyter notebook)
 - **`generate_training_data.ipynb`**: Interactive ML training data generation (Jupyter notebook)
+- **`data_exploration_feature_engineering.ipynb`**: Data exploration and feature engineering (Jupyter notebook)
 - **`train_ml_models.ipynb`**: Interactive ML model training (Jupyter notebook - coming soon)
 - **`scripts/run_simulation.sh`**: Convenience script for command-line execution
 - **`scripts/show_structure.sh`**: Displays the clean project structure excluding generated files

@@ -40,9 +40,9 @@ python src/ml/data_generation.py configs/ml_data_generation_config.json
 
 - **`max_combinations_per_reactant`** (integer): Maximum number of parameter combinations to simulate per reactant. Total simulations = `reactants.length × max_combinations_per_reactant`. Higher values = more training data but longer generation time. Recommended: 50-200 for initial testing, 500-1000+ for production datasets.
 
-- **`output_dir`** (string): Directory where training data CSV files will be saved. Files are automatically named with timestamps: `training_data_complete_YYYYMMDD_HHMMSS.csv`. Partial saves (during generation) use: `training_data_partial_YYYYMMDD_HHMMSS.csv`.
+- **`output_dir`** (string): Directory where training data files will be saved. Final dataset is saved as both pickle (`.pkl`) and CSV (`.csv`) formats with timestamps: `training_data_complete_YYYYMMDD_HHMMSS.pkl` and `training_data_complete_YYYYMMDD_HHMMSS.csv`. Partial saves during generation use pickle format: `training_data_partial_YYYYMMDD_HHMMSS.pkl`. Partial files are automatically cleaned up after successful completion.
 
-- **`save_interval`** (integer): Save progress every N simulations. Prevents data loss if generation is interrupted. Set to `1` to save after every simulation (slower but safer). Recommended: 10-50 for long runs.
+- **`save_interval`** (integer): Save progress every N simulations. Prevents data loss if generation is interrupted. Partial saves are stored as pickle files for efficiency. Set to `1` to save after every simulation (slower but safer). Recommended: 10-50 for long runs. Partial files are automatically deleted after successful completion to save disk space.
 
 - **`n_jobs`** (integer): Number of parallel workers for data generation. 
   - `1`: Sequential execution (default, safer for debugging)

@@ -16,37 +16,48 @@ pip install tensorflow xgboost
 Generate training data from Cantera simulations:
 
 ```bash
-# Quick start: 50 combinations per reactant (faster)
-python src/ml/data_generation.py \
-    --reactants ethane \
-    --max-combinations 50 \
-    --output-dir data/training
+# Using JSON config file (recommended)
+python src/ml/data_generation.py configs/ml_data_generation_config.json
+```
 
-# Full dataset: 100+ combinations per reactant (better accuracy)
-python src/ml/data_generation.py \
-    --reactants ethane propane \
-    --max-combinations 100 \
-    --output-dir data/training
+Or use the Jupyter notebook:
+```bash
+jupyter notebook generate_training_data.ipynb
 ```
 
 **What this does:**
 - Runs multiple Cantera simulations with varied parameters
 - Collects input features and output targets
-- Saves to CSV files in `data/training/`
+- Saves partial data periodically as pickle files (faster I/O)
+- Automatically cleans up partial files after completion
+- Shows real-time progress with success rate and ETA
 
 **Expected output:**
-- `training_data_complete_YYYYMMDD_HHMMSS.csv` - Complete dataset
+- `training_data_complete_YYYYMMDD_HHMMSS.pkl` - Complete dataset (pickle format, faster loading)
+- `training_data_complete_YYYYMMDD_HHMMSS.csv` - Complete dataset (CSV format, for compatibility)
 - `metadata_YYYYMMDD_HHMMSS.json` - Generation metadata
 
-## Step 2: Train ML Models (2-10 minutes)
+## Step 2: Explore and Engineer Features (Optional)
+
+Explore the generated data and perform feature engineering:
+
+```bash
+jupyter notebook data_exploration_feature_engineering.ipynb
+```
+
+This notebook is for:
+- Data exploration and visualization
+- Feature engineering
+- Data quality checks
+- Statistical analysis
+
+## Step 3: Train ML Models (2-10 minutes)
 
 Train ML models on the generated data:
 
 ```bash
 # Train all models on primary targets
 python src/ml/model_training.py configs/ml_training_config.json
-    --target-types primary \
-    --models all \
 ```
 
 **What this does:**
@@ -60,23 +71,13 @@ python src/ml/model_training.py configs/ml_training_config.json
 - `random_forest_primary.pkl` - Random forest model
 - `training_summary.json` - Training metrics
 
-## Step 3: Use ML Models (Instant!)
+## Step 4: Use ML Models (Instant!)
 
 Use trained models for fast predictions:
 
 ```bash
-# Predict reactor profile
-python src/ml/inference.py \
-    --model-type neural_network \
-    --target-type primary \
-    --temperature 925.0 \
-    --pressure 2.0 \
-    --length 5.0 \
-    --diameter 30.0 \
-    --mass-flow 0.07 \
-    --heat-flux 150000.0 \
-    --n-points 200 \
-    --output outputs/predictions.csv
+# Predict reactor profile using JSON config
+python src/ml/inference.py configs/ml_inference_config.json
 ```
 
 **What this does:**
@@ -138,20 +139,21 @@ python src/ml/example_usage.py
 **Solution**: Train models first (Step 2)
 
 ### "Out of memory" during training
-**Solution**: Reduce `--max-combinations` in Step 1
+**Solution**: Reduce `max_combinations_per_reactant` in config file
 
 ### Poor prediction accuracy
 **Solutions**:
-- Increase training data size (`--max-combinations`)
-- Try different model types (`--models`)
-- Check training data quality
+- Increase training data size (`max_combinations_per_reactant` in config)
+- Try different model types (edit config file)
+- Check training data quality (use data exploration notebook)
 
 ## Next Steps
 
-1. **Expand training data**: More combinations = better accuracy
-2. **Train multiple target types**: `--target-types primary secondary`
-3. **Compare models**: Try different `--model-type` options
-4. **Validate predictions**: Compare ML predictions with Cantera
+1. **Expand training data**: More combinations = better accuracy (edit config file)
+2. **Train multiple target types**: Edit config to include `secondary` targets
+3. **Compare models**: Try different model types in config
+4. **Explore data**: Use the data exploration notebook to understand your dataset
+5. **Validate predictions**: Compare ML predictions with Cantera
 
 ## Performance Tips
 
@@ -163,23 +165,19 @@ python src/ml/example_usage.py
 ## Full Workflow
 
 ```bash
-# 1. Generate data (start with small dataset for testing)
-python src/ml/data_generation.py \
-    --reactants ethane \
-    --max-combinations 50
+# 1. Generate data (edit configs/ml_data_generation_config.json first)
+python src/ml/data_generation.py configs/ml_data_generation_config.json
 
-# 2. Train models
-python src/ml/model_training.py \
-    --data data/training/training_data_complete_*.csv \
-    --models all
+# 2. (Optional) Explore data
+jupyter notebook data_exploration_feature_engineering.ipynb
 
-# 3. Test predictions
-python src/ml/inference.py \
-    --model-type neural_network \
-    --temperature 925.0 \
-    --pressure 2.0
+# 3. Train models
+python src/ml/model_training.py configs/ml_training_config.json
 
-# 4. Run examples
+# 4. Test predictions
+python src/ml/inference.py configs/ml_inference_config.json
+
+# 5. Run examples
 python src/ml/example_usage.py
 ```
 

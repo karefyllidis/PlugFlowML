@@ -17,20 +17,21 @@ The ML Surrogate Models module consists of three main components:
 Generate a large training dataset by running parameter sweeps:
 
 ```bash
-# Generate training data (100 combinations per reactant)
-python src/ml/data_generation.py \
-    --reactants ethane propane \
-    --max-combinations 100 \
-    --output-dir data/training
+# Generate training data using JSON config file
+python src/ml/data_generation.py configs/ml_data_generation_config.json
+```
 
-# For faster generation, disable plots (already done by default)
-# The script automatically disables plots and CSV exports for speed
+Or use the Jupyter notebook:
+```bash
+jupyter notebook generate_training_data.ipynb
 ```
 
 **Expected Output:**
-- Training data CSV files in `data/training/`
-- Metadata JSON file with generation parameters
-- Partial saves every N simulations (configurable)
+- Training data files in `data/training/`:
+  - `training_data_complete_YYYYMMDD_HHMMSS.pkl` - Complete dataset (pickle format, faster loading)
+  - `training_data_complete_YYYYMMDD_HHMMSS.csv` - Complete dataset (CSV format, for compatibility)
+  - `metadata_YYYYMMDD_HHMMSS.json` - Generation metadata
+- Partial saves during generation: `training_data_partial_*.pkl` (automatically cleaned up after completion)
 
 ### Step 2: Train ML Models
 
@@ -38,18 +39,7 @@ Train multiple ML models on the generated data:
 
 ```bash
 # Train all models on primary targets (temperature, pressure, velocity, density)
-python src/ml/model_training.py \
-    --data data/training/training_data_complete_*.csv \
-    --target-types primary \
-    --models all \
-    --output-dir models
-
-# Train specific models
-python src/ml/model_training.py \
-    --data data/training/training_data_complete_*.csv \
-    --target-types primary secondary \
-    --models neural_network random_forest \
-    --output-dir models
+python src/ml/model_training.py configs/ml_training_config.json
 ```
 
 **Available Models:**
@@ -70,17 +60,7 @@ Use trained models instead of Cantera:
 
 ```bash
 # Predict reactor profile using ML model
-python src/ml/inference.py \
-    --model-type neural_network \
-    --target-type primary \
-    --temperature 925.0 \
-    --pressure 2.0 \
-    --length 5.0 \
-    --diameter 30.0 \
-    --mass-flow 0.07 \
-    --heat-flux 150000.0 \
-    --n-points 200 \
-    --output outputs/predictions.csv
+python src/ml/inference.py configs/ml_inference_config.json
 ```
 
 ## Architecture
@@ -103,9 +83,12 @@ The `generate_training_data.py` script:
 
 3. **Efficient Generation**: 
    - Disables plots and CSV exports during generation
-   - Saves partial data periodically
+   - Saves partial data periodically as pickle files (faster I/O)
    - Supports random sampling for large parameter spaces
    - **Parallel processing** - Use multiple CPU cores simultaneously (configure via `n_jobs` parameter)
+   - **Memory efficient** - Clears data from memory after each save to prevent unbounded growth
+   - **Automatic cleanup** - Deletes partial files after successful completion
+   - **Real-time progress** - Shows current progress, success rate, and ETA after each simulation
 
 ### ML Model Training
 
@@ -258,8 +241,9 @@ src/ml/
 └── example_usage.py             # Usage examples
 
 data/training/                  # Generated training data
-├── training_data_complete_*.csv
-└── metadata_*.json
+├── training_data_complete_*.pkl  # Complete dataset (pickle format)
+├── training_data_complete_*.csv  # Complete dataset (CSV format)
+└── metadata_*.json              # Generation metadata
 
 models/                         # Trained models
 ├── neural_network_primary.h5
