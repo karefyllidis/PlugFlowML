@@ -5,6 +5,24 @@ All notable changes to the Generalized PFR Simulation System will be documented 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.2] - 2025-01-16
+
+### Added
+- **Pickle file format** - Partial saves now use pickle format (`.pkl`) for faster I/O during data generation
+- **Automatic cleanup** - Partial files are automatically deleted after successful completion to save disk space
+- **Real-time progress tracking** - Enhanced progress display showing current simulation count, success rate, failed simulations, data points collected, and ETA after each simulation
+- **Memory efficiency** - Data is cleared from memory after each save to prevent unbounded memory growth
+- **Data exploration notebook** - New `data_exploration_feature_engineering.ipynb` notebook for exploring generated training data and performing feature engineering
+
+### Changed
+- **File format** - Final dataset saved as both pickle (`.pkl`) and CSV (`.csv`) formats for compatibility
+- **Progress display** - Progress information now appears after every simulation for early visibility
+- **Documentation** - Updated all ML documentation to reflect new file formats, cleanup behavior, and JSON config usage
+
+### Fixed
+- **Memory growth** - Fixed issue where partial save files contained all previous data, causing unbounded file size growth
+- **Documentation** - Updated usage examples to use JSON config files instead of deprecated command-line arguments
+
 ## [3.0.1] - 2025-01-14
 
 ### Fixed
