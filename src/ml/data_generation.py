@@ -15,6 +15,7 @@ import os
 import json
 import numpy as np
 import pandas as pd
+import pickle
 from itertools import product
 from datetime import datetime
 import time
@@ -401,6 +402,8 @@ class TrainingDataGenerator:
         print(f"  Parallel jobs: {n_jobs} {'(sequential)' if n_jobs == 1 else f'(using {n_jobs} CPUs)'}")
         
         all_data = []
+        saved_files = []  # Track all saved partial files for final combination
+        successful_simulations = 0  # Track successful simulations across all saves
         start_time = time.time()
         
         # Prepare all simulation tasks
@@ -446,28 +449,39 @@ class TrainingDataGenerator:
                     completed += 1
                     if result is not None:
                         all_data.append(result)
+                        successful_simulations += 1
                     else:
                         failed_simulations += 1
+                    
+                    # Progress update - print after every simulation for early visibility
+                    elapsed = time.time() - start_time
+                    if completed > 0:
+                        avg_time = elapsed / completed
+                        remaining = (total_simulations - completed) * avg_time
+                        success_rate = 100 * successful_simulations / completed if completed > 0 else 0
+                        current_rows = sum(len(df) for df in all_data) if all_data else 0
+                        
+                        # Print progress with current analysis (on new line so it's always visible)
+                        print(f"[Progress] {completed}/{total_simulations} "
+                              f"({100*completed/total_simulations:.1f}%) | "
+                              f"✓ Success: {successful_simulations} ({success_rate:.1f}%) | "
+                              f"✗ Failed: {failed_simulations} | "
+                              f"Data points: {current_rows:,} | "
+                              f"ETA: {remaining/60:.1f} min")
                     
                     # Save periodically
                     if completed % save_interval == 0:
                         if all_data:
                             combined_data = pd.concat(all_data, ignore_index=True)
                             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-                            filename = self.output_dir / f'training_data_partial_{timestamp}.csv'
-                            combined_data.to_csv(filename, index=False)
-                            print(f"\n  [SAVED] Partial data saved: {filename} ({len(combined_data)} rows)")
-                    
-                    # Progress update
-                    elapsed = time.time() - start_time
-                    if completed > 0:
-                        avg_time = elapsed / completed
-                        remaining = (total_simulations - completed) * avg_time
-                        success_rate = 100 * (completed - failed_simulations) / completed if completed > 0 else 0
-                        print(f"  Progress: {completed}/{total_simulations} "
-                              f"({100*completed/total_simulations:.1f}%) | "
-                              f"Success: {success_rate:.1f}% | "
-                              f"ETA: {remaining/60:.1f} min")
+                            filename = self.output_dir / f'training_data_partial_{timestamp}.pkl'
+                            # Save as pickle file
+                            with open(filename, 'wb') as f:
+                                pickle.dump(combined_data, f, protocol=pickle.HIGHEST_PROTOCOL)
+                            saved_files.append(filename)
+                            print(f"\n  [SAVED] Partial data saved: {filename} ({len(combined_data):,} rows)")
+                            # Clear all_data to free memory (data is now saved)
+                            all_data = []
         else:
             # Sequential execution (original code)
             sim_id = 0
@@ -484,51 +498,87 @@ class TrainingDataGenerator:
                     
                     if training_data is not None:
                         all_data.append(training_data)
+                        successful_simulations += 1
                     else:
                         failed_simulations += 1
+                    
+                    # Progress update - print after every simulation for early visibility
+                    elapsed = time.time() - start_time
+                    if sim_id > 0:
+                        avg_time = elapsed / sim_id
+                        remaining = (total_simulations - sim_id) * avg_time
+                        success_rate = 100 * successful_simulations / sim_id if sim_id > 0 else 0
+                        current_rows = sum(len(df) for df in all_data) if all_data else 0
+                        
+                        # Print progress with current analysis (on new line so it's always visible)
+                        print(f"[Progress] {sim_id}/{total_simulations} "
+                              f"({100*sim_id/total_simulations:.1f}%) | "
+                              f"✓ Success: {successful_simulations} ({success_rate:.1f}%) | "
+                              f"✗ Failed: {failed_simulations} | "
+                              f"Data points: {current_rows:,} | "
+                              f"ETA: {remaining/60:.1f} min")
                     
                     # Save periodically
                     if sim_id % save_interval == 0:
                         if all_data:
                             combined_data = pd.concat(all_data, ignore_index=True)
                             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-                            filename = self.output_dir / f'training_data_partial_{timestamp}.csv'
-                            combined_data.to_csv(filename, index=False)
-                            print(f"\n  [SAVED] Partial data saved: {filename} ({len(combined_data)} rows)")
-                    
-                    # Progress update
-                    elapsed = time.time() - start_time
-                    if sim_id > 0:
-                        avg_time = elapsed / sim_id
-                        remaining = (total_simulations - sim_id) * avg_time
-                        success_rate = 100 * (sim_id - failed_simulations) / sim_id if sim_id > 0 else 0
-                        print(f"  Progress: {sim_id}/{total_simulations} "
-                              f"({100*sim_id/total_simulations:.1f}%) | "
-                              f"Success: {success_rate:.1f}% | "
-                              f"ETA: {remaining/60:.1f} min")
+                            filename = self.output_dir / f'training_data_partial_{timestamp}.pkl'
+                            # Save as pickle file
+                            with open(filename, 'wb') as f:
+                                pickle.dump(combined_data, f, protocol=pickle.HIGHEST_PROTOCOL)
+                            saved_files.append(filename)
+                            print(f"\n  [SAVED] Partial data saved: {filename} ({len(combined_data):,} rows)")
+                            # Clear all_data to free memory (data is now saved)
+                            all_data = []
         
-        # Combine all data
+        # Combine all data from saved files and any remaining in-memory data
+        print(f"\n{'='*60}")
+        print("Combining all training data from partial files...")
+        
+        # Load all partial files
+        all_datasets = []
+        if saved_files:
+            print(f"  Loading {len(saved_files)} partial files...")
+            for filepath in saved_files:
+                with open(filepath, 'rb') as f:
+                    df = pickle.load(f)
+                    all_datasets.append(df)
+                    print(f"    Loaded {filepath.name}: {len(df):,} rows")
+        
+        # Add any remaining in-memory data
         if all_data:
-            print(f"\n{'='*60}")
-            print("Combining all training data...")
-            complete_dataset = pd.concat(all_data, ignore_index=True)
+            remaining_data = pd.concat(all_data, ignore_index=True)
+            all_datasets.append(remaining_data)
+            print(f"    Added remaining in-memory data: {len(remaining_data):,} rows")
+        
+        if all_datasets:
+            complete_dataset = pd.concat(all_datasets, ignore_index=True)
             
-            # Save final dataset
+            # Save final dataset as pickle
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-            filename = self.output_dir / f'training_data_complete_{timestamp}.csv'
-            complete_dataset.to_csv(filename, index=False)
+            filename_pkl = self.output_dir / f'training_data_complete_{timestamp}.pkl'
+            with open(filename_pkl, 'wb') as f:
+                pickle.dump(complete_dataset, f, protocol=pickle.HIGHEST_PROTOCOL)
             
-            print(f"[OK] Complete dataset saved: {filename}")
+            # Also save as CSV for compatibility (optional, can be removed if not needed)
+            filename_csv = self.output_dir / f'training_data_complete_{timestamp}.csv'
+            complete_dataset.to_csv(filename_csv, index=False)
+            
+            print(f"[OK] Complete dataset saved:")
+            print(f"  Pickle: {filename_pkl}")
+            print(f"  CSV: {filename_csv}")
             print(f"  Total rows: {len(complete_dataset):,}")
             print(f"  Total columns: {len(complete_dataset.columns)}")
-            print(f"  File size: {os.path.getsize(filename) / 1e6:.2f} MB")
+            print(f"  Pickle file size: {os.path.getsize(filename_pkl) / 1e6:.2f} MB")
+            print(f"  CSV file size: {os.path.getsize(filename_csv) / 1e6:.2f} MB")
             
-            # Calculate failed simulations
-            failed_simulations = total_simulations - len(all_data)
+            # Calculate failed simulations (successful_simulations was tracked during execution)
+            failed_simulations = total_simulations - successful_simulations
             
             if failed_simulations > 0:
-                print(f"  Successful simulations: {len(all_data)}/{total_simulations}")
-                print(f"  Failed simulations: {failed_simulations} ({100*failed_simulations/total_simulations:.1f}%)")
+                print(f"  Estimated successful simulations: ~{successful_simulations}/{total_simulations}")
+                print(f"  Estimated failed simulations: ~{failed_simulations} ({100*failed_simulations/total_simulations:.1f}%)")
                 print(f"  Note: Some parameter combinations may be physically unrealistic")
             
             # Save metadata
@@ -541,10 +591,12 @@ class TrainingDataGenerator:
                                     for k, v in self.param_ranges.items()},
                 'n_combinations_per_reactant': len(param_combinations),
                 'total_simulations': total_simulations,
-                'successful_simulations': len(all_data),
+                'successful_simulations': successful_simulations,
                 'failed_simulations': failed_simulations,
-                'success_rate': 100 * len(all_data) / total_simulations if total_simulations > 0 else 0,
-                'n_jobs': n_jobs
+                'success_rate': 100 * successful_simulations / total_simulations if total_simulations > 0 else 0,
+                'n_jobs': n_jobs,
+                'partial_files': [str(f) for f in saved_files],
+                'save_interval': save_interval
             }
             
             metadata_file = self.output_dir / f'metadata_{timestamp}.json'
@@ -552,6 +604,30 @@ class TrainingDataGenerator:
                 json.dump(metadata, f, indent=2)
             
             print(f"[OK] Metadata saved: {metadata_file}")
+            
+            # Clean up partial files after successful completion
+            if saved_files:
+                print(f"\n{'='*60}")
+                print("Cleaning up partial files...")
+                deleted_count = 0
+                deleted_size = 0
+                for filepath in saved_files:
+                    try:
+                        if filepath.exists():
+                            file_size = filepath.stat().st_size
+                            filepath.unlink()
+                            deleted_count += 1
+                            deleted_size += file_size
+                            print(f"  Deleted: {filepath.name} ({file_size / 1e6:.2f} MB)")
+                    except Exception as e:
+                        print(f"  Warning: Could not delete {filepath.name}: {e}")
+                
+                if deleted_count > 0:
+                    print(f"\n[OK] Cleanup complete:")
+                    print(f"  Deleted {deleted_count} partial file(s)")
+                    print(f"  Freed {deleted_size / 1e6:.2f} MB of disk space")
+                else:
+                    print(f"  No partial files to clean up")
             
             return complete_dataset
         else:

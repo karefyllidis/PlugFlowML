@@ -11,7 +11,7 @@
     "random_sample_bounds": {
         "_comment": "Optional bounds for random sampling (random_sample=true).",
         "temperature_K": [800, 900],
-        "pressure_bar": [1.5, 2.5],
+        "pressure_bar": [1.5, 3.5],
         "length_m": [10.0, 15.0],
         "diameter_mm": [25.0, 40.0],
         "mass_flow_rate_kgps": [0.05, 0.10],
