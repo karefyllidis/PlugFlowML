@@ -24,27 +24,22 @@ The ML Surrogate Models module successfully implements machine learning models t
 - **Sampling** - `sampling_method`: `"latin"` (LHS), `"random"`, or `"full_grid"` / `"structured_grid"` / `"grid"`; bounds via `random_sample_bounds` for random/LHS; `parameter_ranges` for grid
 - **Parallel processing** - Multiprocessing via `n_jobs`
 - **Run control** - Optional `save_metadata` and `save_training_data`; notebook flags: `IF_SHOW_PLOTS`, `IF_SAVE_PLOTS`, `IF_SAVE_METADATA`, `IF_SAVE_TRAINING_DATA`
-- **Training space visualization** - In `notebooks/Main_generate_training_data.ipynb`: 1D marginals and 2D coverage (preview and from-data)
+- **Training space visualization** - In `notebooks/Main_2_generate_training_data.ipynb`: 1D marginals and 2D coverage (preview and from-data)
 
-**Output**: Pickle and CSV files with features and targets for ML training (when saving enabled)
+**Output**: Pickle files (`training_data_complete_*.pkl`) with features and targets for ML training; optional metadata JSON (when saving enabled)
 
-### 2. ML Training Framework (`train_ml_models.py`)
+### 2. ML Training Framework (`model_training.py` and `Main_4_train_tree_models.ipynb`)
 
 **Purpose**: Train multiple ML algorithms on generated data
 
-**Supported Models**:
-- **Neural Networks** (TensorFlow/Keras)
-  - Deep feedforward network
-  - Early stopping
-  - Dropout regularization
-- **Random Forest** (scikit-learn)
-  - Ensemble of decision trees
-  - Fast training and inference
-- **XGBoost** (XGBoost)
-  - Gradient boosting
-  - Often best accuracy
-- **Gradient Boosting** (scikit-learn)
-  - Alternative boosting algorithm
+**Tree-based notebook** (`Main_4_train_tree_models.ipynb`): Trains RF, Gradient Boosting, XGBoost, AdaBoost; saves `*_primary.joblib` to `models/`.
+
+**Supported Models** (notebook: tree-only; script: all):
+- **Random Forest** (scikit-learn) - Ensemble of decision trees; fast training and inference
+- **Gradient Boosting** (scikit-learn) - Boosting algorithm
+- **XGBoost** - Gradient boosting; often best accuracy
+- **AdaBoost** (scikit-learn) - Tree-based AdaBoost (notebook)
+- **Neural Networks** (TensorFlow/Keras; script only) - Deep feedforward, early stopping, dropout
 
 **Target Types**:
 - `primary`: Core outputs (temperature, pressure, velocity, density)

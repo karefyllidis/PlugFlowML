@@ -23,30 +23,34 @@ python src/ml/data_generation.py configs/ml_data_generation_config.json
 
 Or use the Jupyter notebook:
 ```bash
-jupyter notebook notebooks/Main_generate_training_data.ipynb
+jupyter notebook notebooks/Main_2_generate_training_data.ipynb
 ```
 
 **Expected Output:**
 - Training data files in `data/training/`:
-  - `training_data_complete_YYYYMMDD_HHMMSS.pkl` - Complete dataset (pickle format, faster loading)
-  - `training_data_complete_YYYYMMDD_HHMMSS.csv` - Complete dataset (CSV format, for compatibility)
-  - `metadata_YYYYMMDD_HHMMSS.json` - Generation metadata
+  - `training_data_complete_YYYYMMDD_HHMMSS.pkl` - Complete dataset (primary format; pickle for fast loading)
+  - Optional: `metadata_YYYYMMDD_HHMMSS.json` - Generation metadata (when saving enabled)
 - Partial saves during generation: `training_data_partial_*.pkl` (automatically cleaned up after completion)
 
 ### Step 2: Train ML Models
 
-Train multiple ML models on the generated data:
-
+**Option A – Tree-based models (recommended, Jupyter notebook):**
 ```bash
-# Train all models on primary targets (temperature, pressure, velocity, density)
+jupyter notebook notebooks/Main_4_train_tree_models.ipynb
+```
+Trains Random Forest, Gradient Boosting, XGBoost, and AdaBoost (one model per primary target). Saves `random_forest_primary.joblib`, `gradient_boosting_primary.joblib`, `xgboost_primary.joblib`, `adaboost_primary.joblib` to `models/`.
+
+**Option B – All model types (command-line):**
+```bash
 python src/ml/model_training.py configs/ml_training_config.json
 ```
 
-**Available Models:**
-- `neural_network` - Deep neural network (TensorFlow/Keras)
+**Available models (notebook: tree-only; script: all):**
 - `random_forest` - Random Forest (scikit-learn)
-- `xgboost` - XGBoost gradient boosting
 - `gradient_boosting` - Gradient Boosting (scikit-learn)
+- `xgboost` - XGBoost
+- `adaboost` - AdaBoost with tree base (scikit-learn)
+- `neural_network` - Deep neural network (TensorFlow/Keras; script only)
 
 **Target Types:**
 - `primary` - Core outputs (temperature, pressure, velocity, density)
@@ -96,7 +100,7 @@ The `generate_training_data.py` script:
 
 ### ML Model Training
 
-The `train_ml_models.py` script:
+The `model_training.py` script (and `Main_4_train_tree_models.ipynb` for tree-only):
 
 1. **Data Preparation**:
    - Splits data into train/test sets

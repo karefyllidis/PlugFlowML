@@ -107,7 +107,7 @@ If `sampling_method` is `"full_grid"`, `"structured_grid"`, or `"grid"`, total c
 
 If `sampling_method` is `"random"` or `"latin"`, only `max_combinations_per_reactant` combinations are generated per reactant; bounds come from `random_sample_bounds` (or `parameter_ranges`).
 
-### Notebook run control (`notebooks/Main_generate_training_data.ipynb`)
+### Notebook run control (`notebooks/Main_2_generate_training_data.ipynb`)
 
 The notebook defines flags that override saving/display behavior (config does not control these):
 
@@ -117,6 +117,10 @@ The notebook defines flags that override saving/display behavior (config does no
 - **`IF_SAVE_TRAINING_DATA`**: If `True`, partial and final training data (pkl/csv) are written; if `False`, no training files are written (dataset is still built and returned in memory).
 
 ### 2. ML Model Training
+
+**Notebook (tree models only):** `notebooks/Main_4_train_tree_models.ipynb` loads the latest `training_data_complete_*.pkl` from `data/training/`, trains RF, Gradient Boosting, XGBoost, and AdaBoost, and saves `*_primary.joblib` to `models/`. Config: `configs/ml_training_config.json` (sections `random_forest`, `gradient_boosting`, `xgboost`, `adaboost`).
+
+**Script (all model types):** `python src/ml/model_training.py configs/ml_training_config.json`
 
 **File**: `configs/ml_training_config.json`
 
@@ -143,11 +147,18 @@ The notebook defines flags that override saving/display behavior (config does no
     "gradient_boosting": {
         "n_estimators": 100,
         "max_depth": 5
+    },
+    "adaboost": {
+        "n_estimators": 50,
+        "learning_rate": 1.0,
+        "max_depth": 3
     }
 }
 ```
 
-**Usage:**
+**Usage (notebook for tree models):** `jupyter notebook notebooks/Main_4_train_tree_models.ipynb`
+
+**Usage (script for all types):**
 ```bash
 python src/ml/model_training.py configs/ml_training_config.json
 ```
@@ -156,7 +167,7 @@ python src/ml/model_training.py configs/ml_training_config.json
 - `data_file`: Path to training data CSV (supports glob patterns)
 - `output_dir`: Directory to save trained models
 - `target_types`: List of target types (`primary`, `secondary`, `species`, `all`)
-- `models`: List of models to train (`neural_network`, `random_forest`, `xgboost`, `gradient_boosting`, `all`)
+- `models`: List of models to train (`neural_network`, `random_forest`, `xgboost`, `gradient_boosting`, `adaboost`, `all`)
 - `test_size`: Fraction of data for testing (0.0-1.0)
 - `random_state`: Random seed for reproducibility
 - Model-specific parameters: See individual model sections

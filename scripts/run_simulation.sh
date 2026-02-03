@@ -5,8 +5,8 @@
 # Usage: ./run_simulation.sh
 # 
 # Note: For interactive use, launch the notebook directly:
-#   jupyter notebook notebooks/Main_run_pfr.ipynb
-#   jupyter lab notebooks/Main_run_pfr.ipynb
+#   jupyter notebook notebooks/Main_1_run_pfr.ipynb
+#   jupyter lab notebooks/Main_1_run_pfr.ipynb
 
 # Get the directory where this script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -24,7 +24,7 @@ fi
 # Launch Jupyter notebook
 echo "Launching Jupyter notebook for HydrAI simulations..."
 echo "========================================================================"
-echo "Opening: notebooks/Main_run_pfr.ipynb"
+echo "Opening: notebooks/Main_1_run_pfr.ipynb"
 echo "========================================================================"
 
-python3 -m jupyter notebook notebooks/Main_run_pfr.ipynb
+python3 -m jupyter notebook notebooks/Main_1_run_pfr.ipynb

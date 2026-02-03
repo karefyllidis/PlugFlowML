@@ -21,7 +21,10 @@ HydrAI/
 ├── configs/                      # Configuration files
 │   ├── config_template.json      # Configuration template
 │   ├── reactant_database.json    # Reactant definitions
-│   └── heat_flux_profile.json    # Heat flux profiles
+│   ├── heat_flux_profile.json    # Heat flux profiles
+│   ├── ml_data_generation_config.json
+│   ├── ml_training_config.json
+│   └── ml_inference_config.json
 │
 ├── mechanisms/                    # Chemical kinetic mechanisms
 │   ├── Ethane_Kinetic-Model_species_35.yaml
@@ -34,9 +37,11 @@ HydrAI/
 │   └── raw/                      # Raw simulation data
 │
 ├── models/                       # Trained ML models (generated)
-│   ├── neural_network_*.h5
-│   ├── random_forest_*.pkl
-│   └── training_summary.json
+│   ├── random_forest_primary.joblib
+│   ├── gradient_boosting_primary.joblib
+│   ├── xgboost_primary.joblib
+│   ├── adaboost_primary.joblib
+│   └── (optional: neural_network_*.h5, training_summary.json from model_training.py)
 │
 ├── outputs/                      # Simulation outputs
 │   ├── results/                  # CSV results and summaries
@@ -45,6 +50,7 @@ HydrAI/
 ├── docs/                         # Documentation
 │   ├── API_REFERENCE.md
 │   ├── ML_CONFIG_GUIDE.md       # ML configuration guide
+│   ├── UPDATES_v3.0.md          # Version 3.0 update notes
 │   └── ml/                        # ML Surrogate Models documentation
 │       ├── README.md
 │       ├── QUICKSTART.md
@@ -65,10 +71,10 @@ HydrAI/
 │   └── .gitkeep                  # Preserves directory structure
 │
 ├── notebooks/
-│   ├── Main_run_pfr.ipynb                        # Main entry point - PFR simulations (Jupyter notebook)
-│   ├── Main_generate_training_data.ipynb         # ML training data generation (Jupyter notebook)
-│   ├── Main_data_exploration_feature_engineering.ipynb  # Data exploration and feature engineering
-│   └── Main_train_ml_models.ipynb                # ML model training (Jupyter notebook - coming soon)
+│   ├── Main_1_run_pfr.ipynb                       # Step 1: PFR simulations (Jupyter notebook)
+│   ├── Main_2_generate_training_data.ipynb        # Step 2: ML training data generation (Jupyter notebook)
+│   ├── Main_3_data_exploration_feature_engineering.ipynb  # Step 3: Data exploration and feature engineering
+│   └── Main_4_train_tree_models.ipynb            # Step 4: Tree-based ML training (RF, GB, XGBoost)
 ├── requirements.txt
 ├── README.md
 ├── LICENSE
@@ -91,7 +97,7 @@ HydrAI/
 
 ### 4. Notebooks
 - **Location**: All interactive entry points are in **`notebooks/`**
-- **Naming**: Notebooks use the **`Main_`** prefix (e.g. `Main_run_pfr.ipynb`, `Main_generate_training_data.ipynb`, `Main_data_exploration_feature_engineering.ipynb`, `Main_train_ml_models.ipynb`)
+- **Naming**: Notebooks use **`Main_N_`** prefix for pipeline order (e.g. `Main_1_run_pfr.ipynb`, `Main_2_generate_training_data.ipynb`, `Main_3_data_exploration_feature_engineering.ipynb`, `Main_4_train_tree_models.ipynb`)
 
 ### 5. ML Surrogate Models
 - **Before**: `phase_b/` directory with mixed files
@@ -111,8 +117,8 @@ HydrAI/
 
 **Interactive Jupyter Notebook (Recommended):**
 ```bash
-jupyter notebook notebooks/Main_run_pfr.ipynb
-# Or: jupyter lab notebooks/Main_run_pfr.ipynb
+jupyter notebook notebooks/Main_1_run_pfr.ipynb
+# Or: jupyter lab notebooks/Main_1_run_pfr.ipynb
 ```
 
 The notebook provides an interactive interface where you can:
@@ -125,7 +131,7 @@ The notebook provides an interactive interface where you can:
 
 **1. Generate training data (Jupyter Notebook):**
 ```bash
-jupyter notebook notebooks/Main_generate_training_data.ipynb
+jupyter notebook notebooks/Main_2_generate_training_data.ipynb
 ```
 
 The notebook provides:
@@ -134,12 +140,13 @@ The notebook provides:
 - Comprehensive data visualization
 - Data quality checks
 
-**2. Train ML models (Jupyter Notebook - Coming Soon):**
+**2. Train tree-based ML models (Jupyter Notebook):**
 ```bash
-jupyter notebook notebooks/Main_train_ml_models.ipynb
+jupyter notebook notebooks/Main_4_train_tree_models.ipynb
 ```
+Trains Random Forest, Gradient Boosting, XGBoost, and AdaBoost (one model per primary target). Saves artifacts to `models/` (e.g. `random_forest_primary.joblib`).
 
-**For now, use command-line:**
+**Alternative (all model types including neural network):**
 ```bash
 python src/ml/model_training.py configs/ml_training_config.json
 ```

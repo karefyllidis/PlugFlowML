@@ -16,7 +16,7 @@ This document provides comprehensive API documentation for all functions, classe
 
 ### src/cantera/pfr_simulator.py
 
-The main simulation module containing all core PFR functionality. The interactive entry point is **`notebooks/Main_run_pfr.ipynb`**, which imports and uses this module.
+The main simulation module containing all core PFR functionality. The interactive entry point is **`notebooks/Main_1_run_pfr.ipynb`**, which imports and uses this module.
 
 #### Module-level Constants
 

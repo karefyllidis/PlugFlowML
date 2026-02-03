@@ -22,7 +22,7 @@ python src/ml/data_generation.py configs/ml_data_generation_config.json
 
 Or use the Jupyter notebook:
 ```bash
-jupyter notebook notebooks/Main_generate_training_data.ipynb
+jupyter notebook notebooks/Main_2_generate_training_data.ipynb
 ```
 
 **What this does:**
@@ -35,16 +35,15 @@ jupyter notebook notebooks/Main_generate_training_data.ipynb
 - In the notebook: run control flags (`IF_SHOW_PLOTS`, `IF_SAVE_PLOTS`, `IF_SAVE_METADATA`, `IF_SAVE_TRAINING_DATA`) and training-space plots (Step 2.1 preview, Step 4.1 from data)
 
 **Expected output:**
-- `training_data_complete_YYYYMMDD_HHMMSS.pkl` - Complete dataset (pickle format, faster loading)
-- `training_data_complete_YYYYMMDD_HHMMSS.csv` - Complete dataset (CSV format, for compatibility)
-- `metadata_YYYYMMDD_HHMMSS.json` - Generation metadata
+- `training_data_complete_YYYYMMDD_HHMMSS.pkl` - Complete dataset (primary format; pickle for fast loading)
+- Optional: `metadata_YYYYMMDD_HHMMSS.json` - Generation metadata (when saving enabled)
 
 ## Step 2: Explore and Engineer Features (Optional)
 
 Explore the generated data and perform feature engineering:
 
 ```bash
-jupyter notebook notebooks/Main_data_exploration_feature_engineering.ipynb
+jupyter notebook notebooks/Main_3_data_exploration_feature_engineering.ipynb
 ```
 
 This notebook is for:
@@ -56,23 +55,24 @@ This notebook is for:
 
 ## Step 3: Train ML Models (2-10 minutes)
 
-Train ML models on the generated data:
-
+**Option A – Tree models (Jupyter notebook, recommended):**
 ```bash
-# Train all models on primary targets
+jupyter notebook notebooks/Main_4_train_tree_models.ipynb
+```
+Trains Random Forest, Gradient Boosting, XGBoost, and AdaBoost. Saves one artifact per type to `models/`.
+
+**Option B – All model types (command-line):**
+```bash
 python src/ml/model_training.py configs/ml_training_config.json
 ```
 
 **What this does:**
-- Trains multiple ML algorithms (Neural Network, Random Forest, XGBoost, etc.)
-- Evaluates model performance
+- Trains multiple ML algorithms (notebook: RF, GB, XGBoost, AdaBoost; script: also Neural Network, etc.)
+- Evaluates model performance (R², MSE, MAE)
 - Saves trained models to `models/`
 
-**Expected output:**
-- `neural_network_primary.h5` - Neural network model
-- `neural_network_primary_scalers.pkl` - Preprocessing scalers
-- `random_forest_primary.pkl` - Random forest model
-- `training_summary.json` - Training metrics
+**Expected output (notebook):**
+- `random_forest_primary.joblib`, `gradient_boosting_primary.joblib`, `xgboost_primary.joblib`, `adaboost_primary.joblib` - Tree model artifacts (each includes models, scaler, feature/target lists)
 
 ## Step 4: Use ML Models (Instant!)
 
@@ -139,7 +139,7 @@ python src/ml/example_usage.py
 ## Troubleshooting
 
 ### "Model not found" error
-**Solution**: Train models first (Step 2)
+**Solution**: Train models first (Step 3); run `Main_4_train_tree_models.ipynb` or `python src/ml/model_training.py configs/ml_training_config.json`
 
 ### "Out of memory" during training
 **Solution**: Reduce `max_combinations_per_reactant` in config file
@@ -172,10 +172,11 @@ python src/ml/example_usage.py
 python src/ml/data_generation.py configs/ml_data_generation_config.json
 
 # 2. (Optional) Explore data
-jupyter notebook notebooks/Main_data_exploration_feature_engineering.ipynb
+jupyter notebook notebooks/Main_3_data_exploration_feature_engineering.ipynb
 
-# 3. Train models
-python src/ml/model_training.py configs/ml_training_config.json
+# 3. Train models (notebook for tree models, or script for all types)
+jupyter notebook notebooks/Main_4_train_tree_models.ipynb
+# Or: python src/ml/model_training.py configs/ml_training_config.json
 
 # 4. Test predictions
 python src/ml/inference.py configs/ml_inference_config.json

@@ -76,7 +76,7 @@ Version 3.0.0 represents a major restructuring and enhancement of the HydrAI pro
 ### 5. Updated Entry Points
 
 **New Main Entry Point:**
-- `notebooks/Main_run_pfr.ipynb` - Main interactive entry point for simulations (Jupyter notebook)
+- `notebooks/Main_1_run_pfr.ipynb` - Step 1: Main interactive entry point for simulations (Jupyter notebook)
 - Replaces direct execution of `Main_GeneralizedPFR.py`
 
 **Updated Scripts:**
@@ -107,7 +107,7 @@ Version 3.0.0 represents a major restructuring and enhancement of the HydrAI pro
    python Main_GeneralizedPFR.py --reactant ethane
    
    # New
-   jupyter notebook notebooks/Main_run_pfr.ipynb
+   jupyter notebook notebooks/Main_1_run_pfr.ipynb
    ```
 
 ### For ML Users

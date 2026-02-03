@@ -3,7 +3,7 @@
 
 **Date:** February 2026  
 **Status:** **FULLY COMPATIBLE** with README specifications  
-**Version:** 2.1.0 – Export controls, notebooks in `notebooks/` with `Main_` prefix  
+**Version:** 2.2.0 – Pipeline-order notebooks (`Main_1_` … `Main_4_`), tree ML (RF, GB, XGBoost, AdaBoost)  
 **Tested:** All functionality verified and working
 
 ---
@@ -20,10 +20,10 @@ HydrAI/
 ├── README.md                            # Main documentation
 ├── requirements.txt                     # Python dependencies
 ├── notebooks/
-│   ├── Main_run_pfr.ipynb                        # Main entry point - PFR simulations (Jupyter notebook)
-│   ├── Main_generate_training_data.ipynb         # ML training data generation (Jupyter notebook)
-│   ├── Main_data_exploration_feature_engineering.ipynb  # Data exploration and feature engineering
-│   └── Main_train_ml_models.ipynb                # ML model training (Jupyter notebook - coming soon)
+│   ├── Main_1_run_pfr.ipynb                       # Step 1: PFR simulations (Jupyter notebook)
+│   ├── Main_2_generate_training_data.ipynb       # Step 2: ML training data generation (Jupyter notebook)
+│   ├── Main_3_data_exploration_feature_engineering.ipynb  # Step 3: Data exploration and feature engineering
+│   └── Main_4_train_tree_models.ipynb            # Step 4: Tree-based ML model training (RF, GB, XGBoost)
 ├── src/                                 # Source code
 │   ├── cantera/                         # Cantera simulation
 │   │   └── pfr_simulator.py            # Main PFR simulation
@@ -59,6 +59,7 @@ HydrAI/
 ├── docs/                                # Documentation
 │   ├── API_REFERENCE.md                # Detailed API documentation
 │   ├── ML_CONFIG_GUIDE.md             # ML configuration guide
+│   ├── UPDATES_v3.0.md                # Version 3.0 update notes
 │   └── ml/                              # ML Surrogate Models docs
 │       ├── README.md
 │       ├── QUICKSTART.md
@@ -73,8 +74,8 @@ HydrAI/
 ### Generated Files (Excluded from Core Structure)
 - **`outputs/figures/`** directory contains: PNG plot files (temperature, pressure, velocity, etc.)
 - **`outputs/results/`** directory contains: CSV data files and DAT summary files
-- **`data/training/`** directory contains: Training data CSV files (generated)
-- **`models/`** directory contains: Trained ML model files (generated)
+- **`data/training/`** directory contains: Training data (`.pkl`; optional `metadata_*.json`) (generated)
+- **`models/`** directory contains: Trained ML model artifacts (e.g. `*_primary.joblib`) (generated)
 
 ---
 
@@ -85,10 +86,10 @@ HydrAI/
 | Component | README Expectation | Current Status | Status |
 |-----------|-------------------|----------------|--------|
 | **Main Script** | `src/cantera/pfr_simulator.py` | Present | OK |
-| **Entry Point** | `notebooks/Main_run_pfr.ipynb` | Present | OK |
-| **Data Generation** | `notebooks/Main_generate_training_data.ipynb` | Present | OK |
-| **Data Exploration** | `notebooks/Main_data_exploration_feature_engineering.ipynb` | Present | OK |
-| **ML Training** | `notebooks/Main_train_ml_models.ipynb` | Placeholder | Coming Soon |
+| **Step 1 Entry** | `notebooks/Main_1_run_pfr.ipynb` | Present | OK |
+| **Step 2 Data Gen** | `notebooks/Main_2_generate_training_data.ipynb` | Present | OK |
+| **Step 3 Exploration** | `notebooks/Main_3_data_exploration_feature_engineering.ipynb` | Present | OK |
+| **Step 4 Tree ML** | `notebooks/Main_4_train_tree_models.ipynb` | Tree models (RF, GB, XGBoost, AdaBoost) | OK |
 | **Database** | `configs/reactant_database.json` | Present | OK |
 | **Template** | `configs/config_template.json` | Present | OK |
 | **Dependencies** | `requirements.txt` | Present | OK |
@@ -117,10 +118,10 @@ HydrAI/
 ### **Method 1: Jupyter Notebook (Recommended)**
 ```bash
 # Launch Jupyter notebook
-jupyter notebook notebooks/Main_run_pfr.ipynb
+jupyter notebook notebooks/Main_1_run_pfr.ipynb
 
 # Or use JupyterLab
-jupyter lab notebooks/Main_run_pfr.ipynb
+jupyter lab notebooks/Main_1_run_pfr.ipynb
 ```
 
 The notebook provides an interactive interface where you can:
@@ -172,10 +173,10 @@ SIMULATION COMPLETED SUCCESSFULLY!
 
 | File | Purpose | Status |
 |------|---------|--------|
-| `notebooks/Main_run_pfr.ipynb` | Main entry point (Jupyter notebook) | Working |
-| `notebooks/Main_generate_training_data.ipynb` | ML data generation (Jupyter notebook) | Working |
-| `notebooks/Main_data_exploration_feature_engineering.ipynb` | Data exploration and feature engineering (Jupyter notebook) | Working |
-| `notebooks/Main_train_ml_models.ipynb` | ML model training (Jupyter notebook) | Coming Soon |
+| `notebooks/Main_1_run_pfr.ipynb` | Step 1: Main entry point (Jupyter notebook) | Working |
+| `notebooks/Main_2_generate_training_data.ipynb` | Step 2: ML data generation (Jupyter notebook) | Working |
+| `notebooks/Main_3_data_exploration_feature_engineering.ipynb` | Step 3: Data exploration and feature engineering (Jupyter notebook) | Working |
+| `notebooks/Main_4_train_tree_models.ipynb` | Step 4: Tree-based ML training (RF, GB, XGBoost) | OK |
 | `src/cantera/pfr_simulator.py` | Main simulation code | Working |
 | `configs/reactant_database.json` | Reactant definitions | Complete |
 | `configs/config_template.json` | Configuration template | Valid |
@@ -188,7 +189,7 @@ SIMULATION COMPLETED SUCCESSFULLY!
 
 ## Recommendations
 
-1. **Use Jupyter notebooks** (`notebooks/Main_run_pfr.ipynb`, `notebooks/Main_generate_training_data.ipynb`) for interactive execution
+1. **Use Jupyter notebooks** (`notebooks/Main_1_run_pfr.ipynb`, `notebooks/Main_2_generate_training_data.ipynb`, etc.) for interactive execution in pipeline order
 2. **All dependencies are properly installed** via pip
 3. **Directory structure has been restructured** for better organization (see STRUCTURE.md)
 4. **System is ready for production use** with all 4 reactants
