@@ -22,7 +22,10 @@
 | **Visualizations** | 18+ customizable plots with centralized aesthetics configuration |
 | **Export Controls** | Optional CSV and plot generation with flexible workflow options |
 | **ML Surrogate Models** | Machine learning models for 100-1000x faster predictions |
+| **Latin Hypercube Sampling** | Optional LHS for efficient parameter-space coverage when generating training data |
 | **Parallel Processing** | Multiprocessing support for fast training data generation (use all CPU cores) |
+| **Training Space Plots** | 1D/2D visualization of parameter sampling (preview and from-data) in the data-generation notebook |
+| **Run Control Flags** | Notebook flags to toggle plots, saving of plots/metadata/training data |
 | **Centralized Styling** | Consistent figure aesthetics via JSON configuration |
 | **JSON Configuration** | All ML workflows use JSON config files for reproducibility |
 | **Extensible Design** | Easy addition of new reactants and mechanisms |
@@ -450,8 +453,8 @@ HydrAI/
 
 ### Key Files
 - **`run_pfr.ipynb`**: Main interactive entry point for PFR simulations (Jupyter notebook)
-- **`generate_training_data.ipynb`**: Interactive ML training data generation (Jupyter notebook)
-- **`data_exploration_feature_engineering.ipynb`**: Data exploration and feature engineering (Jupyter notebook)
+- **`generate_training_data.ipynb`**: ML training data generation with LHS/random sampling, training-space plots, and run control flags (IF_SHOW_PLOTS, IF_SAVE_PLOTS, IF_SAVE_METADATA, IF_SAVE_TRAINING_DATA)
+- **`data_exploration_feature_engineering.ipynb`**: Data exploration, organized column categories (inlet, reactor, operating, state, thermo, species), and feature engineering for ML
 - **`train_ml_models.ipynb`**: Interactive ML model training (Jupyter notebook - coming soon)
 - **`scripts/run_simulation.sh`**: Convenience script for command-line execution
 - **`scripts/show_structure.sh`**: Displays the clean project structure excluding generated files
@@ -663,18 +666,19 @@ See `styles/README.md` for detailed documentation.
 
 ---
 
-**Version:** 3.0.0  
+**Version:** 3.0.3  
 **Last Updated:** January 2025  
 **Maintainer:** Nikolas Karefyllidis, PhD
 
-### Recent Updates (v3.0.0)
+### Recent Updates (v3.0.x)
+- **Latin Hypercube Sampling (LHS)** - Use `sampling_method: "latin"` in ML data config for better parameter-space coverage
+- **Training space visualization** - In `generate_training_data.ipynb`: preview (Step 2.1) and from-data (Step 4.1) plots for 1D marginals and 2D coverage
+- **Run control flags** - In the data-generation notebook: `IF_SHOW_PLOTS`, `IF_SAVE_PLOTS`, `IF_SAVE_METADATA`, `IF_SAVE_TRAINING_DATA` to control what is displayed and saved
 - **Project restructuring** - Organized into `src/`, `configs/`, `data/`, `models/`, `outputs/` directories
 - **ML Surrogate Models** - Complete ML framework for fast predictions (100-1000x speedup)
-- **Parallel processing** - Multiprocessing support for training data generation (use all CPU cores for faster generation)
-- **JSON configuration** - All ML workflows use JSON config files instead of command-line arguments
+- **Parallel processing** - Multiprocessing support for training data generation (use all CPU cores)
+- **JSON configuration** - All ML workflows use JSON config files
+- **Data exploration** - `data_exploration_feature_engineering.ipynb` with organized column categories (inlet, reactor, operating, state, thermo, species) for ML
 - **Centralized figure aesthetics** - Consistent styling via `styles/figure_aesthetics.json`
-- **Improved code organization** - Modular package structure following Python best practices
-- **Enhanced documentation** - Updated all docs to reflect new structure and features
-- **Jupyter notebook improvements** - Fixed import order, added combined conversion/product plots
-- **Better visualization** - Combined reactant consumption and product formation in single plot
+- **Jupyter notebook improvements** - Fixed import order, combined conversion/product plots, training space plots
 

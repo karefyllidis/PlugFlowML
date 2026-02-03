@@ -24,6 +24,7 @@ import warnings
 import logging
 from multiprocessing import Pool, cpu_count, Manager
 from functools import partial
+from scipy.stats import qmc
 
 # IMPORTANT: Import cantera BEFORE adding src to sys.path
 # This prevents namespace conflict: without this, Python would find src/cantera/ 
@@ -158,6 +159,58 @@ class TrainingDataGenerator:
             np.random.seed(42)  # For reproducibility
             indices = np.random.choice(len(param_dicts), max_combinations, replace=False)
             param_dicts = [param_dicts[i] for i in indices]
+        
+        return param_dicts
+    
+    def generate_parameter_combinations_lhs(self, n_samples, random_sample_bounds=None, seed=42):
+        """
+        Generate parameter combinations using Latin Hypercube Sampling (LHS).
+        LHS gives better coverage of the parameter space than random sampling.
+        
+        Parameters:
+        -----------
+        n_samples : int
+            Number of parameter combinations to generate.
+        random_sample_bounds : dict, optional
+            Override bounds per parameter. Format: {"param_name": [min, max], ...}
+            If not provided, uses min/max from self.param_ranges.
+        seed : int
+            Random seed for reproducibility.
+        
+        Returns:
+        --------
+        list
+            List of parameter dictionaries (same format as generate_parameter_combinations).
+        """
+        keys = list(self.param_ranges.keys())
+        dim = len(keys)
+        
+        # Bounds for each parameter [min, max]
+        bounds = np.zeros((dim, 2))
+        for i, key in enumerate(keys):
+            if random_sample_bounds and key in random_sample_bounds:
+                bounds[i, 0] = random_sample_bounds[key][0]
+                bounds[i, 1] = random_sample_bounds[key][1]
+            else:
+                arr = self.param_ranges[key]
+                bounds[i, 0] = float(np.min(arr))
+                bounds[i, 1] = float(np.max(arr))
+        
+        # Latin Hypercube sample in [0, 1]^d
+        sampler = qmc.LatinHypercube(d=dim, seed=seed)
+        u = sampler.random(n=n_samples)
+        # Scale to parameter bounds
+        samples = qmc.scale(u, bounds[:, 0], bounds[:, 1])
+        
+        param_dicts = []
+        for row in samples:
+            param_dict = dict(zip(keys, row))
+            # Unit conversions (same as generate_parameter_combinations)
+            if 'diameter_mm' in param_dict:
+                param_dict['diameter_m'] = param_dict.pop('diameter_mm') / 1000.0
+            if 'pressure_bar' in param_dict:
+                param_dict['pressure_Pa'] = param_dict.pop('pressure_bar') * 1e5
+            param_dicts.append(param_dict)
         
         return param_dicts
     
@@ -355,7 +408,7 @@ class TrainingDataGenerator:
     
     def generate_dataset(self, reactants=None, max_combinations_per_reactant=100, 
                         random_sample=True, save_interval=10, random_sample_bounds=None,
-                        n_jobs=1):
+                        n_jobs=1, sampling_method='random', lhs_seed=42, save_metadata=True, save_training_data=True):
         """
         Generate complete training dataset.
         
@@ -366,13 +419,22 @@ class TrainingDataGenerator:
         max_combinations_per_reactant : int
             Maximum parameter combinations per reactant
         random_sample : bool
-            Randomly sample parameter combinations
+            Randomly sample parameter combinations (ignored if sampling_method='latin_hypercube')
         save_interval : int
             Save data every N simulations
         random_sample_bounds : dict, optional
-            Bounds for random sampling
+            Bounds for random or LHS sampling
         n_jobs : int
             Number of parallel jobs. Use -1 for all available CPUs, 1 for sequential
+        sampling_method : str
+            'random' = random sample from full grid; 'full_grid' = all combinations;
+            'latin' or 'latin_hypercube' = Latin Hypercube Sampling (better space coverage)
+        lhs_seed : int
+            Random seed for Latin Hypercube Sampling (reproducibility)
+        save_metadata : bool
+            If True, save metadata JSON file; if False, skip (e.g. for notebook flags)
+        save_training_data : bool
+            If True, save partial and final training data (pkl/csv); if False, keep only in memory and return
         
         Returns:
         --------
@@ -382,12 +444,24 @@ class TrainingDataGenerator:
         if reactants is None:
             reactants = list(self.database['reactants'].keys())
         
+        # Normalize sampling_method: accept 'latin' as alias for 'latin_hypercube'
+        _method = (sampling_method or 'random').strip().lower()
+        if _method == 'latin':
+            _method = 'latin_hypercube'
+        
         # Generate parameter combinations
-        param_combinations = self.generate_parameter_combinations(
-            max_combinations=max_combinations_per_reactant,
-            random_sample=random_sample,
-            random_sample_bounds=random_sample_bounds
-        )
+        if _method == 'latin_hypercube':
+            param_combinations = self.generate_parameter_combinations_lhs(
+                n_samples=max_combinations_per_reactant,
+                random_sample_bounds=random_sample_bounds,
+                seed=lhs_seed
+            )
+        else:
+            param_combinations = self.generate_parameter_combinations(
+                max_combinations=max_combinations_per_reactant,
+                random_sample=(_method == 'random'),
+                random_sample_bounds=random_sample_bounds
+            )
         
         # Determine number of workers
         if n_jobs == -1:
@@ -397,6 +471,7 @@ class TrainingDataGenerator:
         
         total_simulations = len(reactants) * len(param_combinations)
         print(f"\nGenerating training data for {len(reactants)} reactants")
+        print(f"  Sampling method: {_method}")
         print(f"  {len(param_combinations)} parameter combinations per reactant")
         print(f"  Total simulations: {total_simulations}")
         print(f"  Parallel jobs: {n_jobs} {'(sequential)' if n_jobs == 1 else f'(using {n_jobs} CPUs)'}")
@@ -469,8 +544,8 @@ class TrainingDataGenerator:
                               f"Data points: {current_rows:,} | "
                               f"ETA: {remaining/60:.1f} min")
                     
-                    # Save periodically
-                    if completed % save_interval == 0:
+                    # Save periodically (only if saving training data to disk)
+                    if save_training_data and completed % save_interval == 0:
                         if all_data:
                             combined_data = pd.concat(all_data, ignore_index=True)
                             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
@@ -518,8 +593,8 @@ class TrainingDataGenerator:
                               f"Data points: {current_rows:,} | "
                               f"ETA: {remaining/60:.1f} min")
                     
-                    # Save periodically
-                    if sim_id % save_interval == 0:
+                    # Save periodically (only if saving training data to disk)
+                    if save_training_data and sim_id % save_interval == 0:
                         if all_data:
                             combined_data = pd.concat(all_data, ignore_index=True)
                             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
@@ -534,7 +609,7 @@ class TrainingDataGenerator:
         
         # Combine all data from saved files and any remaining in-memory data
         print(f"\n{'='*60}")
-        print("Combining all training data from partial files...")
+        print("Combining all training data..." + (" from partial files" if saved_files else " (in-memory only)"))
         
         # Load all partial files
         all_datasets = []
@@ -555,23 +630,26 @@ class TrainingDataGenerator:
         if all_datasets:
             complete_dataset = pd.concat(all_datasets, ignore_index=True)
             
-            # Save final dataset as pickle
-            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-            filename_pkl = self.output_dir / f'training_data_complete_{timestamp}.pkl'
-            with open(filename_pkl, 'wb') as f:
-                pickle.dump(complete_dataset, f, protocol=pickle.HIGHEST_PROTOCOL)
+            # Save final dataset to disk only if requested
+            if save_training_data:
+                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                filename_pkl = self.output_dir / f'training_data_complete_{timestamp}.pkl'
+                with open(filename_pkl, 'wb') as f:
+                    pickle.dump(complete_dataset, f, protocol=pickle.HIGHEST_PROTOCOL)
+                
+                filename_csv = self.output_dir / f'training_data_complete_{timestamp}.csv'
+                complete_dataset.to_csv(filename_csv, index=False)
+                
+                print(f"[OK] Complete dataset saved:")
+                print(f"  Pickle: {filename_pkl}")
+                print(f"  CSV: {filename_csv}")
+                print(f"  Pickle file size: {os.path.getsize(filename_pkl) / 1e6:.2f} MB")
+                print(f"  CSV file size: {os.path.getsize(filename_csv) / 1e6:.2f} MB")
+            else:
+                print(f"[OK] Complete dataset in memory only (not saved to disk)")
             
-            # Also save as CSV for compatibility (optional, can be removed if not needed)
-            filename_csv = self.output_dir / f'training_data_complete_{timestamp}.csv'
-            complete_dataset.to_csv(filename_csv, index=False)
-            
-            print(f"[OK] Complete dataset saved:")
-            print(f"  Pickle: {filename_pkl}")
-            print(f"  CSV: {filename_csv}")
             print(f"  Total rows: {len(complete_dataset):,}")
             print(f"  Total columns: {len(complete_dataset.columns)}")
-            print(f"  Pickle file size: {os.path.getsize(filename_pkl) / 1e6:.2f} MB")
-            print(f"  CSV file size: {os.path.getsize(filename_csv) / 1e6:.2f} MB")
             
             # Calculate failed simulations (successful_simulations was tracked during execution)
             failed_simulations = total_simulations - successful_simulations
@@ -595,18 +673,20 @@ class TrainingDataGenerator:
                 'failed_simulations': failed_simulations,
                 'success_rate': 100 * successful_simulations / total_simulations if total_simulations > 0 else 0,
                 'n_jobs': n_jobs,
+                'sampling_method': _method,
+                'lhs_seed': lhs_seed if _method == 'latin_hypercube' else None,
                 'partial_files': [str(f) for f in saved_files],
                 'save_interval': save_interval
             }
             
-            metadata_file = self.output_dir / f'metadata_{timestamp}.json'
-            with open(metadata_file, 'w') as f:
-                json.dump(metadata, f, indent=2)
+            if save_metadata:
+                metadata_file = self.output_dir / f'metadata_{timestamp}.json'
+                with open(metadata_file, 'w') as f:
+                    json.dump(metadata, f, indent=2)
+                print(f"[OK] Metadata saved: {metadata_file}")
             
-            print(f"[OK] Metadata saved: {metadata_file}")
-            
-            # Clean up partial files after successful completion
-            if saved_files:
+            # Clean up partial files after successful completion (only if we wrote them)
+            if save_training_data and saved_files:
                 print(f"\n{'='*60}")
                 print("Cleaning up partial files...")
                 deleted_count = 0
@@ -710,6 +790,8 @@ def main():
     random_sample = config.get('random_sample', True)
     random_sample_bounds = config.get('random_sample_bounds', None)
     n_jobs = config.get('n_jobs', 1)  # Default to sequential
+    sampling_method = config.get('sampling_method', 'random')  # 'random' | 'full_grid' | 'latin_hypercube'
+    lhs_seed = config.get('lhs_seed', 42)
     
     # Create generator
     generator = TrainingDataGenerator(output_dir=output_dir)
@@ -730,7 +812,9 @@ def main():
         random_sample=random_sample,
         save_interval=save_interval,
         random_sample_bounds=random_sample_bounds,
-        n_jobs=n_jobs
+        n_jobs=n_jobs,
+        sampling_method=sampling_method,
+        lhs_seed=lhs_seed
     )
     
     if dataset is not None:

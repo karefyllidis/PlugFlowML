@@ -84,11 +84,14 @@ The `generate_training_data.py` script:
 3. **Efficient Generation**: 
    - Disables plots and CSV exports during generation
    - Saves partial data periodically as pickle files (faster I/O)
-   - Supports random sampling for large parameter spaces
-   - **Parallel processing** - Use multiple CPU cores simultaneously (configure via `n_jobs` parameter)
-   - **Memory efficient** - Clears data from memory after each save to prevent unbounded growth
+   - **Latin Hypercube Sampling (LHS)** - Use `sampling_method: "latin"` in config for better parameter-space coverage with fewer runs
+   - **Random or full grid** - `sampling_method: "random"` or `"full_grid"`; bounds via `random_sample_bounds` apply to both random and LHS
+   - **Parallel processing** - Use multiple CPU cores (configure via `n_jobs`)
+   - **Memory efficient** - Clears data from memory after each save when saving to disk
    - **Automatic cleanup** - Deletes partial files after successful completion
-   - **Real-time progress** - Shows current progress, success rate, and ETA after each simulation
+   - **Real-time progress** - Progress, success rate, and ETA after each simulation
+   - **Run control flags** (notebook) - `IF_SHOW_PLOTS`, `IF_SAVE_PLOTS`, `IF_SAVE_METADATA`, `IF_SAVE_TRAINING_DATA` to control display and saving
+   - **Training space visualization** - Step 2.1 (sampling preview) and Step 4.1 (from generated data): 1D marginals and 2D pairwise plots to assess exploration quality
 
 ### ML Model Training
 

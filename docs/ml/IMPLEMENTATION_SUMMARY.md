@@ -20,11 +20,13 @@ The ML Surrogate Models module successfully implements machine learning models t
   - Heat flux: 100,000-200,000 W/m² (5 points)
 - Supports all reactants (ethane, propane, naphtha, n-hexane)
 - Efficient generation (disables plots/CSV during collection)
-- Periodic saves to prevent data loss
-- Random sampling for large parameter spaces
-- **Parallel processing** - Multiprocessing support for faster data generation (use `n_jobs` to control number of CPU cores)
+- Periodic saves to prevent data loss (optional via `save_training_data`)
+- **Latin Hypercube Sampling (LHS)** - `sampling_method: "latin"` or `"random"` / `"full_grid"`; bounds via `random_sample_bounds` for both
+- **Parallel processing** - Multiprocessing via `n_jobs`
+- **Run control** - Optional `save_metadata` and `save_training_data`; notebook flags: `IF_SHOW_PLOTS`, `IF_SAVE_PLOTS`, `IF_SAVE_METADATA`, `IF_SAVE_TRAINING_DATA`
+- **Training space visualization** - In `generate_training_data.ipynb`: 1D marginals and 2D coverage (preview and from-data)
 
-**Output**: CSV files with features and targets for ML training
+**Output**: Pickle and CSV files with features and targets for ML training (when saving enabled)
 
 ### 2. ML Training Framework (`train_ml_models.py`)
 

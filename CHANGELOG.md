@@ -5,6 +5,21 @@ All notable changes to the Generalized PFR Simulation System will be documented 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.3] - 2025-01-17
+
+### Added
+- **Latin Hypercube Sampling (LHS)** - Parameter space sampling via `sampling_method: "latin"` or `"latin_hypercube"` for better coverage with fewer runs; config supports `"random"` or `"latin"` with `lhs_seed` for reproducibility
+- **Training space visualization** - In `generate_training_data.ipynb`: Step 2.1 (sampling preview) and Step 4.1 (from generated data) with 1D marginals and 2D pairwise scatter plots to assess exploration quality
+- **Run control flags** in `generate_training_data.ipynb`: `IF_SHOW_PLOTS`, `IF_SAVE_PLOTS`, `IF_SAVE_METADATA`, `IF_SAVE_TRAINING_DATA` to control display/saving of plots, metadata JSON, and training data (pkl/csv)
+- **Optional saving** - `generate_dataset()` accepts `save_metadata` and `save_training_data`; when False, metadata or training files are not written (dataset still returned in memory)
+
+### Changed
+- **ML config** - `random_sample_bounds` applies to both random and Latin Hypercube sampling; config key `sampling_method` chooses `"random"` or `"latin"`
+- **Data exploration notebook** - Column categories: inlet conditions, reactor design, operating conditions, spatial coordinates, state variables, thermodynamic properties, species (Y/X); ML-ready feature/target separation
+
+### Documentation
+- Updated README, ML_CONFIG_GUIDE, docs/ml (README, QUICKSTART, IMPLEMENTATION_SUMMARY) for LHS, flags, and training space visualization
+
 ## [3.0.2] - 2025-01-16
 
 ### Added

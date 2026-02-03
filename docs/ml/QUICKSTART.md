@@ -27,10 +27,12 @@ jupyter notebook generate_training_data.ipynb
 
 **What this does:**
 - Runs multiple Cantera simulations with varied parameters
+- Supports **Latin Hypercube Sampling (LHS)** via config `sampling_method: "latin"` for efficient parameter-space coverage
 - Collects input features and output targets
-- Saves partial data periodically as pickle files (faster I/O)
-- Automatically cleans up partial files after completion
+- Saves partial data periodically as pickle files (when saving is enabled)
+- Automatically cleans up partial files after completion (when saving to disk)
 - Shows real-time progress with success rate and ETA
+- In the notebook: run control flags (`IF_SHOW_PLOTS`, `IF_SAVE_PLOTS`, `IF_SAVE_METADATA`, `IF_SAVE_TRAINING_DATA`) and training-space plots (Step 2.1 preview, Step 4.1 from data)
 
 **Expected output:**
 - `training_data_complete_YYYYMMDD_HHMMSS.pkl` - Complete dataset (pickle format, faster loading)
@@ -47,6 +49,7 @@ jupyter notebook data_exploration_feature_engineering.ipynb
 
 This notebook is for:
 - Data exploration and visualization
+- **Organized column categories** (inlet conditions, reactor design, operating conditions, state variables, thermodynamic properties, species Y/X) for ML-ready feature/target separation
 - Feature engineering
 - Data quality checks
 - Statistical analysis

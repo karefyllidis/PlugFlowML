@@ -17,6 +17,9 @@ All ML scripts now use JSON configuration files instead of command-line argument
     "output_dir": "data/training",
     "save_interval": 10,
     "random_sample": true,
+    "sampling_method": "latin",
+    "lhs_seed": 42,
+    "n_jobs": -1,
     
     "parameter_ranges": {
         "temperature_K": [800, 1200, 10],
@@ -51,13 +54,22 @@ python src/ml/data_generation.py configs/ml_data_generation_config.json
   
   **Note**: Parallel execution significantly speeds up data generation but uses more memory. Each worker runs a separate Cantera simulation, so ensure you have enough RAM. Recommended: Use `-1` for production runs, `1` for testing.
 
-- **`random_sample`** (boolean): 
-  - `true`: Randomly sample from parameter space (recommended for large parameter spaces)
-  - `false`: Use full grid search (exhaustive - can be very large). 
+- **`sampling_method`** (string): How to sample the parameter space.
+  - `"random"`: Random sample from the full grid (uses `random_sample` and `max_combinations_per_reactant`).
+  - `"full_grid"`: Use all combinations (exhaustive; can be very large).
+  - `"latin"` or `"latin_hypercube"`: **Latin Hypercube Sampling (LHS)** – better space-filling with fewer runs. Uses `max_combinations_per_reactant` as the number of LHS points. Bounds from `parameter_ranges` or `random_sample_bounds` apply.
   
-  **Example**: With 6 parameters each having 10 values, full grid = 10⁶ = 1,000,000 combinations. Random sampling with `max_combinations_per_reactant=100` generates only 100 combinations.
+  **Recommendation**: Use `"latin"` for efficient exploration; use `"random"` for compatibility with older configs.
 
-- **`random_sample_bounds`** (object, optional): Constrain random sampling to a subset of the parameter space. If provided, only parameter combinations within these bounds will be considered for random sampling.
+- **`lhs_seed`** (integer): Random seed for Latin Hypercube Sampling. Default: `42`. Only used when `sampling_method` is `"latin"` or `"latin_hypercube"`.
+
+- **`random_sample`** (boolean): Used when `sampling_method` is `"random"`. 
+  - `true`: Randomly sample from parameter space (recommended for large spaces)
+  - `false`: Use full grid (exhaustive). 
+  
+  **Example**: With 6 parameters each having 10 values, full grid = 10⁶ combinations. Random or LHS with `max_combinations_per_reactant=100` generates 100 combinations.
+
+- **`random_sample_bounds`** (object, optional): Bounds for **both** random and Latin Hypercube sampling. If provided, sampling is constrained to these [min, max] per parameter.
   
   **Format**: `{"parameter_name": [min_value, max_value], ...}`
   
@@ -98,7 +110,16 @@ If `random_sample=false`, total combinations per reactant = product of all `n_po
 - Example: `10 × 8 × 6 × 5 × 6 × 5 = 72,000` combinations per reactant
 - With 2 reactants: `72,000 × 2 = 144,000` total simulations
 
-If `random_sample=true`, only `max_combinations_per_reactant` combinations are generated per reactant, regardless of the parameter space size.
+If `sampling_method` is `"random"` or `"latin"`, only `max_combinations_per_reactant` combinations are generated per reactant, regardless of the parameter space size.
+
+### Notebook run control (generate_training_data.ipynb)
+
+The notebook defines flags that override saving/display behavior (config does not control these):
+
+- **`IF_SHOW_PLOTS`**: If `True`, show training-space plots (1D marginals, 2D coverage) in the notebook; if `False`, figures are closed without display.
+- **`IF_SAVE_PLOTS`**: If `True`, save training-space plots as PNG in `output_dir` (e.g. `training_space_1d_preview.png`, `training_space_2d_from_data.png`).
+- **`IF_SAVE_METADATA`**: If `True`, the generator writes the metadata JSON file; if `False`, metadata is not saved (dataset still returned).
+- **`IF_SAVE_TRAINING_DATA`**: If `True`, partial and final training data (pkl/csv) are written; if `False`, no training files are written (dataset is still built and returned in memory).
 
 ### 2. ML Model Training
 
