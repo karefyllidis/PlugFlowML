@@ -87,7 +87,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - **Directory structure** - Complete reorganization for better scalability
   - `Main_GeneralizedPFR.py` → `src/cantera/pfr_simulator.py`
-  - `mechanism/` → `mechanisms/`
+  - Mechanism files directory: `mechanisms/`
   - `results/` and `fig/` → `outputs/results/` and `outputs/figures/`
   - Config files moved to `configs/`
 - **Entry point** - New `Main_run_pfr.ipynb` as main interactive entry point (Jupyter notebook)

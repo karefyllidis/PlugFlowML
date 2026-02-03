@@ -86,7 +86,7 @@ HydrAI/
 - **After**: All configs in `configs/` directory
 
 ### 3. Mechanisms
-- **Before**: `mechanism/` directory
+- **Before**: `mechanisms/` directory
 - **After**: `mechanisms/` directory (plural, more standard)
 
 ### 4. Notebooks

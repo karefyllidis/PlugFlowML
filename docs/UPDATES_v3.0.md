@@ -14,7 +14,7 @@ Version 3.0.0 represents a major restructuring and enhancement of the HydrAI pro
   - `src/ml/` - ML Surrogate Models
   - `src/utils/` - Utility modules (plot styling, etc.)
 - `configs/` - All configuration files centralized
-- `mechanisms/` - Chemical kinetic mechanisms (renamed from `mechanism/`)
+- `mechanisms/` - Chemical kinetic mechanisms
 - `data/` - Training data directory
 - `models/` - Trained ML models directory
 - `outputs/` - All simulation outputs

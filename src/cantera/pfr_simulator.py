@@ -214,9 +214,17 @@ def generate_config_for_reactant(reactant_key: str, database: dict) -> dict:
     feed_composition = f"{reactant_info['feed_species']}, {reactant_info['diluent']}:{reactant_info['diluent_ratio']}"
     config_str = config_str.replace('{{FEED_COMPOSITION}}', feed_composition)
     
-    # Load mechanism to get species and reaction counts
+    # Load mechanism to get species and reaction counts (resolve path relative to project root)
+    mechanism_path = reactant_info['mechanism_file']
+    if not os.path.isabs(mechanism_path):
+        mechanism_path = os.path.join(get_project_root(), mechanism_path)
+    if not os.path.isfile(mechanism_path):
+        raise FileNotFoundError(
+            f"Mechanism file not found: {mechanism_path}\n"
+            "Add your mechanism YAML files to the mechanisms/ directory (see README: Adding New Reactants)."
+        )
     try:
-        gas_temp = ct.Solution(reactant_info['mechanism_file'])
+        gas_temp = ct.Solution(mechanism_path)
         config_str = config_str.replace('{{N_SPECIES}}', str(gas_temp.n_species))
         config_str = config_str.replace('{{N_REACTIONS}}', str(gas_temp.n_reactions))
     except Exception as e:
