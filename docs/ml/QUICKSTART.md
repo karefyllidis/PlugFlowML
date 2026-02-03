@@ -22,12 +22,12 @@ python src/ml/data_generation.py configs/ml_data_generation_config.json
 
 Or use the Jupyter notebook:
 ```bash
-jupyter notebook generate_training_data.ipynb
+jupyter notebook notebooks/Main_generate_training_data.ipynb
 ```
 
 **What this does:**
 - Runs multiple Cantera simulations with varied parameters
-- Supports **Latin Hypercube Sampling (LHS)** via config `sampling_method: "latin"` for efficient parameter-space coverage
+- **Sampling**: LHS (`sampling_method: "latin"`), random (`"random"`), or structured grid (`"full_grid"` / `"structured_grid"` / `"grid"`) via config
 - Collects input features and output targets
 - Saves partial data periodically as pickle files (when saving is enabled)
 - Automatically cleans up partial files after completion (when saving to disk)
@@ -44,7 +44,7 @@ jupyter notebook generate_training_data.ipynb
 Explore the generated data and perform feature engineering:
 
 ```bash
-jupyter notebook data_exploration_feature_engineering.ipynb
+jupyter notebook notebooks/Main_data_exploration_feature_engineering.ipynb
 ```
 
 This notebook is for:
@@ -172,7 +172,7 @@ python src/ml/example_usage.py
 python src/ml/data_generation.py configs/ml_data_generation_config.json
 
 # 2. (Optional) Explore data
-jupyter notebook data_exploration_feature_engineering.ipynb
+jupyter notebook notebooks/Main_data_exploration_feature_engineering.ipynb
 
 # 3. Train models
 python src/ml/model_training.py configs/ml_training_config.json

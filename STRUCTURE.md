@@ -64,9 +64,11 @@ HydrAI/
 ├── temp/                         # Temporary files (auto-generated, git-ignored)
 │   └── .gitkeep                  # Preserves directory structure
 │
-├── run_pfr.ipynb                 # Main entry point - PFR simulations (Jupyter notebook)
-├── generate_training_data.ipynb  # ML training data generation (Jupyter notebook)
-├── train_ml_models.ipynb         # ML model training (Jupyter notebook - coming soon)
+├── notebooks/
+│   ├── Main_run_pfr.ipynb                        # Main entry point - PFR simulations (Jupyter notebook)
+│   ├── Main_generate_training_data.ipynb         # ML training data generation (Jupyter notebook)
+│   ├── Main_data_exploration_feature_engineering.ipynb  # Data exploration and feature engineering
+│   └── Main_train_ml_models.ipynb                # ML model training (Jupyter notebook - coming soon)
 ├── requirements.txt
 ├── README.md
 ├── LICENSE
@@ -87,15 +89,19 @@ HydrAI/
 - **Before**: `mechanism/` directory
 - **After**: `mechanisms/` directory (plural, more standard)
 
-### 4. ML Surrogate Models
+### 4. Notebooks
+- **Location**: All interactive entry points are in **`notebooks/`**
+- **Naming**: Notebooks use the **`Main_`** prefix (e.g. `Main_run_pfr.ipynb`, `Main_generate_training_data.ipynb`, `Main_data_exploration_feature_engineering.ipynb`, `Main_train_ml_models.ipynb`)
+
+### 5. ML Surrogate Models
 - **Before**: `phase_b/` directory with mixed files
 - **After**: `src/ml/` with organized modules and `docs/ml/` for documentation
 
-### 5. Outputs
+### 6. Outputs
 - **Before**: `results/` and `fig/` at root
 - **After**: `outputs/results/` and `outputs/figures/` organized under outputs
 
-### 6. Data and Models
+### 7. Data and Models
 - **New**: `data/` directory for training data
 - **New**: `models/` directory for trained ML models
 
@@ -105,8 +111,8 @@ HydrAI/
 
 **Interactive Jupyter Notebook (Recommended):**
 ```bash
-jupyter notebook run_pfr.ipynb
-# Or: jupyter lab run_pfr.ipynb
+jupyter notebook notebooks/Main_run_pfr.ipynb
+# Or: jupyter lab notebooks/Main_run_pfr.ipynb
 ```
 
 The notebook provides an interactive interface where you can:
@@ -119,7 +125,7 @@ The notebook provides an interactive interface where you can:
 
 **1. Generate training data (Jupyter Notebook):**
 ```bash
-jupyter notebook generate_training_data.ipynb
+jupyter notebook notebooks/Main_generate_training_data.ipynb
 ```
 
 The notebook provides:
@@ -130,7 +136,7 @@ The notebook provides:
 
 **2. Train ML models (Jupyter Notebook - Coming Soon):**
 ```bash
-jupyter notebook train_ml_models.ipynb
+jupyter notebook notebooks/Main_train_ml_models.ipynb
 ```
 
 **For now, use command-line:**

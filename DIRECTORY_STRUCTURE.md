@@ -1,9 +1,9 @@
 # HydrAI Directory Structure Analysis
 ## Complete Project Structure and Compatibility Report
 
-**Date:** September 20, 2025  
+**Date:** February 2026  
 **Status:** **FULLY COMPATIBLE** with README specifications  
-**Version:** 2.1.0 - Export Controls Added  
+**Version:** 2.1.0 – Export controls, notebooks in `notebooks/` with `Main_` prefix  
 **Tested:** All functionality verified and working
 
 ---
@@ -19,9 +19,11 @@ HydrAI/
 ├── LICENSE                              # MIT License
 ├── README.md                            # Main documentation
 ├── requirements.txt                     # Python dependencies
-├── run_pfr.ipynb                       # Main entry point - PFR simulations (Jupyter notebook)
-├── generate_training_data.ipynb       # ML training data generation (Jupyter notebook)
-├── train_ml_models.ipynb              # ML model training (Jupyter notebook - coming soon)
+├── notebooks/
+│   ├── Main_run_pfr.ipynb                        # Main entry point - PFR simulations (Jupyter notebook)
+│   ├── Main_generate_training_data.ipynb         # ML training data generation (Jupyter notebook)
+│   ├── Main_data_exploration_feature_engineering.ipynb  # Data exploration and feature engineering
+│   └── Main_train_ml_models.ipynb                # ML model training (Jupyter notebook - coming soon)
 ├── src/                                 # Source code
 │   ├── cantera/                         # Cantera simulation
 │   │   └── pfr_simulator.py            # Main PFR simulation
@@ -83,9 +85,10 @@ HydrAI/
 | Component | README Expectation | Current Status | Status |
 |-----------|-------------------|----------------|--------|
 | **Main Script** | `src/cantera/pfr_simulator.py` | Present | OK |
-| **Entry Point** | `run_pfr.ipynb` | Present | OK |
-| **Data Generation** | `generate_training_data.ipynb` | Present | OK |
-| **ML Training** | `train_ml_models.ipynb` | Placeholder | Coming Soon |
+| **Entry Point** | `notebooks/Main_run_pfr.ipynb` | Present | OK |
+| **Data Generation** | `notebooks/Main_generate_training_data.ipynb` | Present | OK |
+| **Data Exploration** | `notebooks/Main_data_exploration_feature_engineering.ipynb` | Present | OK |
+| **ML Training** | `notebooks/Main_train_ml_models.ipynb` | Placeholder | Coming Soon |
 | **Database** | `configs/reactant_database.json` | Present | OK |
 | **Template** | `configs/config_template.json` | Present | OK |
 | **Dependencies** | `requirements.txt` | Present | OK |
@@ -114,10 +117,10 @@ HydrAI/
 ### **Method 1: Jupyter Notebook (Recommended)**
 ```bash
 # Launch Jupyter notebook
-jupyter notebook run_pfr.ipynb
+jupyter notebook notebooks/Main_run_pfr.ipynb
 
 # Or use JupyterLab
-jupyter lab run_pfr.ipynb
+jupyter lab notebooks/Main_run_pfr.ipynb
 ```
 
 The notebook provides an interactive interface where you can:
@@ -169,9 +172,10 @@ SIMULATION COMPLETED SUCCESSFULLY!
 
 | File | Purpose | Status |
 |------|---------|--------|
-| `run_pfr.ipynb` | Main entry point (Jupyter notebook) | Working |
-| `generate_training_data.ipynb` | ML data generation (Jupyter notebook) | Working |
-| `train_ml_models.ipynb` | ML model training (Jupyter notebook) | Coming Soon |
+| `notebooks/Main_run_pfr.ipynb` | Main entry point (Jupyter notebook) | Working |
+| `notebooks/Main_generate_training_data.ipynb` | ML data generation (Jupyter notebook) | Working |
+| `notebooks/Main_data_exploration_feature_engineering.ipynb` | Data exploration and feature engineering (Jupyter notebook) | Working |
+| `notebooks/Main_train_ml_models.ipynb` | ML model training (Jupyter notebook) | Coming Soon |
 | `src/cantera/pfr_simulator.py` | Main simulation code | Working |
 | `configs/reactant_database.json` | Reactant definitions | Complete |
 | `configs/config_template.json` | Configuration template | Valid |
@@ -184,7 +188,7 @@ SIMULATION COMPLETED SUCCESSFULLY!
 
 ## Recommendations
 
-1. **Use Jupyter notebooks** (`run_pfr.ipynb`, `generate_training_data.ipynb`) for interactive execution
+1. **Use Jupyter notebooks** (`notebooks/Main_run_pfr.ipynb`, `notebooks/Main_generate_training_data.ipynb`) for interactive execution
 2. **All dependencies are properly installed** via pip
 3. **Directory structure has been restructured** for better organization (see STRUCTURE.md)
 4. **System is ready for production use** with all 4 reactants

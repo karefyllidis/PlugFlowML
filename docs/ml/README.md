@@ -23,7 +23,7 @@ python src/ml/data_generation.py configs/ml_data_generation_config.json
 
 Or use the Jupyter notebook:
 ```bash
-jupyter notebook generate_training_data.ipynb
+jupyter notebook notebooks/Main_generate_training_data.ipynb
 ```
 
 **Expected Output:**
@@ -85,7 +85,8 @@ The `generate_training_data.py` script:
    - Disables plots and CSV exports during generation
    - Saves partial data periodically as pickle files (faster I/O)
    - **Latin Hypercube Sampling (LHS)** - Use `sampling_method: "latin"` in config for better parameter-space coverage with fewer runs
-   - **Random or full grid** - `sampling_method: "random"` or `"full_grid"`; bounds via `random_sample_bounds` apply to both random and LHS
+   - **Random** - `sampling_method: "random"`; bounds via `random_sample_bounds`
+   - **Structured grid** - `sampling_method: "full_grid"`, `"structured_grid"`, or `"grid"`; grid from `parameter_ranges` (product of `n_points`)
    - **Parallel processing** - Use multiple CPU cores (configure via `n_jobs`)
    - **Memory efficient** - Clears data from memory after each save when saving to disk
    - **Automatic cleanup** - Deletes partial files after successful completion

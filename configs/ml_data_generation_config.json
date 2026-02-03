@@ -1,12 +1,11 @@
 {
     "_comment": "Configuration for ML training data generation. See docs/ML_CONFIG_GUIDE.md for detailed documentation.",
-    "sampling_comment": "sampling_method: use 'random' or 'latin' (Latin Hypercube). Bounds below apply to both.",
+    "sampling_comment": "sampling_method: 'random' | 'latin' (LHS) | 'full_grid' or 'structured_grid' or 'grid' (all combos from parameter_ranges). Bounds in random_sample_bounds apply to random/latin.",
 
     "reactants": ["n-hexane"],
-    "max_combinations_per_reactant": 1000,
+    "max_combinations_per_reactant": 100,
     "output_dir": "data/training",
     "save_interval": 10,
-    "random_sample": true,
     "sampling_method": "latin",
     "lhs_seed": 42,
     "n_jobs": -1,
@@ -22,7 +21,7 @@
     },
 
     "parameter_ranges": {
-        "_comment": "Define the parameter space for simulations (random_sample=false).",
+        "_comment": "For grid / structured_grid / full_grid: [min, max, n_points] per parameter. Total runs = product of n_points.",
         "temperature_K": [800, 900, 10],
         "pressure_bar": [1.5, 3.0, 10],
         "length_m": [8.0, 15.0, 10],

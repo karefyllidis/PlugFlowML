@@ -5,12 +5,21 @@ All notable changes to the Generalized PFR Simulation System will be documented 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- **Structured grid sampling** - `sampling_method: "full_grid"`, `"structured_grid"`, or `"grid"` uses all combinations from `parameter_ranges` ([min, max, n_points] per parameter); total runs = product of n_points
+
+### Changed
+- **ML config** - `parameter_ranges` is documented and used for grid/structured_grid/full_grid only; `random_sample_bounds` for random/LHS. Removed redundant `random_sample` config key (sampling controlled only by `sampling_method`)
+- **Documentation** - ML_CONFIG_GUIDE, docs/ml (README, IMPLEMENTATION_SUMMARY, QUICKSTART), README, and notebook updated for structured grid and consistent sampling options
+
 ## [3.0.3] - 2025-01-17
 
 ### Added
 - **Latin Hypercube Sampling (LHS)** - Parameter space sampling via `sampling_method: "latin"` or `"latin_hypercube"` for better coverage with fewer runs; config supports `"random"` or `"latin"` with `lhs_seed` for reproducibility
-- **Training space visualization** - In `generate_training_data.ipynb`: Step 2.1 (sampling preview) and Step 4.1 (from generated data) with 1D marginals and 2D pairwise scatter plots to assess exploration quality
-- **Run control flags** in `generate_training_data.ipynb`: `IF_SHOW_PLOTS`, `IF_SAVE_PLOTS`, `IF_SAVE_METADATA`, `IF_SAVE_TRAINING_DATA` to control display/saving of plots, metadata JSON, and training data (pkl/csv)
+- **Training space visualization** - In `Main_generate_training_data.ipynb`: Step 2.1 (sampling preview) and Step 4.1 (from generated data) with 1D marginals and 2D pairwise scatter plots to assess exploration quality
+- **Run control flags** in `Main_generate_training_data.ipynb`: `IF_SHOW_PLOTS`, `IF_SAVE_PLOTS`, `IF_SAVE_METADATA`, `IF_SAVE_TRAINING_DATA` to control display/saving of plots, metadata JSON, and training data (pkl/csv)
 - **Optional saving** - `generate_dataset()` accepts `save_metadata` and `save_training_data`; when False, metadata or training files are not written (dataset still returned in memory)
 
 ### Changed
@@ -27,7 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Automatic cleanup** - Partial files are automatically deleted after successful completion to save disk space
 - **Real-time progress tracking** - Enhanced progress display showing current simulation count, success rate, failed simulations, data points collected, and ETA after each simulation
 - **Memory efficiency** - Data is cleared from memory after each save to prevent unbounded memory growth
-- **Data exploration notebook** - New `data_exploration_feature_engineering.ipynb` notebook for exploring generated training data and performing feature engineering
+- **Data exploration notebook** - New `Main_data_exploration_feature_engineering.ipynb` notebook for exploring generated training data and performing feature engineering
 
 ### Changed
 - **File format** - Final dataset saved as both pickle (`.pkl`) and CSV (`.csv`) formats for compatibility
@@ -81,7 +90,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `mechanism/` → `mechanisms/`
   - `results/` and `fig/` → `outputs/results/` and `outputs/figures/`
   - Config files moved to `configs/`
-- **Entry point** - New `run_pfr.ipynb` as main interactive entry point (Jupyter notebook)
+- **Entry point** - New `Main_run_pfr.ipynb` as main interactive entry point (Jupyter notebook)
 - **Import paths** - All imports updated to use new package structure
 - **Terminology** - Removed "Phase B" references, now "ML Surrogate Models"
 - **ML workflows** - Switched from command-line arguments to JSON configuration files

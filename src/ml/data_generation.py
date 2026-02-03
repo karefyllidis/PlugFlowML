@@ -427,7 +427,7 @@ class TrainingDataGenerator:
         n_jobs : int
             Number of parallel jobs. Use -1 for all available CPUs, 1 for sequential
         sampling_method : str
-            'random' = random sample from full grid; 'full_grid' = all combinations;
+            'random' = random sample; 'full_grid' / 'structured_grid' / 'grid' = all combinations from parameter_ranges;
             'latin' or 'latin_hypercube' = Latin Hypercube Sampling (better space coverage)
         lhs_seed : int
             Random seed for Latin Hypercube Sampling (reproducibility)
@@ -444,10 +444,12 @@ class TrainingDataGenerator:
         if reactants is None:
             reactants = list(self.database['reactants'].keys())
         
-        # Normalize sampling_method: accept 'latin' as alias for 'latin_hypercube'
+        # Normalize sampling_method: accept aliases
         _method = (sampling_method or 'random').strip().lower()
         if _method == 'latin':
             _method = 'latin_hypercube'
+        if _method in ('structured_grid', 'grid'):
+            _method = 'full_grid'
         
         # Generate parameter combinations
         if _method == 'latin_hypercube':
@@ -457,9 +459,11 @@ class TrainingDataGenerator:
                 seed=lhs_seed
             )
         else:
+            # random: random sample; full_grid / structured_grid: all combinations from parameter_ranges
+            use_full_grid = (_method == 'full_grid')
             param_combinations = self.generate_parameter_combinations(
                 max_combinations=max_combinations_per_reactant,
-                random_sample=(_method == 'random'),
+                random_sample=not use_full_grid,
                 random_sample_bounds=random_sample_bounds
             )
         
@@ -787,10 +791,9 @@ def main():
     max_combinations = config.get('max_combinations_per_reactant', 100)
     output_dir = config.get('output_dir', 'data/training')
     save_interval = config.get('save_interval', 10)
-    random_sample = config.get('random_sample', True)
     random_sample_bounds = config.get('random_sample_bounds', None)
     n_jobs = config.get('n_jobs', 1)  # Default to sequential
-    sampling_method = config.get('sampling_method', 'random')  # 'random' | 'full_grid' | 'latin_hypercube'
+    sampling_method = config.get('sampling_method', 'random')  # 'random' | 'latin' | 'full_grid' | 'structured_grid' | 'grid'
     lhs_seed = config.get('lhs_seed', 42)
     
     # Create generator
@@ -809,7 +812,6 @@ def main():
     dataset = generator.generate_dataset(
         reactants=reactants,
         max_combinations_per_reactant=max_combinations,
-        random_sample=random_sample,
         save_interval=save_interval,
         random_sample_bounds=random_sample_bounds,
         n_jobs=n_jobs,

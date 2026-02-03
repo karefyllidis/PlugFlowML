@@ -16,7 +16,6 @@ All ML scripts now use JSON configuration files instead of command-line argument
     "max_combinations_per_reactant": 100,
     "output_dir": "data/training",
     "save_interval": 10,
-    "random_sample": true,
     "sampling_method": "latin",
     "lhs_seed": 42,
     "n_jobs": -1,
@@ -55,17 +54,13 @@ python src/ml/data_generation.py configs/ml_data_generation_config.json
   **Note**: Parallel execution significantly speeds up data generation but uses more memory. Each worker runs a separate Cantera simulation, so ensure you have enough RAM. Recommended: Use `-1` for production runs, `1` for testing.
 
 - **`sampling_method`** (string): How to sample the parameter space.
-  - `"random"`: Random sample from the full grid (uses `random_sample` and `max_combinations_per_reactant`).
-  - `"full_grid"`: Use all combinations (exhaustive; can be very large).
-  - `"latin"` or `"latin_hypercube"`: **Latin Hypercube Sampling (LHS)** – better space-filling with fewer runs. Uses `max_combinations_per_reactant` as the number of LHS points. Bounds from `parameter_ranges` or `random_sample_bounds` apply.
+  - `"random"`: Random sample of up to `max_combinations_per_reactant` points within the bounds.
+  - `"full_grid"`, `"structured_grid"`, or `"grid"`: **Structured grid** – use all combinations from `parameter_ranges` (regular spacing per dimension). Total runs = product of `n_points` over parameters (can be large).
+  - `"latin"` or `"latin_hypercube"`: **Latin Hypercube Sampling (LHS)** – better space-filling with fewer runs. Uses `max_combinations_per_reactant` as the number of LHS points. Bounds from `random_sample_bounds` (or `parameter_ranges`) apply.
   
-  **Recommendation**: Use `"latin"` for efficient exploration; use `"random"` for compatibility with older configs.
+  **Recommendation**: Use `"latin"` for efficient exploration; use `"structured_grid"` or `"grid"` when you want a regular grid; use `"random"` for compatibility with older configs.
 
 - **`lhs_seed`** (integer): Random seed for Latin Hypercube Sampling. Default: `42`. Only used when `sampling_method` is `"latin"` or `"latin_hypercube"`.
-
-- **`random_sample`** (boolean): Used when `sampling_method` is `"random"`. 
-  - `true`: Randomly sample from parameter space (recommended for large spaces)
-  - `false`: Use full grid (exhaustive). 
   
   **Example**: With 6 parameters each having 10 values, full grid = 10⁶ combinations. Random or LHS with `max_combinations_per_reactant=100` generates 100 combinations.
 
@@ -88,9 +83,9 @@ python src/ml/data_generation.py configs/ml_data_generation_config.json
   - Prioritize certain operating conditions
   - Reduce parameter space for faster generation
   
-  **Note**: Bounds must be within the `parameter_ranges` for each parameter. If a parameter is not listed in `random_sample_bounds`, it uses the full range from `parameter_ranges`.
+  **Note**: For random/LHS, if a parameter is not listed in `random_sample_bounds`, its range comes from `parameter_ranges` (min/max). For grid sampling, only `parameter_ranges` is used.
 
-- **`parameter_ranges`** (object): Define the parameter space for simulations. Each parameter uses format: `[min_value, max_value, n_points]`. The script creates `n_points` evenly spaced values between `min` and `max` using `np.linspace(min, max, n_points)`.
+- **`parameter_ranges`** (object): Used for **grid / structured_grid / full_grid** sampling. Define the parameter space: each parameter uses format `[min_value, max_value, n_points]`. The script creates `n_points` evenly spaced values between `min` and `max` using `np.linspace(min, max, n_points)`. Total runs = product of all `n_points`.
   
   - **`temperature_K`**: Reactor inlet temperature range. Format: `[min_K, max_K, n_points]`. Typical steam cracking temperatures: 800-1200 K. Example: `[800, 1200, 10]` creates 10 points: 800, 844, 889, ..., 1200 K.
   
@@ -106,13 +101,13 @@ python src/ml/data_generation.py configs/ml_data_generation_config.json
 
 **Total Combinations Calculation:**
 
-If `random_sample=false`, total combinations per reactant = product of all `n_points`:
+If `sampling_method` is `"full_grid"`, `"structured_grid"`, or `"grid"`, total combinations per reactant = product of all `n_points` in `parameter_ranges`:
 - Example: `10 × 8 × 6 × 5 × 6 × 5 = 72,000` combinations per reactant
 - With 2 reactants: `72,000 × 2 = 144,000` total simulations
 
-If `sampling_method` is `"random"` or `"latin"`, only `max_combinations_per_reactant` combinations are generated per reactant, regardless of the parameter space size.
+If `sampling_method` is `"random"` or `"latin"`, only `max_combinations_per_reactant` combinations are generated per reactant; bounds come from `random_sample_bounds` (or `parameter_ranges`).
 
-### Notebook run control (generate_training_data.ipynb)
+### Notebook run control (`notebooks/Main_generate_training_data.ipynb`)
 
 The notebook defines flags that override saving/display behavior (config does not control these):
 
