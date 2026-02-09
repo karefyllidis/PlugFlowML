@@ -408,7 +408,8 @@ class TrainingDataGenerator:
     
     def generate_dataset(self, reactants=None, max_combinations_per_reactant=100, 
                         random_sample=True, save_interval=10, random_sample_bounds=None,
-                        n_jobs=1, sampling_method='random', lhs_seed=42, save_metadata=True, save_training_data=True):
+                        n_jobs=1, sampling_method='random', lhs_seed=42, save_metadata=True, save_training_data=True,
+                        task_id=None, ntasks=None):
         """
         Generate complete training dataset.
         
@@ -435,6 +436,11 @@ class TrainingDataGenerator:
             If True, save metadata JSON file; if False, skip (e.g. for notebook flags)
         save_training_data : bool
             If True, save partial and final training data (pkl/csv); if False, keep only in memory and return
+        task_id : int, optional
+            For SLURM/multi-process: this task's index (0 to ntasks-1). If set with ntasks, only runs
+            simulations where global_index % ntasks == task_id for balanced parallelism.
+        ntasks : int, optional
+            Total number of parallel tasks. Use with task_id.
         
         Returns:
         --------
@@ -492,6 +498,12 @@ class TrainingDataGenerator:
             for params in param_combinations:
                 sim_id += 1
                 all_tasks.append((reactant_key, params, sim_id))
+        
+        # Chunk for SLURM/multi-process: only run this task's share
+        if task_id is not None and ntasks is not None and ntasks > 1:
+            all_tasks = [t for i, t in enumerate(all_tasks) if i % ntasks == task_id]
+            total_simulations = len(all_tasks)
+            print(f"  Task chunk: {task_id}/{ntasks} -> {total_simulations} simulations for this process")
         
         # Run simulations (parallel or sequential)
         if n_jobs > 1:
@@ -562,54 +574,45 @@ class TrainingDataGenerator:
                             # Clear all_data to free memory (data is now saved)
                             all_data = []
         else:
-            # Sequential execution (original code)
-            sim_id = 0
+            # Sequential execution: iterate over all_tasks (so chunking by task_id/ntasks is respected)
             failed_simulations = 0
-            
-            for reactant_key in reactants:
-                print(f"\n{'='*60}")
-                print(f"Processing reactant: {reactant_key}")
-                print(f"{'='*60}")
-                
-                for params in param_combinations:
-                    sim_id += 1
-                    training_data = self.run_single_simulation(reactant_key, params, sim_id)
-                    
-                    if training_data is not None:
-                        all_data.append(training_data)
-                        successful_simulations += 1
-                    else:
-                        failed_simulations += 1
-                    
-                    # Progress update - print after every simulation for early visibility
-                    elapsed = time.time() - start_time
-                    if sim_id > 0:
-                        avg_time = elapsed / sim_id
-                        remaining = (total_simulations - sim_id) * avg_time
-                        success_rate = 100 * successful_simulations / sim_id if sim_id > 0 else 0
-                        current_rows = sum(len(df) for df in all_data) if all_data else 0
-                        
-                        # Print progress with current analysis (on new line so it's always visible)
-                        print(f"[Progress] {sim_id}/{total_simulations} "
-                              f"({100*sim_id/total_simulations:.1f}%) | "
-                              f"✓ Success: {successful_simulations} ({success_rate:.1f}%) | "
-                              f"✗ Failed: {failed_simulations} | "
-                              f"Data points: {current_rows:,} | "
-                              f"ETA: {remaining/60:.1f} min")
-                    
-                    # Save periodically (only if saving training data to disk)
-                    if save_training_data and sim_id % save_interval == 0:
-                        if all_data:
-                            combined_data = pd.concat(all_data, ignore_index=True)
-                            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-                            filename = self.output_dir / f'training_data_partial_{timestamp}.pkl'
-                            # Save as pickle file
-                            with open(filename, 'wb') as f:
-                                pickle.dump(combined_data, f, protocol=pickle.HIGHEST_PROTOCOL)
-                            saved_files.append(filename)
-                            print(f"\n  [SAVED] Partial data saved: {filename} ({len(combined_data):,} rows)")
-                            # Clear all_data to free memory (data is now saved)
-                            all_data = []
+            completed = 0
+            for reactant_key, params, sim_id in all_tasks:
+                completed += 1
+                if completed == 1 or (completed - 1) % 50 == 0:
+                    print(f"\n{'='*60}")
+                    print(f"Processing reactant: {reactant_key} (sim {completed}/{total_simulations})")
+                    print(f"{'='*60}")
+                training_data = self.run_single_simulation(reactant_key, params, sim_id)
+                if training_data is not None:
+                    all_data.append(training_data)
+                    successful_simulations += 1
+                else:
+                    failed_simulations += 1
+                # Progress update
+                elapsed = time.time() - start_time
+                if completed > 0:
+                    avg_time = elapsed / completed
+                    remaining = (total_simulations - completed) * avg_time
+                    success_rate = 100 * successful_simulations / completed if completed > 0 else 0
+                    current_rows = sum(len(df) for df in all_data) if all_data else 0
+                    print(f"[Progress] {completed}/{total_simulations} "
+                          f"({100*completed/total_simulations:.1f}%) | "
+                          f"✓ Success: {successful_simulations} ({success_rate:.1f}%) | "
+                          f"✗ Failed: {failed_simulations} | "
+                          f"Data points: {current_rows:,} | "
+                          f"ETA: {remaining/60:.1f} min")
+                # Save periodically
+                if save_training_data and completed % save_interval == 0:
+                    if all_data:
+                        combined_data = pd.concat(all_data, ignore_index=True)
+                        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                        filename = self.output_dir / f'training_data_partial_{timestamp}.pkl'
+                        with open(filename, 'wb') as f:
+                            pickle.dump(combined_data, f, protocol=pickle.HIGHEST_PROTOCOL)
+                        saved_files.append(filename)
+                        print(f"\n  [SAVED] Partial data saved: {filename} ({len(combined_data):,} rows)")
+                        all_data = []
         
         # Combine all data from saved files and any remaining in-memory data
         print(f"\n{'='*60}")
