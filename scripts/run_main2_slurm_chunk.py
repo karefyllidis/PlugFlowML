@@ -10,7 +10,8 @@ Usage (from SLURM script):
   export TASK_ID=0 NTASKS=11
   python scripts/run_main2_slurm_chunk.py
 
-Or run 11 processes in parallel, each with TASK_ID=0..10, NTASKS=11.
+NTASKS can be in the order of 100s (one process per CPU). Run that many
+processes in parallel, each with TASK_ID=0..NTASKS-1.
 """
 
 import os
