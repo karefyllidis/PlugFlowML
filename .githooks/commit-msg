@@ -1,0 +1,8 @@
+#!/bin/sh
+# Strip Co-authored-by lines that mention Cursor/AI so commits never attribute to Cursor AI.
+MSG_FILE="$1"
+[ ! -f "$MSG_FILE" ] && exit 0
+tmp=$(mktemp)
+grep -ivE '^Co-authored-by:.*(Cursor|AI)' "$MSG_FILE" > "$tmp" 2>/dev/null || cat "$MSG_FILE" > "$tmp"
+mv "$tmp" "$MSG_FILE"
+exit 0

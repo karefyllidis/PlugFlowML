@@ -8,11 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Main_3 export** - Optional export of `df_features` and `df_target` to `data/processed/` as a single pickle (`features_targets_*.pkl`) via **IF_EXPORT_FEATURES_TARGETS** and **EXPORT_DIR**
+- **Main_3 NaN handling** - Load step drops rows with NaN and reports how many were dropped
 - **Structured grid sampling** - `sampling_method: "full_grid"`, `"structured_grid"`, or `"grid"` uses all combinations from `parameter_ranges` ([min, max, n_points] per parameter); total runs = product of n_points
 - **Pipeline-order notebook names** - Notebooks renamed to `Main_1_run_pfr.ipynb`, `Main_2_generate_training_data.ipynb`, `Main_3_data_exploration_feature_engineering.ipynb`, `Main_4_train_tree_models.ipynb` to reflect workflow steps
 - **AdaBoost** - Tree-based training notebook (`Main_4_train_tree_models.ipynb`) now includes AdaBoost; config section `adaboost` in `ml_training_config.json`
 
 ### Changed
+- **Main_3 documentation** - Concise markdown docs and Summary aligned with actual steps (load, drop NaNs, organize, export)
 - **ML config** - `parameter_ranges` is documented and used for grid/structured_grid/full_grid only; `random_sample_bounds` for random/LHS. Removed redundant `random_sample` config key (sampling controlled only by `sampling_method`)
 - **Documentation** - Full pass: README, STRUCTURE.md, DIRECTORY_STRUCTURE.md, docs/ml (README, QUICKSTART, IMPLEMENTATION_SUMMARY), ML_CONFIG_GUIDE, API_REFERENCE, UPDATES_v3.0, CHANGELOG, scripts. All references use `Main_N_` notebook names; tree models (RF, GB, XGBoost, AdaBoost) and joblib artifacts documented; training data described as pkl-primary; "Coming Soon" removed for tree training
 

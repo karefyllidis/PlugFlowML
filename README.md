@@ -342,6 +342,10 @@ outputs/
     └── *.png (e.g. temperature_profile, pressure_profile; 18+ plots)
 ```
 
+**ML data (from notebooks):**
+- **`data/training/`** – From **Main_2**: training DataFrames and metadata (`training_data_complete_*.pkl`, `metadata_*.json`).
+- **`data/processed/`** – From **Main_3** (optional): `features_targets_*.pkl` with `{'df_features': ..., 'df_target': ...}`. Later: PCA, scaled/transformed features, etc.
+
 ### CSV Data Export
 The CSV files contain comprehensive data from Cantera (245 columns total):
 
@@ -455,10 +459,10 @@ HydrAI/
 │   └── n-Hexane_Kinetic-Model_species_153.yaml
 │   └── .gitkeep                   # Ensures directory structure is tracked
 ├── data/                           # Data directory
-│   ├── training/                   # Training data (generated, not tracked)
+│   ├── training/                   # Training data from Main_2 (generated, not tracked)
 │   │   └── .gitkeep               # Ensures directory structure is tracked
-│   └── raw/                        # Raw simulation data (not tracked)
-│       └── .gitkeep               # Ensures directory structure is tracked
+│   └── processed/                  # Derived data: Main_3 features/targets pickle; later PCA, scaled, etc.
+│       └── .gitkeep
 ├── models/                         # Trained ML models (generated, not tracked)
 │   └── .gitkeep                   # Ensures directory structure is tracked
 ├── outputs/                        # Simulation outputs (not tracked)
@@ -502,7 +506,7 @@ All interactive entry points are Jupyter notebooks in **`notebooks/`**, numbered
 ### Key Files
 - **`notebooks/Main_1_run_pfr.ipynb`**: Main interactive entry point for PFR simulations (Jupyter notebook)
 - **`notebooks/Main_2_generate_training_data.ipynb`**: ML training data generation with LHS/random sampling, training-space plots, and run control flags (IF_SHOW_PLOTS, IF_SAVE_PLOTS, IF_SAVE_METADATA, IF_SAVE_TRAINING_DATA)
-- **`notebooks/Main_3_data_exploration_feature_engineering.ipynb`**: Data exploration, organized column categories (inlet, reactor, operating, state, thermo, species), and feature engineering for ML
+- **`notebooks/Main_3_data_exploration_feature_engineering.ipynb`**: Load training data from `data/training/`, drop rows with NaN (reports count), organize columns into **`df_features`** (inputs) and **`df_target`** (outputs). Optional export to `data/processed/` via **IF_EXPORT_FEATURES_TARGETS** and **EXPORT_DIR**.
 - **`notebooks/Main_4_train_tree_models.ipynb`**: Step 4 – Tree-based ML training (Random Forest, Gradient Boosting, XGBoost, AdaBoost); saves `*_primary.joblib` to `models/`
 - **`scripts/run_simulation.sh`**: Convenience script for command-line execution
 - **`scripts/show_structure.sh`**: Displays the clean project structure excluding generated files
@@ -726,7 +730,7 @@ See `styles/README.md` for detailed documentation.
 - **ML Surrogate Models** - Complete ML framework for fast predictions (100-1000x speedup)
 - **Parallel processing** - Multiprocessing support for training data generation (use all CPU cores)
 - **JSON configuration** - All ML workflows use JSON config files
-- **Data exploration** - `notebooks/Main_3_data_exploration_feature_engineering.ipynb` with organized column categories (inlet, reactor, operating, state, thermo, species) for ML
+- **Data exploration** - `notebooks/Main_3_data_exploration_feature_engineering.ipynb`: load from `data/training/`, drop NaNs (reports count), define `df_features`/`df_target`; optional export to `data/processed/` (IF_EXPORT_FEATURES_TARGETS).
 - **Centralized figure aesthetics** - Consistent styling via `styles/figure_aesthetics.json`
 - **Jupyter notebook improvements** - Fixed import order, combined conversion/product plots, training space plots
 

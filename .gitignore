@@ -104,11 +104,14 @@ summary_*.dat
 # ML training data and models
 # Ignore contents but keep directory structure
 data/training/*
-!data/training/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
 data/raw/*
 !data/raw/.gitkeep
+!data/training/.gitkeep
 models/*
 !models/.gitkeep
+
 
 # ML model and data files
 *.pkl
