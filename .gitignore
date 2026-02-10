@@ -148,3 +148,5 @@ temp_*.csv
 
 # YAML files (mechanisms and all other YAML files)
 *.yaml
+
+.githooks/
