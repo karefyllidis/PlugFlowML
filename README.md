@@ -342,6 +342,11 @@ outputs/
     └── *.png (e.g. temperature_profile, pressure_profile; 18+ plots)
 ```
 
+**ML data (from notebooks):**
+- **`data/training/`** – From **Main_2**: training DataFrames and metadata (`training_data_complete_*.pkl`, `metadata_*.json`).
+- **`data/processed/`** – From **Main_3** (optional): `features_targets_*.pkl` with `{'df_features': ..., 'df_target': ...}`. Later: PCA, scaled/transformed features, etc.
+- **`models/`** – From **Main_4**: `tree_models_<mode>_<timestamp>.joblib` containing trained models, scalers, and train/test splits (loaded by Main_5 for evaluation).
+
 ### CSV Data Export
 The CSV files contain comprehensive data from Cantera (245 columns total):
 
@@ -455,10 +460,10 @@ HydrAI/
 │   └── n-Hexane_Kinetic-Model_species_153.yaml
 │   └── .gitkeep                   # Ensures directory structure is tracked
 ├── data/                           # Data directory
-│   ├── training/                   # Training data (generated, not tracked)
+│   ├── training/                   # Training data from Main_2 (generated, not tracked)
 │   │   └── .gitkeep               # Ensures directory structure is tracked
-│   └── raw/                        # Raw simulation data (not tracked)
-│       └── .gitkeep               # Ensures directory structure is tracked
+│   └── processed/                  # Derived data: Main_3 features/targets pickle; later PCA, scaled, etc.
+│       └── .gitkeep
 ├── models/                         # Trained ML models (generated, not tracked)
 │   └── .gitkeep                   # Ensures directory structure is tracked
 ├── outputs/                        # Simulation outputs (not tracked)
@@ -485,7 +490,8 @@ HydrAI/
 │   ├── Main_1_run_pfr.ipynb                       # Step 1: PFR simulations (Jupyter notebook)
 │   ├── Main_2_generate_training_data.ipynb        # Step 2: ML training data generation (Jupyter notebook)
 │   ├── Main_3_data_exploration_feature_engineering.ipynb  # Step 3: Data exploration and feature engineering
-│   └── Main_4_train_tree_models.ipynb             # Step 4: Tree-based ML training (RF, GB, XGBoost, AdaBoost)
+│   ├── Main_4_train_tree_models.ipynb             # Step 4: Tree-based ML training (RF, GB, XGBoost, AdaBoost)
+│   └── Main_5_tree_models_comparison.ipynb        # Step 5: Model comparison on test set (metrics, ranking, plots)
 ├── requirements.txt
 ├── README.md                       # This file
 ├── LICENSE
@@ -493,17 +499,19 @@ HydrAI/
 └── STRUCTURE.md                    # Detailed structure documentation
 ```
 
-All interactive entry points are Jupyter notebooks in **`notebooks/`**, numbered **`Main_1_`** … **`Main_4_`** for pipeline order:
+All interactive entry points are Jupyter notebooks in **`notebooks/`**, numbered **`Main_1_`** … **`Main_5_`** for pipeline order:
 - **`Main_1_run_pfr.ipynb`** – Step 1: PFR simulations
 - **`Main_2_generate_training_data.ipynb`** – Step 2: ML training data generation
 - **`Main_3_data_exploration_feature_engineering.ipynb`** – Step 3: Data exploration and feature engineering
-- **`Main_4_train_tree_models.ipynb`** – Step 4: Tree-based ML training (RF, Gradient Boosting, XGBoost, AdaBoost)
+- **`Main_4_train_tree_models.ipynb`** – Step 4: Tree-based ML training (RF, Gradient Boosting, XGBoost, AdaBoost); exports models and evaluation data to `models/`
+- **`Main_5_tree_models_comparison.ipynb`** – Step 5: Model comparison on test set (R², MAE, MedAE, RMSE, NRMSE, MAPE, MaxErr, MBE); model ranking; actual vs predicted and MAPE charts
 
 ### Key Files
 - **`notebooks/Main_1_run_pfr.ipynb`**: Main interactive entry point for PFR simulations (Jupyter notebook)
 - **`notebooks/Main_2_generate_training_data.ipynb`**: ML training data generation with LHS/random sampling, training-space plots, and run control flags (IF_SHOW_PLOTS, IF_SAVE_PLOTS, IF_SAVE_METADATA, IF_SAVE_TRAINING_DATA)
-- **`notebooks/Main_3_data_exploration_feature_engineering.ipynb`**: Data exploration, organized column categories (inlet, reactor, operating, state, thermo, species), and feature engineering for ML
-- **`notebooks/Main_4_train_tree_models.ipynb`**: Step 4 – Tree-based ML training (Random Forest, Gradient Boosting, XGBoost, AdaBoost); saves `*_primary.joblib` to `models/`
+- **`notebooks/Main_3_data_exploration_feature_engineering.ipynb`**: Load training data from `data/training/`, drop rows with NaN (reports count), organize columns into **`df_features`** (inputs) and **`df_target`** (outputs). Optional export to `data/processed/` via **IF_EXPORT_FEATURES_TARGETS** and **EXPORT_DIR**.
+- **`notebooks/Main_4_train_tree_models.ipynb`**: Step 4 – Tree-based ML training (Random Forest, Gradient Boosting, XGBoost, AdaBoost) with optional hyperparameter tuning (RandomizedSearchCV). Extracts feature importance, optional tree plotting. Exports trained models, scalers, and train/test splits as `tree_models_<mode>_<timestamp>.joblib` to `models/`.
+- **`notebooks/Main_5_tree_models_comparison.ipynb`**: Step 5 – Loads exported artifacts from Main_4 and evaluates all models on the held-out test set. Computes 8 error metrics (R², MAE, MedAE, RMSE, NRMSE, MAPE, MaxErr, MBE), ranks models by MAPE, and produces actual-vs-predicted bar charts (with % deviation) and per-target MAPE subplots.
 - **`scripts/run_simulation.sh`**: Convenience script for command-line execution
 - **`scripts/show_structure.sh`**: Displays the clean project structure excluding generated files
 - **`STRUCTURE.md`**: Detailed documentation of the project structure
@@ -714,11 +722,19 @@ See `styles/README.md` for detailed documentation.
 
 ---
 
-**Version:** 3.0.3  
-**Last Updated:** January 2025  
+**Version:** 3.1.0  
+**Last Updated:** February 2026  
 **Maintainer:** Nikolas Karefyllidis, PhD
 
-### Recent Updates (v3.0.x)
+### Recent Updates (v3.1.0)
+- **Model export pipeline** - Main_4 now exports trained models, scalers, and train/test splits as `.joblib` artifacts to `models/`, decoupling training from evaluation
+- **Model comparison notebook** - New `Main_5_tree_models_comparison.ipynb` loads exported artifacts and evaluates all tree models on the test set with 8 error metrics (R², MAE, MedAE, RMSE, NRMSE, MAPE, MaxErr, MBE), model ranking by MAPE, actual-vs-predicted charts with % deviation labels, and per-target MAPE subplots
+- **AdaBoost improvements** - Updated default hyperparameters (`n_estimators: 200`, `learning_rate: 0.1`, `max_depth: 6`) and tuning search now explores base tree depth (`estimator__estimator__max_depth`)
+- **Hyperparameter tuning** - XGBoost included in Section 7 tuning (param grids and RandomizedSearchCV); N_ITER=100, CV=5 for more robust best params
+- **Config defaults** - Gradient Boosting and XGBoost use `n_estimators: 150` in `ml_training_config.json` when tuning is off
+- **Limited data** - Main_4 intro lists recommendations for few samples (e.g. smaller test_size, enable tuning); optional runtime hint when sample count is below a threshold
+
+### Previous Updates (v3.0.x)
 - **Sampling** - LHS (`sampling_method: "latin"`), random (`"random"`), or structured grid (`"full_grid"` / `"structured_grid"` / `"grid"`) in ML data config
 - **Training space visualization** - In `notebooks/Main_2_generate_training_data.ipynb`: preview (Step 2.1) and from-data (Step 4.1) plots for 1D marginals and 2D coverage
 - **Run control flags** - In the data-generation notebook: `IF_SHOW_PLOTS`, `IF_SAVE_PLOTS`, `IF_SAVE_METADATA`, `IF_SAVE_TRAINING_DATA` to control what is displayed and saved
@@ -726,7 +742,7 @@ See `styles/README.md` for detailed documentation.
 - **ML Surrogate Models** - Complete ML framework for fast predictions (100-1000x speedup)
 - **Parallel processing** - Multiprocessing support for training data generation (use all CPU cores)
 - **JSON configuration** - All ML workflows use JSON config files
-- **Data exploration** - `notebooks/Main_3_data_exploration_feature_engineering.ipynb` with organized column categories (inlet, reactor, operating, state, thermo, species) for ML
+- **Data exploration** - `notebooks/Main_3_data_exploration_feature_engineering.ipynb`: load from `data/training/`, drop NaNs (reports count), define `df_features`/`df_target`; optional export to `data/processed/` (IF_EXPORT_FEATURES_TARGETS).
 - **Centralized figure aesthetics** - Consistent styling via `styles/figure_aesthetics.json`
 - **Jupyter notebook improvements** - Fixed import order, combined conversion/product plots, training space plots
 

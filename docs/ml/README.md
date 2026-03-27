@@ -7,8 +7,10 @@ This module implements machine learning models to replace Cantera simulations, p
 The ML Surrogate Models module consists of three main components:
 
 1. **Training Data Generation** - Generate massive datasets from Cantera simulations
-2. **ML Model Training** - Train multiple ML algorithms (Neural Networks, Random Forest, XGBoost, etc.)
-3. **ML Inference** - Use trained models for fast predictions
+2. **Data Exploration & Feature Engineering** - Clean data, define features and targets
+3. **ML Model Training** - Train multiple ML algorithms (Random Forest, Gradient Boosting, XGBoost, AdaBoost, Neural Networks)
+4. **Model Comparison** - Evaluate all models on held-out test set with comprehensive error metrics and visual comparison
+5. **ML Inference** - Use trained models for fast predictions
 
 ## Quick Start
 
@@ -38,7 +40,13 @@ jupyter notebook notebooks/Main_2_generate_training_data.ipynb
 ```bash
 jupyter notebook notebooks/Main_4_train_tree_models.ipynb
 ```
-Trains Random Forest, Gradient Boosting, XGBoost, and AdaBoost (one model per primary target). Saves `random_forest_primary.joblib`, `gradient_boosting_primary.joblib`, `xgboost_primary.joblib`, `adaboost_primary.joblib` to `models/`.
+Trains Random Forest, Gradient Boosting, XGBoost, and AdaBoost via `MultiOutputRegressor` (one base regressor per target). Optional hyperparameter tuning via `RandomizedSearchCV` for all four (RF, GB, XGBoost, AdaBoost) with N_ITER=100 and CV=5. Exports trained models, scalers, and train/test splits as `tree_models_<mode>_<timestamp>.joblib` to `models/`.
+
+**Step 2b — Model comparison (Jupyter notebook):**
+```bash
+jupyter notebook notebooks/Main_5_tree_models_comparison.ipynb
+```
+Loads exported artifacts from Main_4 and evaluates all models on the held-out test set. Computes 8 error metrics (R², MAE, MedAE, RMSE, NRMSE, MAPE, MaxErr, MBE), ranks models by MAPE, and produces actual-vs-predicted bar charts (with % deviation labels) and per-target MAPE subplots.
 
 **Option B – All model types (command-line):**
 ```bash
@@ -183,6 +191,8 @@ Typical R² scores:
 - Secondary targets: 0.90-0.95
 - Species targets: 0.85-0.95
 
+For surrogate use, **MAPE (or mean % error) around 5% or lower** is often considered good; single-digit percentage error is a typical goal in engineering surrogates.
+
 ## Usage Examples
 
 ### Python API
@@ -254,6 +264,7 @@ data/training/                  # Generated training data
 └── metadata_*.json              # Generation metadata
 
 models/                         # Trained models
+├── tree_models_exit_*.joblib    # From Main_4: models, scalers, splits (loaded by Main_5)
 ├── neural_network_primary.h5
 ├── neural_network_primary_scalers.pkl
 ├── random_forest_primary.pkl
@@ -283,6 +294,7 @@ pip install scikit-learn joblib tensorflow xgboost
 1. **Training Data Size**: 
    - Start with 100-500 combinations per reactant
    - Increase for better accuracy (1000+ for production)
+   - With limited data: use a smaller test_size (e.g. 0.15), enable hyperparameter tuning so max_depth/min_samples_leaf regularize trees, and add more runs when possible
 
 2. **Model Selection**:
    - Neural networks: Best for large datasets, complex relationships
