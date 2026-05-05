@@ -44,9 +44,9 @@ Trains Random Forest, Gradient Boosting, XGBoost, and AdaBoost via `MultiOutputR
 
 **Step 2b — Model comparison (Jupyter notebook):**
 ```bash
-jupyter notebook notebooks/Main_5_tree_models_comparison.ipynb
+jupyter notebook notebooks/Main_4b_tree_models_comparison.ipynb
 ```
-Loads exported artifacts from Main_4 and evaluates all models on the held-out test set. Computes 8 error metrics (R², MAE, MedAE, RMSE, NRMSE, MAPE, MaxErr, MBE), ranks models by MAPE, and produces actual-vs-predicted bar charts (with % deviation labels) and per-target MAPE subplots.
+Loads exported artifacts from Main_4 and evaluates all models on the held-out test set. Computes 8 error metrics (R², MAE, MedAE, RMSE, NRMSE, MAPE, MaxErr, MBE), ranks models by MAPE, and produces per-sample actual-vs-predicted scatter plots (with R² and MAPE) and grouped MAPE/R² box plots across target categories (state variables, thermodynamic properties, species fractions).
 
 **Option B – All model types (command-line):**
 ```bash
@@ -200,28 +200,27 @@ For surrogate use, **MAPE (or mean % error) around 5% or lower** is often consid
 ```python
 from src.ml.inference import MLPFRPredictor
 
-# Load predictor
+# Load most recent artifact in models/ (auto-discovery)
 predictor = MLPFRPredictor(
-    model_dir='models',
-    model_type='neural_network',
-    target_type='primary'
+    artifact_path='models',
+    model_key='xgboost',     # or random_forest, gradient_boosting, adaboost
+    mode='exit',             # or 'full_profile'
 )
 
-# Predict single point
-result = predictor.predict_single_point(
+# Predict reactor exit conditions
+result = predictor.predict_exit(
     initial_temperature_K=925.0,
     initial_pressure_Pa=200000.0,
     reactor_length_m=5.0,
     reactor_diameter_m=0.03,
     mass_flow_rate_kgps=0.07,
     heat_flux_Wm2=150000.0,
-    z_position_m=2.5
 )
 
 print(f"Temperature: {result['temperature_K']:.1f} K")
 print(f"Pressure: {result['pressure_Pa']/1e5:.2f} bar")
 
-# Predict complete profile
+# Predict complete axial profile
 profile = predictor.predict_profile(
     initial_temperature_K=925.0,
     initial_pressure_Pa=200000.0,
@@ -229,11 +228,14 @@ profile = predictor.predict_profile(
     reactor_diameter_m=0.03,
     mass_flow_rate_kgps=0.07,
     heat_flux_Wm2=150000.0,
-    n_points=200
+    n_points=200,
 )
 
-# Save results
 profile.to_csv('predictions.csv', index=False)
+
+# Hot-swap to a different model from the same artifact
+print(predictor.available_models())
+predictor.switch_model('random_forest')
 ```
 
 ### Batch Processing
@@ -264,12 +266,9 @@ data/training/                  # Generated training data
 └── metadata_*.json              # Generation metadata
 
 models/                         # Trained models
-├── tree_models_exit_*.joblib    # From Main_4: models, scalers, splits (loaded by Main_5)
-├── neural_network_primary.h5
-├── neural_network_primary_scalers.pkl
-├── random_forest_primary.pkl
-├── random_forest_primary_scalers.pkl
-└── training_summary.json
+├── tree_models_exit_*.joblib    # From Main_4: models, scalers, splits (loaded by Main_4b)
+├── tree_models_full_profile_*.joblib
+└── training_summary.json        # (legacy, written by src/ml/model_training.py)
 ```
 
 ## Dependencies

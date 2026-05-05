@@ -90,15 +90,13 @@ configs/
 └── ml_inference_config.json          # Inference config
 
 data/training/                   # Generated training data (created at runtime)
-├── training_data_complete_*.csv
+├── training_data_complete_*.pkl
 └── metadata_*.json
 
 models/                          # Trained models (created at runtime)
-├── neural_network_primary.h5
-├── neural_network_primary_scalers.pkl
-├── random_forest_primary.pkl
-├── random_forest_primary_scalers.pkl
-└── training_summary.json
+├── tree_models_exit_*.joblib       # Main_4 export (RF / GB / XGBoost / AdaBoost)
+├── tree_models_full_profile_*.joblib
+└── training_summary.json           # (legacy, src/ml/model_training.py)
 
 docs/ml/
 ├── README.md                    # Comprehensive documentation
@@ -130,9 +128,9 @@ docs/ml/
 ```python
 from src.ml.inference import MLPFRPredictor
 
-predictor = MLPFRPredictor(model_dir='models', model_type='neural_network')
-result = predictor.predict_single_point(...)
-profile = predictor.predict_profile(...)
+predictor = MLPFRPredictor(artifact_path='models', model_key='xgboost', mode='exit')
+result   = predictor.predict_exit(initial_temperature_K=925, ...)
+profile  = predictor.predict_profile(initial_temperature_K=925, ..., n_points=200)
 ```
 
 ## Key Features

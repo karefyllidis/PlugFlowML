@@ -1,235 +1,124 @@
 #!/usr/bin/env python3
 """
-ML Surrogate Models: Example Usage Script
-=========================================
+ML Surrogate Models — Example Usage
+====================================
 
-Example demonstrating how to use ML surrogate models for PFR predictions.
+Minimal examples demonstrating the MLPFRPredictor API for fast PFR predictions
+using trained tree-based surrogate models.
+
+Prerequisites
+-------------
+Run notebooks/Main_4_train_tree_models.ipynb first with IF_TREE_MODEL_EXPORT=True
+so that ``models/tree_models_<mode>_<timestamp>.joblib`` exists.
+
+Usage
+-----
+    python src/ml/example_usage.py
 
 Author: Nikolas Karefyllidis, PhD
-ML Surrogate Models Module
 """
 
 import sys
-import os
 from pathlib import Path
 
-# Add parent directory to path
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Project root on sys.path
+project_root = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(project_root))
 
 from src.ml.inference import MLPFRPredictor
-import pandas as pd
-import matplotlib.pyplot as plt
 
 
-def example_single_prediction():
-    """Example: Predict reactor state at a single point."""
-    print("\n" + "="*60)
-    print("Example 1: Single Point Prediction")
-    print("="*60)
-    
-    # Load predictor
+# ── Common operating conditions ──────────────────────────────────────────────
+CASE = dict(
+    initial_temperature_K = 925.0,
+    initial_pressure_Pa   = 200_000.0,   # 2.0 bar
+    reactor_length_m      = 5.0,
+    reactor_diameter_m    = 0.03,        # 30 mm
+    mass_flow_rate_kgps   = 0.07,
+    heat_flux_Wm2         = 150_000.0,
+)
+
+
+def example_exit_prediction():
+    """Predict reactor exit conditions with a trained surrogate model."""
+    print("\n" + "=" * 60)
+    print("Example 1: Reactor exit prediction (single point)")
+    print("=" * 60)
+
     predictor = MLPFRPredictor(
-        model_dir='models',
-        model_type='neural_network',  # or 'random_forest', 'xgboost', etc.
-        target_type='primary'
+        artifact_path = project_root / "models",
+        model_key     = "xgboost",   # or 'random_forest', 'gradient_boosting', 'adaboost'
+        mode          = "exit",
     )
-    
-    # Predict at a specific position
-    result = predictor.predict_single_point(
-        initial_temperature_K=925.0,
-        initial_pressure_Pa=200000.0,  # 2.0 bar
-        reactor_length_m=5.0,
-        reactor_diameter_m=0.03,  # 30 mm
-        mass_flow_rate_kgps=0.07,
-        heat_flux_Wm2=150000.0,
-        z_position_m=2.5  # Middle of reactor
-    )
-    
-    print(f"\nPredicted values at z = 2.5 m:")
-    print(f"  Temperature: {result['temperature_K']:.1f} K")
-    print(f"  Pressure: {result['pressure_Pa']/1e5:.2f} bar")
-    print(f"  Velocity: {result['velocity_ms']:.2f} m/s")
-    print(f"  Density: {result['density_kgm3']:.2f} kg/m³")
+
+    result = predictor.predict_exit(**CASE)
+
+    print(f"\n[exit conditions]")
+    print(f"  Temperature : {result.get('temperature_K', float('nan')):.1f} K")
+    print(f"  Pressure    : {result.get('pressure_Pa', float('nan')) / 1e5:.2f} bar")
+    print(f"  Velocity    : {result.get('velocity_ms', float('nan')):.2f} m/s")
+    print(f"  Density     : {result.get('density_kgm3', float('nan')):.3f} kg/m³")
 
 
-def example_profile_prediction():
-    """Example: Predict complete reactor profile."""
-    print("\n" + "="*60)
-    print("Example 2: Complete Reactor Profile")
-    print("="*60)
-    
-    # Load predictor
+def example_full_profile():
+    """Predict the complete axial profile and save to CSV."""
+    print("\n" + "=" * 60)
+    print("Example 2: Full axial profile (200 points)")
+    print("=" * 60)
+
     predictor = MLPFRPredictor(
-        model_dir='models',
-        model_type='neural_network',
-        target_type='primary'
+        artifact_path = project_root / "models",
+        model_key     = "xgboost",
+        mode          = "exit",
     )
-    
-    # Predict complete profile
-    profile = predictor.predict_profile(
-        initial_temperature_K=925.0,
-        initial_pressure_Pa=200000.0,
-        reactor_length_m=5.0,
-        reactor_diameter_m=0.03,
-        mass_flow_rate_kgps=0.07,
-        heat_flux_Wm2=150000.0,
-        n_points=200
-    )
-    
-    print(f"\nGenerated profile with {len(profile)} points")
-    print(f"Columns: {list(profile.columns)}")
-    
-    # Save to CSV
-    output_file = 'outputs/example_profile.csv'
-    Path(output_file).parent.mkdir(parents=True, exist_ok=True)
-    profile.to_csv(output_file, index=False)
-    print(f"\n[OK] Profile saved to: {output_file}")
-    
-    # Display summary
-    print("\nProfile Summary:")
-    print(f"  Initial T: {profile['temperature_K'].iloc[0]:.1f} K")
-    print(f"  Final T: {profile['temperature_K'].iloc[-1]:.1f} K")
-    print(f"  Temperature rise: {profile['temperature_K'].iloc[-1] - profile['temperature_K'].iloc[0]:.1f} K")
-    print(f"  Initial P: {profile['pressure_Pa'].iloc[0]/1e5:.2f} bar")
-    print(f"  Final P: {profile['pressure_Pa'].iloc[-1]/1e5:.2f} bar")
-    print(f"  Pressure drop: {(profile['pressure_Pa'].iloc[0] - profile['pressure_Pa'].iloc[-1])/1e5:.2f} bar")
+
+    profile = predictor.predict_profile(**CASE, n_points=200)
+
+    print(f"\n  Profile shape: {profile.shape}")
+    print(f"  T inlet  → T outlet : "
+          f"{profile['temperature_K'].iloc[0]:.1f} K → "
+          f"{profile['temperature_K'].iloc[-1]:.1f} K")
+    print(f"  P inlet  → P outlet : "
+          f"{profile['pressure_Pa'].iloc[0] / 1e5:.2f} bar → "
+          f"{profile['pressure_Pa'].iloc[-1] / 1e5:.2f} bar")
+
+    out_csv = project_root / "outputs" / "example_profile.csv"
+    out_csv.parent.mkdir(parents=True, exist_ok=True)
+    profile.to_csv(out_csv, index=False)
+    print(f"\n  Saved: {out_csv}")
 
 
-def example_visualization():
-    """Example: Visualize predictions."""
-    print("\n" + "="*60)
-    print("Example 3: Visualization")
-    print("="*60)
-    
-    # Load predictor
-    predictor = MLPFRPredictor(
-        model_dir='models',
-        model_type='neural_network',
-        target_type='primary'
-    )
-    
-    # Predict profile
-    profile = predictor.predict_profile(
-        initial_temperature_K=925.0,
-        initial_pressure_Pa=200000.0,
-        reactor_length_m=5.0,
-        reactor_diameter_m=0.03,
-        mass_flow_rate_kgps=0.07,
-        heat_flux_Wm2=150000.0,
-        n_points=200
-    )
-    
-    # Create plots
-    fig, axes = plt.subplots(2, 2, figsize=(12, 10))
-    
-    # Temperature profile
-    axes[0, 0].plot(profile['z_position_m'], profile['temperature_K'], 'r-', linewidth=2)
-    axes[0, 0].set_xlabel('Position [m]')
-    axes[0, 0].set_ylabel('Temperature [K]')
-    axes[0, 0].set_title('Temperature Profile (ML Prediction)')
-    axes[0, 0].grid(True, alpha=0.3)
-    
-    # Pressure profile
-    axes[0, 1].plot(profile['z_position_m'], profile['pressure_Pa']/1e5, 'b-', linewidth=2)
-    axes[0, 1].set_xlabel('Position [m]')
-    axes[0, 1].set_ylabel('Pressure [bar]')
-    axes[0, 1].set_title('Pressure Profile (ML Prediction)')
-    axes[0, 1].grid(True, alpha=0.3)
-    
-    # Velocity profile
-    axes[1, 0].plot(profile['z_position_m'], profile['velocity_ms'], 'g-', linewidth=2)
-    axes[1, 0].set_xlabel('Position [m]')
-    axes[1, 0].set_ylabel('Velocity [m/s]')
-    axes[1, 0].set_title('Velocity Profile (ML Prediction)')
-    axes[1, 0].grid(True, alpha=0.3)
-    
-    # Density profile
-    axes[1, 1].plot(profile['z_position_m'], profile['density_kgm3'], 'm-', linewidth=2)
-    axes[1, 1].set_xlabel('Position [m]')
-    axes[1, 1].set_ylabel('Density [kg/m³]')
-    axes[1, 1].set_title('Density Profile (ML Prediction)')
-    axes[1, 1].grid(True, alpha=0.3)
-    
-    plt.tight_layout()
-    
-    # Save figure
-    output_file = 'outputs/example_ml_predictions.png'
-    Path(output_file).parent.mkdir(parents=True, exist_ok=True)
-    plt.savefig(output_file, dpi=150, bbox_inches='tight')
-    print(f"\n[OK] Visualization saved to: {output_file}")
-    plt.close()
+def example_compare_models():
+    """Compare exit predictions from each trained model in the artifact."""
+    print("\n" + "=" * 60)
+    print("Example 3: Compare all models in the artifact")
+    print("=" * 60)
 
+    predictor = MLPFRPredictor(artifact_path=project_root / "models", mode="exit")
 
-def example_parameter_study():
-    """Example: Parameter study using ML models."""
-    print("\n" + "="*60)
-    print("Example 4: Parameter Study")
-    print("="*60)
-    
-    # Load predictor
-    predictor = MLPFRPredictor(
-        model_dir='models',
-        model_type='neural_network',
-        target_type='primary'
-    )
-    
-    # Vary temperature
-    temperatures = [850, 900, 950, 1000, 1050]
-    final_temperatures = []
-    
-    for T in temperatures:
-        result = predictor.predict_single_point(
-            initial_temperature_K=T,
-            initial_pressure_Pa=200000.0,
-            reactor_length_m=5.0,
-            reactor_diameter_m=0.03,
-            mass_flow_rate_kgps=0.07,
-            heat_flux_Wm2=150000.0,
-            z_position_m=5.0  # Outlet
-        )
-        final_temperatures.append(result['temperature_K'])
-    
-    # Display results
-    print("\nParameter Study: Effect of Initial Temperature")
-    print("Initial T [K] | Final T [K] | Temperature Rise [K]")
-    print("-" * 50)
-    for T_init, T_final in zip(temperatures, final_temperatures):
-        print(f"  {T_init:8.0f}   | {T_final:8.1f}   | {T_final - T_init:15.1f}")
+    print(f"\n  Available models: {predictor.available_models()}\n")
+    print(f"  {'Model':<22} {'T_out [K]':>10} {'P_out [bar]':>14}")
+    print("  " + "-" * 48)
+    for key in predictor.available_models():
+        predictor.switch_model(key)
+        out = predictor.predict_exit(**CASE)
+        print(f"  {key:<22} {out['temperature_K']:>10.1f} "
+              f"{out['pressure_Pa'] / 1e5:>14.3f}")
 
 
 def main():
-    """Run all examples."""
-    print("\n" + "="*60)
-    print("ML Surrogate Models - Example Usage")
-    print("="*60)
-    print("\nNote: Make sure you have trained models in models/")
-    print("      Run model_training.py first if needed.\n")
-    
+    """Run all examples; abort gracefully if no artifact is available."""
     try:
-        # Check if models exist
-        model_dir = Path('models')
-        if not model_dir.exists() or not list(model_dir.glob('*.pkl')) and not list(model_dir.glob('*.h5')):
-            print("[WARNING] No trained models found!")
-            print("  Please run: python src/ml/model_training.py --data data/training/*.csv")
-            return
-        
-        # Run examples
-        example_single_prediction()
-        example_profile_prediction()
-        example_visualization()
-        example_parameter_study()
-        
-        print("\n" + "="*60)
-        print("All examples completed successfully!")
-        print("="*60)
-        
-    except FileNotFoundError as e:
-        print(f"\n[ERROR] {e}")
-        print("  Make sure models are trained first!")
-    except Exception as e:
-        print(f"\n[ERROR] {e}")
-        import traceback
-        traceback.print_exc()
+        example_exit_prediction()
+        example_full_profile()
+        example_compare_models()
+        print("\n" + "=" * 60)
+        print("All examples completed.")
+        print("=" * 60)
+    except FileNotFoundError as err:
+        print(f"\n[ERROR] {err}")
+        print("  Run notebooks/Main_4_train_tree_models.ipynb first to export the model artifact.")
+        sys.exit(1)
 
 
 if __name__ == "__main__":

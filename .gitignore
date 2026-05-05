@@ -1,5 +1,10 @@
 # Python
 __pycache__/
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+.hypothesis/
 *.py[cod]
 *$py.class
 *.so
@@ -124,6 +129,7 @@ metadata_*.json
 *.tmp
 *.temp
 .DS_Store
+Desktop.ini
 Thumbs.db
 temp/
 temp_*.json
@@ -146,5 +152,13 @@ temp_*.csv
 *.bak
 *.backup
 
-# YAML files (mechanisms and all other YAML files)
-*.yaml
+# Local YAML overrides (not committed)
+*.local.yaml
+
+# Cantera kinetic mechanisms — large / environment-specific; keep folder via .gitkeep only
+# Obtain YAML files separately (see README "Required External Files").
+mechanisms/*
+!mechanisms/.gitkeep
+
+# Browser-download leftovers
+*.crdownload

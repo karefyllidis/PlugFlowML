@@ -15,7 +15,6 @@ import os
 import json
 import numpy as np
 import pandas as pd
-import pickle
 from itertools import product
 from datetime import datetime
 import time
@@ -45,6 +44,7 @@ logging.getLogger('sundials').setLevel(logging.CRITICAL)
 project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, project_root)
 
+from src.ml.dataframe_pickle import save_dataframe_pickle, load_dataframe_pickle
 from src.cantera.pfr_simulator import (
     load_reactant_database,
     generate_config_for_reactant,
@@ -474,8 +474,12 @@ class TrainingDataGenerator:
             )
         
         # Determine number of workers
+        # On SLURM, respect the allocated CPU count (SLURM_CPUS_PER_TASK) rather than
+        # the total node CPUs returned by cpu_count(), which would over-subscribe the node.
+        import os as _os
         if n_jobs == -1:
-            n_jobs = cpu_count()
+            slurm_cpus = _os.environ.get("SLURM_CPUS_PER_TASK")
+            n_jobs = int(slurm_cpus) if slurm_cpus else cpu_count()
         elif n_jobs < 1:
             n_jobs = 1
         
@@ -566,9 +570,7 @@ class TrainingDataGenerator:
                             combined_data = pd.concat(all_data, ignore_index=True)
                             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
                             filename = self.output_dir / f'training_data_partial_{timestamp}.pkl'
-                            # Save as pickle file
-                            with open(filename, 'wb') as f:
-                                pickle.dump(combined_data, f, protocol=pickle.HIGHEST_PROTOCOL)
+                            save_dataframe_pickle(combined_data, filename)
                             saved_files.append(filename)
                             print(f"\n  [SAVED] Partial data saved: {filename} ({len(combined_data):,} rows)")
                             # Clear all_data to free memory (data is now saved)
@@ -608,8 +610,7 @@ class TrainingDataGenerator:
                         combined_data = pd.concat(all_data, ignore_index=True)
                         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
                         filename = self.output_dir / f'training_data_partial_{timestamp}.pkl'
-                        with open(filename, 'wb') as f:
-                            pickle.dump(combined_data, f, protocol=pickle.HIGHEST_PROTOCOL)
+                        save_dataframe_pickle(combined_data, filename)
                         saved_files.append(filename)
                         print(f"\n  [SAVED] Partial data saved: {filename} ({len(combined_data):,} rows)")
                         all_data = []
@@ -623,10 +624,9 @@ class TrainingDataGenerator:
         if saved_files:
             print(f"  Loading {len(saved_files)} partial files...")
             for filepath in saved_files:
-                with open(filepath, 'rb') as f:
-                    df = pickle.load(f)
-                    all_datasets.append(df)
-                    print(f"    Loaded {filepath.name}: {len(df):,} rows")
+                df = load_dataframe_pickle(filepath)
+                all_datasets.append(df)
+                print(f"    Loaded {filepath.name}: {len(df):,} rows")
         
         # Add any remaining in-memory data
         if all_data:
@@ -641,8 +641,7 @@ class TrainingDataGenerator:
             if save_training_data:
                 timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
                 filename_pkl = self.output_dir / f'training_data_complete_{timestamp}.pkl'
-                with open(filename_pkl, 'wb') as f:
-                    pickle.dump(complete_dataset, f, protocol=pickle.HIGHEST_PROTOCOL)
+                save_dataframe_pickle(complete_dataset, filename_pkl)
                 
                 filename_csv = self.output_dir / f'training_data_complete_{timestamp}.csv'
                 complete_dataset.to_csv(filename_csv, index=False)

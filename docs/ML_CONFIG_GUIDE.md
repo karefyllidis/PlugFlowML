@@ -120,7 +120,7 @@ The notebook defines flags that override saving/display behavior (config does no
 
 **Notebook (tree models):** `notebooks/Main_4_train_tree_models.ipynb` loads the latest `features_targets_*.pkl` from `data/processed/`, trains RF, Gradient Boosting, XGBoost, and AdaBoost (each via `MultiOutputRegressor`), with optional hyperparameter tuning (`RandomizedSearchCV` for all four; N_ITER=100, CV=5). Exports trained models, scalers, and train/test splits as `tree_models_<mode>_<timestamp>.joblib` to `models/`. Config: `configs/ml_training_config.json`.
 
-**Notebook (model comparison):** `notebooks/Main_5_tree_models_comparison.ipynb` loads exported artifacts from Main_4 and evaluates all models on the held-out test set. Computes 8 error metrics (R², MAE, MedAE, RMSE, NRMSE, MAPE, MaxErr, MBE), ranks models by MAPE, and produces actual-vs-predicted and per-target MAPE charts.
+**Notebook (model comparison):** `notebooks/Main_4b_tree_models_comparison.ipynb` loads exported artifacts from Main_4 and evaluates all models on the held-out test set. Computes 8 error metrics (R², MAE, MedAE, RMSE, NRMSE, MAPE, MaxErr, MBE), ranks models by MAPE, and produces per-sample actual-vs-predicted scatter plots and grouped MAPE/R² box plots across target categories.
 
 **Script (all model types):** `python src/ml/model_training.py configs/ml_training_config.json`
 

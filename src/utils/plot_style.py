@@ -10,10 +10,104 @@ Author: Nikolas Karefyllidis, PhD
 
 import os
 import json
+import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, Union
+
+
+def setup_matplotlib(ax: Union[None, "matplotlib.axes.Axes", np.ndarray] = None) -> None:
+    """
+    Apply the project's standard matplotlib style globally and, optionally,
+    to one or more Axes objects.
+
+    Call once per notebook/script at import time (no arguments) to set rcParams.
+    Pass ``ax`` after creating subplots to apply per-axis finishing touches
+    (minor ticks, grid style, tick direction).
+
+    Parameters
+    ----------
+    ax : None | Axes | ndarray of Axes
+        If None, only global rcParams are updated.
+        If an Axes or array of Axes (e.g. from ``plt.subplots``), per-axis
+        styling is also applied.
+
+    Examples
+    --------
+    >>> from src.utils.plot_style import setup_matplotlib
+    >>> setup_matplotlib()                          # global style only
+    >>> fig, axes = plt.subplots(1, 3)
+    >>> setup_matplotlib(axes)                      # global + per-axis
+    """
+    plt.rcParams.update({
+        # Figure
+        "figure.figsize":       (24, 6),
+        "figure.dpi":           120,
+        "savefig.dpi":          200,
+        "savefig.bbox":         "tight",
+        "savefig.pad_inches":   0.02,
+
+        # Fonts
+        "font.size":            10,
+        "axes.labelsize":       10,
+        "axes.titlesize":       10,
+        "legend.fontsize":      10,
+        "xtick.labelsize":      10,
+        "ytick.labelsize":      10,
+
+        # Lines
+        "lines.linewidth":      1.2,
+        "lines.markersize":     4,
+
+        # Axes
+        "axes.linewidth":       0.8,
+        "axes.spines.top":      False,
+        "axes.spines.right":    False,
+
+        # Colors
+        "text.color":           "black",
+        "axes.labelcolor":      "black",
+        "xtick.color":          "black",
+        "ytick.color":          "black",
+
+        # Ticks
+        "xtick.direction":      "in",
+        "ytick.direction":      "in",
+        "xtick.major.size":     6,
+        "ytick.major.size":     6,
+        "xtick.minor.size":     4,
+        "ytick.minor.size":     4,
+        "xtick.major.width":    0.8,
+        "ytick.major.width":    0.8,
+        "xtick.minor.width":    0.5,
+        "ytick.minor.width":    0.5,
+        "xtick.major.pad":      6,
+        "ytick.major.pad":      6,
+        "xtick.minor.pad":      4,
+        "ytick.minor.pad":      4,
+
+        # Legend
+        "legend.frameon":       False,
+
+        # Font export (embed fonts in PDF/PS)
+        "pdf.fonttype":         42,
+        "ps.fonttype":          42,
+
+        # TeX
+        "text.usetex":          False,
+    })
+
+    if ax is not None:
+        axes_list = list(ax.flat) if hasattr(ax, "flat") else [ax]
+        for a in axes_list:
+            a.set_axisbelow(True)
+            a.grid(False, linestyle="--", linewidth=0.65, color="gray", alpha=0.75)
+            a.tick_params(
+                which="both", direction="in",
+                top=False, bottom=True, left=True, right=False,
+            )
+            a.minorticks_on()
 
 
 def get_project_root():

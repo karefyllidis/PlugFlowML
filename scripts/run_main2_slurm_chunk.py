@@ -12,6 +12,10 @@ Usage (from SLURM script):
 
 NTASKS can be in the order of 100s (one process per CPU). Run that many
 processes in parallel, each with TASK_ID=0..NTASKS-1.
+
+On a single Windows/macOS/Linux workstation (no SLURM), use::
+
+    python scripts/run_main2_local_parallel.py --ntasks 4
 """
 
 import os
