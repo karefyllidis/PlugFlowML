@@ -409,7 +409,7 @@ class TrainingDataGenerator:
     def generate_dataset(self, reactants=None, max_combinations_per_reactant=100, 
                         random_sample=True, save_interval=10, random_sample_bounds=None,
                         n_jobs=1, sampling_method='random', lhs_seed=42, save_metadata=True, save_training_data=True,
-                        task_id=None, ntasks=None):
+                        save_complete_csv=False, task_id=None, ntasks=None):
         """
         Generate complete training dataset.
         
@@ -435,7 +435,9 @@ class TrainingDataGenerator:
         save_metadata : bool
             If True, save metadata JSON file; if False, skip (e.g. for notebook flags)
         save_training_data : bool
-            If True, save partial and final training data (pkl/csv); if False, keep only in memory and return
+            If True, save partial and final training data (pickle); if False, keep only in memory and return
+        save_complete_csv : bool, optional
+            If True, also write ``training_data_complete_*.csv`` beside the pickle (large / slow). Default False.
         task_id : int, optional
             For SLURM/multi-process: this task's index (0 to ntasks-1). If set with ntasks, only runs
             simulations where global_index % ntasks == task_id for balanced parallelism.
@@ -643,14 +645,14 @@ class TrainingDataGenerator:
                 filename_pkl = self.output_dir / f'training_data_complete_{timestamp}.pkl'
                 save_dataframe_pickle(complete_dataset, filename_pkl)
                 
-                filename_csv = self.output_dir / f'training_data_complete_{timestamp}.csv'
-                complete_dataset.to_csv(filename_csv, index=False)
-                
                 print(f"[OK] Complete dataset saved:")
                 print(f"  Pickle: {filename_pkl}")
-                print(f"  CSV: {filename_csv}")
                 print(f"  Pickle file size: {os.path.getsize(filename_pkl) / 1e6:.2f} MB")
-                print(f"  CSV file size: {os.path.getsize(filename_csv) / 1e6:.2f} MB")
+                if save_complete_csv:
+                    filename_csv = self.output_dir / f'training_data_complete_{timestamp}.csv'
+                    complete_dataset.to_csv(filename_csv, index=False)
+                    print(f"  CSV: {filename_csv}")
+                    print(f"  CSV file size: {os.path.getsize(filename_csv) / 1e6:.2f} MB")
             else:
                 print(f"[OK] Complete dataset in memory only (not saved to disk)")
             
@@ -818,7 +820,8 @@ def main():
         random_sample_bounds=random_sample_bounds,
         n_jobs=n_jobs,
         sampling_method=sampling_method,
-        lhs_seed=lhs_seed
+        lhs_seed=lhs_seed,
+        save_complete_csv=config.get("save_complete_csv", False),
     )
     
     if dataset is not None:

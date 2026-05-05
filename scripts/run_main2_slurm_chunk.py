@@ -86,6 +86,7 @@ def main():
         lhs_seed=lhs_seed,
         save_metadata=True,
         save_training_data=True,
+        save_complete_csv=config.get("save_complete_csv", False),
         task_id=task_id,
         ntasks=ntasks,
     )
