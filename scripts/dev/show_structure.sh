@@ -2,6 +2,10 @@
 # HydrAI Core Structure Display Script
 # ====================================
 # Shows the core project structure excluding generated files
+# Usage: from repo root: ./scripts/dev/show_structure.sh
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR/../.." || exit 1
 
 echo "HydrAI Core Project Structure (excluding generated files)"
 echo "========================================================"

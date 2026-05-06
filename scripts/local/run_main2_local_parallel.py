@@ -7,7 +7,7 @@ so it runs on **Windows**, macOS, and Linux without bash or ``srun``.
 
 Usage (from project root)::
 
-    python scripts/run_main2_local_parallel.py --ntasks 4
+    python scripts/local/run_main2_local_parallel.py --ntasks 4
 """
 
 from __future__ import annotations
@@ -31,8 +31,8 @@ def main() -> None:
     if args.ntasks < 1:
         sys.exit("[ERROR] --ntasks must be >= 1")
 
-    root = Path(__file__).resolve().parent.parent
-    script = root / "scripts" / "run_main2_slurm_chunk.py"
+    root = Path(__file__).resolve().parent.parent.parent
+    script = root / "scripts" / "cluster" / "run_main2_slurm_chunk.py"
     if not script.exists():
         print(f"[ERROR] Missing {script}", file=sys.stderr)
         sys.exit(1)
