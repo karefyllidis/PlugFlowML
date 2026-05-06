@@ -3,8 +3,8 @@
 
 **Date:** February 2026  
 **Status:** **FULLY COMPATIBLE** with README specifications  
-**Version:** 2.2.0 – Pipeline-order notebooks (`Main_1_` … `Main_4_`), tree ML (RF, GB, XGBoost, AdaBoost)  
-**Tested:** All functionality verified and working
+**Version:** 2.3.0 – Scripts grouped under `scripts/{cluster,local,notebook,dev}`; SLURM progress JSON; smoke config for HPC tests  
+**Tested:** Structure verified against repository layout (February 2026)
 
 ---
 
@@ -23,7 +23,8 @@ HydrAI/
 │   ├── Main_1_run_pfr.ipynb                       # Step 1: PFR simulations (Jupyter notebook)
 │   ├── Main_2_generate_training_data.ipynb       # Step 2: ML training data generation (Jupyter notebook)
 │   ├── Main_3_data_exploration_feature_engineering.ipynb  # Step 3: Data exploration and feature engineering
-│   └── Main_4_train_tree_models.ipynb            # Step 4: Tree-based ML model training (RF, GB, XGBoost)
+│   ├── Main_4_train_tree_models.ipynb
+│   └── Main_4b_tree_models_comparison.ipynb
 ├── src/                                 # Source code
 │   ├── cantera/                         # Cantera simulation
 │   │   └── pfr_simulator.py            # Main PFR simulation
@@ -35,17 +36,19 @@ HydrAI/
 │   └── utils/                           # Utilities
 │       └── plot_style.py               # Figure aesthetics
 ├── configs/                             # Configuration files
-│   ├── config_template.json            # Configuration template
-│   ├── reactant_database.json          # Reactant definitions
-│   ├── heat_flux_profile.json         # Heat flux profiles
-│   ├── ml_data_generation_config.json
-│   ├── ml_training_config.json
-│   └── ml_inference_config.json
-├── mechanisms/                          # Chemical kinetic mechanisms
-│   ├── Ethane_Kinetic-Model_species_35.yaml
-│   ├── n-Hexane_Kinetic-Model_species_153.yaml
-│   ├── Naphtha_Kinetic-Model_species_1951.yaml
-│   └── Propane_Kinetic-Model_species_53.yaml
+│   ├── simulation/
+│   │   ├── config_template.json
+│   │   ├── reactant_database.json
+│   │   └── heat_flux_profile.json
+│   ├── style/
+│   │   └── figure_aesthetics.json
+│   └── ml/
+│       ├── ml_data_generation_config.json
+│       ├── ml_data_generation_config.smoke.json
+│       ├── ml_training_config.json
+│       └── ml_inference_config.json
+├── mechanisms/                          # Chemical kinetic mechanisms (YAMLs git-ignored; .gitkeep tracked)
+│   └── .gitkeep                         # Add *.yaml locally per README "Required External Files"
 ├── data/                                # Data directory
 │   ├── training/                        # Training data (generated)
 │   └── raw/                             # Raw simulation data
@@ -53,9 +56,8 @@ HydrAI/
 ├── outputs/                              # Simulation outputs
 │   ├── results/                         # CSV and summary files
 │   └── figures/                         # Generated plots
-├── styles/                               # Figure aesthetics
-│   ├── figure_aesthetics.json          # Styling configuration
-│   └── README.md                        # Aesthetics documentation
+├── styles/                               # Figure aesthetics notes (+ optional example script)
+│   └── README.md
 ├── docs/                                # Documentation
 │   ├── API_REFERENCE.md                # Detailed API documentation
 │   ├── ML_CONFIG_GUIDE.md             # ML configuration guide
@@ -66,16 +68,31 @@ HydrAI/
 │       └── IMPLEMENTATION_SUMMARY.md
 ├── examples/                            # Usage examples
 │   └── basic_usage.py                  # Basic usage example
-└── scripts/                             # Utility scripts
-    ├── run_simulation.sh                # Convenience script
-    └── show_structure.sh                # Structure display script
+└── scripts/                             # cluster / local / notebook / dev
+    ├── cluster/
+    │   ├── run_main2_slurm_chunk.py
+    │   ├── run_training_mul_CPUs.sh
+    │   ├── run_training_smoke_gpu_partition.sh
+    │   ├── run_trainning_mul_CPUs.sh
+    │   └── run_trainning_mul_GPUs.sh
+    ├── local/
+    │   ├── run_main2_local_parallel.py
+    │   └── run_main1_local_simulation.sh
+    ├── notebook/
+    │   ├── run_simulation.sh
+    │   └── run_simulation_ipynb.sh
+    └── dev/
+        ├── check_complete_runs.py
+        └── show_structure.sh
 ```
 
-### Generated Files (Excluded from Core Structure)
-- **`outputs/figures/`** directory contains: PNG plot files (temperature, pressure, velocity, etc.)
-- **`outputs/results/`** directory contains: CSV data files and DAT summary files
-- **`data/training/`** directory contains: Training data (`.pkl`; optional `metadata_*.json`) (generated)
-- **`models/`** directory contains: Trained ML model artifacts (e.g. `*_primary.joblib`) (generated)
+### Generated / runtime files (not all tracked in git)
+- **`outputs/figures/`**, **`outputs/results/`**, **`data/training/*.pkl`**, **`data/processed/*.pkl`**, **`data/figures/`** (optional EDA exports), **`models/*.joblib`** and other ML binaries (`*.pt`, `*.pth`, …)
+- **`logs/`** (including **`logs/data_generation_progress_task_*.json`** — per-task Main_2 progress when using `run_main2_slurm_chunk.py`)
+- **`temp/`** — conditions CSV and heat-flux JSON snippets during data generation
+- **`.cursor/`**, `.env` — local IDE / environment (ignored)
+
+See **Version control** in `README.md` and root `.gitignore` for the authoritative list.
 
 ---
 
@@ -90,20 +107,20 @@ HydrAI/
 | **Step 2 Data Gen** | `notebooks/Main_2_generate_training_data.ipynb` | Present | OK |
 | **Step 3 Exploration** | `notebooks/Main_3_data_exploration_feature_engineering.ipynb` | Present | OK |
 | **Step 4 Tree ML** | `notebooks/Main_4_train_tree_models.ipynb` | Tree models (RF, GB, XGBoost, AdaBoost) | OK |
-| **Database** | `configs/reactant_database.json` | Present | OK |
-| **Template** | `configs/config_template.json` | Present | OK |
+| **Database** | `configs/simulation/reactant_database.json` | Present | OK |
+| **Template** | `configs/simulation/config_template.json` | Present | OK |
 | **Dependencies** | `requirements.txt` | Present | OK |
 | **License** | `LICENSE` | Present | OK |
 | **Changelog** | `CHANGELOG.md` | Present | OK |
 | **Documentation** | `README.md` | Present | OK |
 | **Examples** | `examples/basic_usage.py` | Present | OK |
 | **API Docs** | `docs/API_REFERENCE.md` | Present | OK |
-| **Mechanisms** | `mechanisms/*.yaml` (4 files) | All Present | OK |
+| **Mechanisms** | `mechanisms/*.yaml` (local; not committed by default) | Add per README | OK |
 | **Results** | `outputs/results/` directory | Present | OK |
 | **Plots** | `outputs/figures/` directory | Present | OK |
-| **Heat Flux** | `configs/heat_flux_profile.json` | Present | OK |
+| **Heat Flux** | `configs/simulation/heat_flux_profile.json` | Present | OK |
 | **ML Models** | `src/ml/` modules | Present | OK |
-| **Aesthetics** | `styles/figure_aesthetics.json` | Present | OK |
+| **Aesthetics** | `configs/style/figure_aesthetics.json` | Present | OK |
 
 ### **All 4 Reactants Supported**
 - **Ethane** - 35 species, 135 reactions
@@ -130,30 +147,28 @@ The notebook provides an interactive interface where you can:
 - View inline visualizations
 - Modify parameters easily
 
-### **Method 2: Using the Convenience Script**
+### **Method 2: Bash convenience scripts (Unix)**
+From the repository root:
 ```bash
-# List available reactants
-./scripts/run_simulation.sh --list
-
-# Run simulations
-./scripts/run_simulation.sh ethane
-./scripts/run_simulation.sh propane
-./scripts/run_simulation.sh naphtha
-./scripts/run_simulation.sh n-hexane
+./scripts/notebook/run_simulation.sh
+# equivalent:
+./scripts/local/run_main1_local_simulation.sh
 ```
+Each script starts Jupyter and opens `notebooks/Main_1_run_pfr.ipynb`.
+
+### **SLURM / cluster (Main_2 sweeps)**
+
+Submit batch scripts from the repo root (see `README.md` § HPC). Override config for smoke tests:
+`export HYDRAI_ML_CONFIG=$PWD/configs/ml/ml_data_generation_config.smoke.json`.  
+Monitor: `tail -f logs/data_generation_progress_task_0.json` (use the task id of your worker).
 
 ---
 
 ## Test Results
 
-### **Functionality Tests - ALL PASSED**
-- **Reactant Listing**: `--list` command works perfectly
-- **Simulation Execution**: Ethane simulation completed successfully
-- **File Generation**: All output files created correctly
-- **Dependencies**: All required packages installed and working
-- **Dependencies**: All packages installed via pip
+Prior validation used the Jupyter workflow and tree-ML pipeline; SLURM filenames vary by site (edit `#SBATCH` headers before submitting).
 
-### **Sample Test Output**
+### **Sample test output (notebook / CLI-style)**
 ```
 Running simulation for: Ethane
 Loaded configuration for Ethane Pyrolysis PFR Simulation
@@ -169,7 +184,7 @@ SIMULATION COMPLETED SUCCESSFULLY!
 
 ---
 
-## 📋 Key Files Summary
+## Key Files Summary
 
 | File | Purpose | Status |
 |------|---------|--------|
@@ -177,13 +192,19 @@ SIMULATION COMPLETED SUCCESSFULLY!
 | `notebooks/Main_2_generate_training_data.ipynb` | Step 2: ML data generation (Jupyter notebook) | Working |
 | `notebooks/Main_3_data_exploration_feature_engineering.ipynb` | Step 3: Data exploration and feature engineering (Jupyter notebook) | Working |
 | `notebooks/Main_4_train_tree_models.ipynb` | Step 4: Tree-based ML training (RF, GB, XGBoost) | OK |
+| `notebooks/Main_4b_tree_models_comparison.ipynb` | Step 5: Model comparison metrics & plots | OK |
 | `src/cantera/pfr_simulator.py` | Main simulation code | Working |
-| `configs/reactant_database.json` | Reactant definitions | Complete |
-| `configs/config_template.json` | Configuration template | Valid |
+| `configs/simulation/reactant_database.json` | Reactant definitions | Complete |
+| `configs/simulation/config_template.json` | Configuration template | Valid |
 | `requirements.txt` | Dependencies list | All installed |
-| `scripts/run_simulation.sh` | Convenience script | Working |
-| `configs/heat_flux_profile.json` | Heat flux data | Present |
-| `styles/figure_aesthetics.json` | Figure styling | Present |
+| `scripts/cluster/run_main2_slurm_chunk.py` | Main-2 worker (`TASK_ID` / `NTASKS`) | Use on HPC |
+| `scripts/cluster/run_training_mul_CPUs.sh` | Example multi-CPU SLURM job | Site-specific `#SBATCH` |
+| `scripts/cluster/run_training_smoke_gpu_partition.sh` | Short smoke test (tiny config) | Edit account/partition |
+| `scripts/local/run_main2_local_parallel.py` | Multi-process Main_2 on one machine | All OS |
+| `scripts/dev/check_complete_runs.py` | Sweep completeness / manifests | Run from repo root |
+| `scripts/notebook/run_simulation.sh` | Opens Main_1 in Jupyter | Working |
+| `configs/simulation/heat_flux_profile.json` | Heat flux data | Present |
+| `configs/style/figure_aesthetics.json` | Figure styling | Present |
 
 ---
 
@@ -194,7 +215,7 @@ SIMULATION COMPLETED SUCCESSFULLY!
 3. **Directory structure has been restructured** for better organization (see STRUCTURE.md)
 4. **System is ready for production use** with all 4 reactants
 5. **ML Surrogate Models available** for fast predictions (see docs/ml/)
-6. **Centralized figure aesthetics** in `styles/figure_aesthetics.json`
+6. **Centralized figure aesthetics** in `configs/style/figure_aesthetics.json` (see `styles/README.md`)
 7. **Interactive workflows** via Jupyter notebooks for better user experience
 
 ---
@@ -202,7 +223,7 @@ SIMULATION COMPLETED SUCCESSFULLY!
 ## Notes
 
 - **Dependencies**: Installed via pip (no virtual environment required)
-- **Generated Files**: The `fig/` and `results/` directories contain output from previous simulations
+- **Generated files**: Primary outputs live under `outputs/figures/` and `outputs/results/` (legacy `fig/` / `results/` at repo root may appear in older clones)
 - **Compatibility**: The directory structure exactly matches the README specifications
 - **Functionality**: All core features are working and tested
 - **Export Controls**: New v2.1.0 feature allows optional CSV and plot generation via configuration flags

@@ -80,7 +80,7 @@ Main_1 → Main_2 → Main_3 → Main_4 → Main_4b
 
 ### Model Training (Main_4)
 - **MultiOutputRegressor** wrapper: one regressor per output target
-- Models and default hyperparameters (from `configs/ml_training_config.json`):
+- Models and default hyperparameters (from `configs/ml/ml_training_config.json`):
 
 | Model | n_estimators | max_depth | Notes |
 |-------|-------------|-----------|-------|
@@ -120,18 +120,34 @@ HydrAI/
 │       └── inference.py                   # MLPFRPredictor — fast surrogate inference
 │
 ├── configs/
-│   ├── ml_data_generation_config.json     # Sampling method, parameter ranges, reactants
-│   ├── ml_training_config.json            # Model hyperparameters, test split
-│   ├── heat_flux_profile.json             # Axial heat flux profile
-│   ├── reactant_database.json             # Reactant properties and mechanisms
-│   └── config_template.json              # Simulation config template
+│   ├── ml/                                # ML pipeline JSON
+│   │   ├── ml_data_generation_config.json
+│   │   ├── ml_data_generation_config.smoke.json
+│   │   ├── ml_training_config.json
+│   │   └── ml_inference_config.json
+│   ├── simulation/                        # PFR / Cantera inputs
+│   │   ├── reactant_database.json
+│   │   ├── config_template.json
+│   │   └── heat_flux_profile.json
+│   └── style/                              # Matplotlib aesthetics
+│       └── figure_aesthetics.json
 │
 ├── scripts/
-│   ├── run_training_mul_CPUs.sh           # SLURM job (parallel Main_2, Linux/HPC)
-│   ├── run_main2_local_parallel.py       # Local multi-process launcher (Windows/macOS/Linux)
-│   ├── run_main2_slurm_chunk.py           # Per-task chunk runner (TASK_ID / NTASKS)
-│   ├── run_simulation.sh                  # Single simulation convenience script
-│   └── show_structure.sh                  # Print project structure
+│   ├── cluster/                           # SLURM / HPC (Linux clusters)
+│   │   ├── run_main2_slurm_chunk.py       # Per-task chunk runner (TASK_ID / NTASKS)
+│   │   ├── run_training_mul_CPUs.sh       # Example multi-CPU SLURM job
+│   │   ├── run_training_smoke_gpu_partition.sh  # Smoke test (GPU partition; tiny config)
+│   │   ├── run_trainning_mul_CPUs.sh      # Alternate spelling (site-specific duplicate)
+│   │   └── run_trainning_mul_GPUs.sh      # Legacy name; same smoke defaults as above
+│   ├── local/
+│   │   ├── run_main2_local_parallel.py    # Local multi-process Main_2 launcher (TASK_ID / NTASKS)
+│   │   └── run_main1_local_simulation.sh   # Open Main_1 notebook (same idea as notebook/*.sh)
+│   ├── notebook/
+│   │   ├── run_simulation.sh              # Open Main_1 notebook via Jupyter
+│   │   └── run_simulation_ipynb.sh        # Same (duplicate convenience entry)
+│   └── dev/
+│       ├── check_complete_runs.py         # Training sweep progress / manifest helper
+│       └── show_structure.sh              # Print repo tree (requires `tree`)
 │
 ├── data/
 │   ├── training/                          # Raw simulation sweeps (pkl)
@@ -140,7 +156,7 @@ HydrAI/
 ├── models/                                # Exported joblib model artifacts
 ├── mechanisms/                            # Cantera YAML kinetic mechanisms
 ├── outputs/figures/                       # Generated plots
-├── styles/figure_aesthetics.json          # Centralised plot styling
+├── styles/                                 # Notes + examples for figure aesthetics
 └── requirements.txt
 ```
 
@@ -167,7 +183,7 @@ The Python stack runs the same way on Windows: `pip install -r requirements.txt`
 **Parallel data generation without SLURM** (multi-process, works on Windows, macOS, Linux):
 
 ```powershell
-python scripts/run_main2_local_parallel.py --ntasks 4
+python scripts/local/run_main2_local_parallel.py --ntasks 4
 ```
 
 Or run a single chunk in one terminal:
@@ -175,10 +191,12 @@ Or run a single chunk in one terminal:
 ```powershell
 $env:TASK_ID = "0"
 $env:NTASKS = "4"
-python scripts/run_main2_slurm_chunk.py
+python scripts/cluster/run_main2_slurm_chunk.py
 ```
 
-Shell scripts under `scripts/*.sh` are optional convenience wrappers for Unix-like environments; they are not required on Windows.
+Shell scripts under `scripts/**/*.sh` are optional convenience wrappers for Unix-like environments; they are not required on Windows.
+
+To open **Main_1** from a Unix shell (repo root): `./scripts/notebook/run_simulation.sh` or `./scripts/local/run_main1_local_simulation.sh`.
 
 ### 2. Run a single PFR simulation
 
@@ -186,7 +204,7 @@ Open and run `notebooks/Main_1_run_pfr.ipynb`. Set your reactant and operating c
 
 ### 3. Generate training data
 
-Configure `configs/ml_data_generation_config.json`, then run `Main_2_generate_training_data.ipynb`.
+Configure `configs/ml/ml_data_generation_config.json`, then run `Main_2_generate_training_data.ipynb`.
 
 ```json
 {
@@ -213,10 +231,11 @@ On Windows, `run_pipeline.bat` does the same if `python` is on your PATH.
 
 ## Required External Files
 
-The repository ships everything needed to run the pipeline **except** the
-chemical kinetic mechanism files. They live in `mechanisms/` and are tracked,
-but if you clone fresh and Cantera complains about a missing YAML file, the
-mapping is:
+The repository ships code, notebooks, and JSON configs. Large or
+machine-generated artifacts are **git-ignored** by default (see **Version control**
+below). **Cantera kinetic mechanisms** are not committed: only `mechanisms/.gitkeep`
+is tracked. Copy the YAML mechanism files into `mechanisms/` locally. If Cantera
+reports a missing mechanism, the intended filenames are:
 
 | Reactant | Mechanism file (`mechanisms/`) | # Species |
 |----------|--------------------------------|-----------|
@@ -225,18 +244,35 @@ mapping is:
 | `n-hexane` | `n-Hexane_Kinetic-Model_species_153.yaml` | 153 |
 | `naphtha`  | `Naphtha_Kinetic-Model_species_1951.yaml` | 1951 |
 
-Filenames are referenced by `configs/reactant_database.json`. To add a new
+Filenames are referenced by `configs/simulation/reactant_database.json`. To add a new
 reactant, drop the YAML file into `mechanisms/` and add a new entry in the
 reactant database with `"mechanism_file": "<your_file>.yaml"`.
 
 A populated `data/training/*.pkl` dataset is **not** required to clone & run —
-generate one locally with `Main_2_generate_training_data.ipynb`, with `scripts/run_main2_local_parallel.py` for multi-process runs on one machine, or with `scripts/run_main2_slurm_chunk.py` on HPC.
+generate one locally with `Main_2_generate_training_data.ipynb`, with `scripts/local/run_main2_local_parallel.py` for multi-process runs on one machine, or with `scripts/cluster/run_main2_slurm_chunk.py` on HPC.
+
+### Version control (what stays out of git)
+
+`.gitignore` excludes typical **generated** and **large** paths so clones stay small:
+
+| Pattern | Purpose |
+|--------|---------|
+| `data/training/*`, `data/processed/*`, `*.pkl`, `metadata_*.json` | Training pickles and metadata |
+| `data/figures/` | Optional EDA exports (e.g. from Main_3 next to processed data) |
+| `models/*`, `*.joblib`, `*.pt`, `*.pth`, … | Trained surrogates and ML checkpoints |
+| `outputs/results/*`, `outputs/figures/*` | PFR run outputs and plots |
+| `logs/` | SLURM chunk progress JSON and similar run logs |
+| `temp/` | Transient heat-flux snippets and condition logs during data generation |
+| `mechanisms/*.yaml` | Kinetic mechanisms (add locally; see table above) |
+| `.cursor/`, `.vscode/`, `.env`, `.env.local` | Local IDE state and secrets |
+
+Tracked **directory placeholders** use `.gitkeep` where noted. To track mechanism YAMLs in a fork, remove the `mechanisms/*` rule in `.gitignore` (see comment there) and commit the files you need.
 
 ---
 
 ## Configuration
 
-### `configs/ml_data_generation_config.json`
+### `configs/ml/ml_data_generation_config.json`
 
 | Key | Description | Example |
 |-----|-------------|---------|
@@ -247,7 +283,9 @@ generate one locally with `Main_2_generate_training_data.ipynb`, with `scripts/r
 | `n_jobs` | CPU cores (`-1` = all) | `-1` |
 | `save_interval` | Checkpoint every N sims | `10` |
 
-### `configs/ml_training_config.json`
+Use **`configs/ml/ml_data_generation_config.smoke.json`** for a tiny LHS sample (cluster smoke tests). Point the chunk runner at it with `HYDRAI_ML_CONFIG` (see [HPC / SLURM](#hpc-slurm)).
+
+### `configs/ml/ml_training_config.json`
 
 | Key | Description |
 |-----|-------------|
@@ -272,25 +310,30 @@ TUNING_MAX_SAMPLES          = 50000     # subsample for search; best params refi
 
 ## HPC / SLURM
 
-For large parameter sweeps (1M+ simulations), the pipeline supports parallel execution on multi-node HPC clusters **with SLURM (Linux)**. On a single Windows or macOS machine, use `python scripts/run_main2_local_parallel.py` instead (see **Windows** in Quick Start above).
+For large parameter sweeps (1M+ simulations), the pipeline supports parallel execution on multi-node HPC clusters **with SLURM (Linux)**. On a single Windows or macOS machine, use `python scripts/local/run_main2_local_parallel.py` instead (see **Windows** in Quick Start above).
 
 ```bash
 # Submit from project root (56 CPUs on 1 node)
-sbatch scripts/run_training_mul_CPUs.sh
+sbatch scripts/cluster/run_training_mul_CPUs.sh
 
-# Scale to 100s of CPUs — edit the script:
+# Short smoke test on a GPU partition (4 tasks, ethane, 2 LHS points — edit accounts/partition inside the script)
+sbatch scripts/cluster/run_training_smoke_gpu_partition.sh
+
+# Scale to 100s of CPUs — edit the CPU script:
 #SBATCH --nodes=4
 #SBATCH --ntasks=200
 ```
 
-Each SLURM task runs `scripts/run_main2_slurm_chunk.py`, which reads `TASK_ID` and `NTASKS` from the environment and processes `1/NTASKS` of all simulations. Output is written to `data/training/task_<ID>/` with no write conflicts between tasks.
+While jobs run, each Slurm task writes **`logs/data_generation_progress_task_<TASK_ID>.json`** (atomically replaced after every simulation). Example: `tail -f logs/data_generation_progress_task_0.json`. Optional: `export HYDRAI_ML_CONFIG=/path/to/config.json` before launching the Python chunk to override the default config path.
+
+Each SLURM task runs `scripts/cluster/run_main2_slurm_chunk.py`, which reads `TASK_ID` and `NTASKS` from the environment and processes `1/NTASKS` of all simulations. Output is written to `data/training/task_<ID>/` with no write conflicts between tasks.
 
 ```bash
 # Manual parallel execution (e.g. 4 processes locally)
-TASK_ID=0 NTASKS=4 python scripts/run_main2_slurm_chunk.py &
-TASK_ID=1 NTASKS=4 python scripts/run_main2_slurm_chunk.py &
-TASK_ID=2 NTASKS=4 python scripts/run_main2_slurm_chunk.py &
-TASK_ID=3 NTASKS=4 python scripts/run_main2_slurm_chunk.py &
+TASK_ID=0 NTASKS=4 python scripts/cluster/run_main2_slurm_chunk.py &
+TASK_ID=1 NTASKS=4 python scripts/cluster/run_main2_slurm_chunk.py &
+TASK_ID=2 NTASKS=4 python scripts/cluster/run_main2_slurm_chunk.py &
+TASK_ID=3 NTASKS=4 python scripts/cluster/run_main2_slurm_chunk.py &
 wait
 ```
 
@@ -334,6 +377,12 @@ After training on 152,442 n-hexane simulation points (exit-condition mode), the 
 - [ ] Reactor design optimisation (bayesian / gradient-free)
 - [ ] Interactive GUI
 - [ ] Additional reactants (butane, pentane, …)
+
+---
+
+## Contributing
+
+See [Contributing](.github/CONTRIBUTING.md) (git hooks, commit attribution).
 
 ---
 

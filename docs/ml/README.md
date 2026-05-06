@@ -20,7 +20,7 @@ Generate a large training dataset by running parameter sweeps:
 
 ```bash
 # Generate training data using JSON config file
-python src/ml/data_generation.py configs/ml_data_generation_config.json
+python src/ml/data_generation.py configs/ml/ml_data_generation_config.json
 ```
 
 Or use the Jupyter notebook:
@@ -50,15 +50,15 @@ Loads exported artifacts from Main_4 and evaluates all models on the held-out te
 
 **Option B – All model types (command-line):**
 ```bash
-python src/ml/model_training.py configs/ml_training_config.json
+python src/ml/model_training.py configs/ml/ml_training_config.json
 ```
 
-**Available models (notebook: tree-only; script: all):**
+**Available models (notebook: tree-only; script: RF + XGBoost + gradient boosting; `neural_network` = PyTorch placeholder):**
 - `random_forest` - Random Forest (scikit-learn)
 - `gradient_boosting` - Gradient Boosting (scikit-learn)
 - `xgboost` - XGBoost
 - `adaboost` - AdaBoost with tree base (scikit-learn)
-- `neural_network` - Deep neural network (TensorFlow/Keras; script only)
+- `neural_network` - Placeholder in `model_training.py` — deep models will use **PyTorch** (not implemented yet; use tree models or Main_4)
 
 **Target Types:**
 - `primary` - Core outputs (temperature, pressure, velocity, density)
@@ -72,7 +72,7 @@ Use trained models instead of Cantera:
 
 ```bash
 # Predict reactor profile using ML model
-python src/ml/inference.py configs/ml_inference_config.json
+python src/ml/inference.py configs/ml/ml_inference_config.json
 ```
 
 ## Architecture
@@ -280,12 +280,12 @@ models/                         # Trained models
 - `pandas>=1.3.0` - Data manipulation
 
 ### Optional (but recommended)
-- `tensorflow>=2.8.0` - Neural networks
+- `torch>=2.0.0` (optional, future) - PyTorch for neural-network path in `model_training.py`
 - `xgboost>=1.5.0` - XGBoost
 
 Install with:
 ```bash
-pip install scikit-learn joblib tensorflow xgboost
+pip install scikit-learn joblib xgboost
 ```
 
 ## Tips and Best Practices
@@ -314,9 +314,9 @@ pip install scikit-learn joblib tensorflow xgboost
 
 ### Model Not Found
 ```
-FileNotFoundError: Model not found: models/neural_network_primary.h5
+FileNotFoundError: Model not found: models/xgboost_primary.pkl
 ```
-**Solution**: Train models first using `train_ml_models.py`
+**Solution**: Train models first (`Main_4_train_tree_models.ipynb` or `python src/ml/model_training.py`). Ensure `model_type` in inference config matches an artifact model key you actually trained (e.g. `xgboost`, `random_forest`, `adaboost`).
 
 ### Out of Memory
 **Solution**: Reduce `max_combinations` or use random sampling
