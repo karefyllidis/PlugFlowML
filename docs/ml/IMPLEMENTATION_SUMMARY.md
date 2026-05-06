@@ -39,7 +39,7 @@ The ML Surrogate Models module successfully implements machine learning models t
 - **Gradient Boosting** (scikit-learn) - Boosting algorithm
 - **XGBoost** - Gradient boosting; often best accuracy
 - **AdaBoost** (scikit-learn) - Tree-based AdaBoost (notebook)
-- **Neural Networks** (TensorFlow/Keras; script only) - Deep feedforward, early stopping, dropout
+- **Neural Networks** (planned: PyTorch in `model_training.py`) — not wired yet; tree models are production-ready
 
 **Target Types**:
 - `primary`: Core outputs (temperature, pressure, velocity, density)
@@ -84,7 +84,7 @@ src/ml/
 ├── inference.py                 # ML inference script
 └── example_usage.py             # Example usage scripts
 
-configs/
+configs/ml/
 ├── ml_data_generation_config.json    # Data generation config
 ├── ml_training_config.json           # Model training config
 └── ml_inference_config.json          # Inference config
@@ -110,17 +110,17 @@ docs/ml/
 
 1. **Generate Training Data** (5-30 minutes)
    ```bash
-   python src/ml/data_generation.py configs/ml_data_generation_config.json
+   python src/ml/data_generation.py configs/ml/ml_data_generation_config.json
    ```
 
 2. **Train ML Models** (2-10 minutes)
    ```bash
-   python src/ml/model_training.py configs/ml_training_config.json
+   python src/ml/model_training.py configs/ml/ml_training_config.json
    ```
 
 3. **Use ML Models** (instant)
    ```bash
-   python src/ml/inference.py configs/ml_inference_config.json
+   python src/ml/inference.py configs/ml/ml_inference_config.json
    ```
 
 ### Python API
@@ -156,7 +156,7 @@ profile  = predictor.predict_profile(initial_temperature_K=925, ..., n_points=20
 
 - `scikit-learn>=1.0.0` - ML algorithms
 - `joblib>=1.0.0` - Model serialization
-- `tensorflow>=2.8.0` (optional) - Neural networks
+- `torch>=2.0.0` (optional, future) - PyTorch neural networks
 - `xgboost>=1.5.0` (optional) - XGBoost
 
 ## Performance Metrics

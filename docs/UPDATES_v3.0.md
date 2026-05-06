@@ -13,14 +13,14 @@ Version 3.0.0 represents a major restructuring and enhancement of the HydrAI pro
   - `src/cantera/` - Cantera-based simulation code
   - `src/ml/` - ML Surrogate Models
   - `src/utils/` - Utility modules (plot styling, etc.)
-- `configs/` - All configuration files centralized
+- `configs/` — `configs/simulation/` (PFR templates, reactants, heat flux), `configs/ml/` (ML JSON), `configs/style/` (`figure_aesthetics.json`)
 - `mechanisms/` - Chemical kinetic mechanisms
 - `data/` - Training data directory
 - `models/` - Trained ML models directory
 - `outputs/` - All simulation outputs
   - `outputs/results/` - CSV and summary files
   - `outputs/figures/` - Generated plots
-- `styles/` - Figure aesthetics configuration
+- `styles/` - Notes and examples for figure aesthetics (`styles/README.md` points to `configs/style/figure_aesthetics.json`)
 
 **Benefits:**
 - Clear separation of concerns
@@ -40,7 +40,7 @@ Version 3.0.0 represents a major restructuring and enhancement of the HydrAI pro
 - `src/ml/data_generation.py` - Generate training datasets
 - `src/ml/model_training.py` - Train ML models
 - `src/ml/inference.py` - Fast ML predictions
-- `configs/ml_*_config.json` - Configuration files
+- `configs/ml/ml_*_config.json` - ML configuration files
 
 **Documentation:**
 - `docs/ml/README.md` - Comprehensive guide
@@ -56,14 +56,14 @@ Version 3.0.0 represents a major restructuring and enhancement of the HydrAI pro
 - Self-documenting
 
 **Config Files:**
-- `configs/ml_data_generation_config.json` - Training data generation
-- `configs/ml_training_config.json` - Model training
-- `configs/ml_inference_config.json` - Inference/prediction
+- `configs/ml/ml_data_generation_config.json` - Training data generation
+- `configs/ml/ml_training_config.json` - Model training
+- `configs/ml/ml_inference_config.json` - Inference/prediction
 
 ### 4. Centralized Figure Aesthetics
 
 **New Styling System:**
-- `styles/figure_aesthetics.json` - Centralized styling configuration
+- `configs/style/figure_aesthetics.json` - Centralized styling (legacy: flat `configs/figure_aesthetics.json` or `styles/figure_aesthetics.json` if preferred path is absent)
 - `src/utils/plot_style.py` - Utility functions for applying aesthetics
 - Consistent appearance across all plots
 - Easy customization
@@ -79,9 +79,15 @@ Version 3.0.0 represents a major restructuring and enhancement of the HydrAI pro
 - `notebooks/Main_1_run_pfr.ipynb` - Step 1: Main interactive entry point for simulations (Jupyter notebook)
 - Replaces direct execution of `Main_GeneralizedPFR.py`
 
-**Updated Scripts:**
-- `scripts/run_simulation.sh` - Updated to use new entry point
-- All paths updated to new structure
+**Updated Scripts (`scripts/`):**
+- **`scripts/cluster/`** — `run_main2_slurm_chunk.py` (set `TASK_ID`, `NTASKS`, optional `HYDRAI_ML_CONFIG`); `run_training_mul_CPUs.sh`; `run_training_smoke_gpu_partition.sh` (+ typo duplicates for legacy `sbatch` names).
+- **`scripts/local/`** — `run_main2_local_parallel.py` (multi-process Main_2 on one host); `run_main1_local_simulation.sh` (open Main_1 in Jupyter).
+- **`scripts/notebook/`** — `run_simulation.sh` / `run_simulation_ipynb.sh` (same as above).
+- **`scripts/dev/`** — `check_complete_runs.py`, `show_structure.sh`.
+- **Progress / logs** — each SLURM chunk task writes `logs/data_generation_progress_task_<ID>.json`; optional temp CSVs under `temp/`.
+- **Configs** — default `configs/ml/ml_data_generation_config.json`; `configs/ml/ml_data_generation_config.smoke.json` for short cluster tests.
+
+All paths assume execution from the repository root unless noted.
 
 ## Migration Guide
 
@@ -97,7 +103,7 @@ Version 3.0.0 represents a major restructuring and enhancement of the HydrAI pro
    ```
 
 2. **Update File Paths:**
-   - Config files: `configs/`
+   - Config files: `configs/simulation/`, `configs/ml/`, `configs/style/`
    - Mechanisms: `mechanisms/`
    - Outputs: `outputs/results/` and `outputs/figures/`
 
@@ -113,16 +119,16 @@ Version 3.0.0 represents a major restructuring and enhancement of the HydrAI pro
 ### For ML Users
 
 1. **Create Config Files:**
-   - Copy templates from `configs/`
+   - Copy templates from `configs/ml/` (and `configs/simulation/` for PFR templates)
    - Customize for your needs
 
 2. **Update Script Calls:**
    ```bash
    # Old (command-line args)
-   python src/ml/data_generation.py configs/ml_data_generation_config.json
+   python src/ml/data_generation.py configs/ml/ml_data_generation_config.json
    
    # New (JSON config)
-   python src/ml/data_generation.py configs/ml_data_generation_config.json
+   python src/ml/data_generation.py configs/ml/ml_data_generation_config.json
    ```
 
 ## New Features
@@ -157,7 +163,7 @@ All documentation has been updated:
 
 1. **File Locations:**
    - Main code: `src/cantera/pfr_simulator.py`
-   - Configs: `configs/`
+   - Configs: `configs/simulation/`, `configs/ml/`, `configs/style/`
    - Mechanisms: `mechanisms/`
    - Outputs: `outputs/`
 
@@ -179,7 +185,7 @@ All documentation has been updated:
 2. Update any custom scripts to use new paths
 3. Create JSON configs for ML workflows
 4. Explore ML Surrogate Models for fast predictions
-5. Customize figure aesthetics in `styles/figure_aesthetics.json`
+5. Customize figure aesthetics in `configs/style/figure_aesthetics.json`
 
 ## Support
 

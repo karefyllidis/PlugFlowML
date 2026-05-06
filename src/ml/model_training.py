@@ -4,7 +4,7 @@ ML Model Training Script
 ========================
 
 Train multiple ML models to replace Cantera simulations.
-Supports: Neural Networks, Random Forest, XGBoost, Gradient Boosting, etc.
+Supports: Random Forest, XGBoost, Gradient Boosting, and (planned) PyTorch neural networks.
 
 Author: Nikolas Karefyllidis, PhD
 ML Surrogate Models Module
@@ -25,15 +25,7 @@ from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
 import warnings
 warnings.filterwarnings('ignore')
 
-# ML Libraries
-try:
-    import tensorflow as tf
-    from tensorflow import keras
-    from tensorflow.keras import layers
-    TENSORFLOW_AVAILABLE = True
-except ImportError:
-    TENSORFLOW_AVAILABLE = False
-    print("Warning: TensorFlow not available. Neural network training will be skipped.")
+# Deep neural nets: planned stack is PyTorch (see train_neural_network); not required for tree models.
 
 try:
     import xgboost as xgb
@@ -43,10 +35,6 @@ except ImportError:
     print("Warning: XGBoost not available. XGBoost training will be skipped.")
 
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
-from sklearn.linear_model import Ridge
-from sklearn.neural_network import MLPRegressor
-
-
 class MLModelTrainer:
     """Train ML models to replace Cantera."""
     
@@ -197,86 +185,23 @@ class MLModelTrainer:
         return (X_train_scaled, X_test_scaled, y_train_scaled, y_test_scaled, 
                 target_cols, y_train, y_test)
     
-    def train_neural_network(self, X_train, X_test, y_train, y_test, target_names, 
-                           target_type='primary', epochs=50, batch_size=256):
-        """Train a neural network model."""
-        if not TENSORFLOW_AVAILABLE:
-            print("TensorFlow not available. Skipping neural network training.")
-            return None
-        
-        print(f"\nTraining Neural Network for {target_type} targets...")
-        
-        n_features = X_train.shape[1]
-        n_targets = y_train.shape[1]
-        
-        # Build model
-        model = keras.Sequential([
-            layers.Dense(256, activation='relu', input_shape=(n_features,)),
-            layers.Dropout(0.2),
-            layers.Dense(128, activation='relu'),
-            layers.Dropout(0.2),
-            layers.Dense(64, activation='relu'),
-            layers.Dropout(0.1),
-            layers.Dense(32, activation='relu'),
-            layers.Dense(n_targets)
-        ])
-        
-        model.compile(
-            optimizer=keras.optimizers.Adam(learning_rate=0.001),
-            loss='mse',
-            metrics=['mae']
-        )
-        
-        # Early stopping
-        early_stopping = keras.callbacks.EarlyStopping(
-            monitor='val_loss',
-            patience=10,
-            restore_best_weights=True
-        )
-        
-        # Train
-        history = model.fit(
-            X_train, y_train,
-            validation_data=(X_test, y_test),
-            epochs=epochs,
-            batch_size=batch_size,
-            callbacks=[early_stopping],
-            verbose=1
-        )
-        
-        # Evaluate
-        y_pred = model.predict(X_test)
-        y_pred_original = self.target_scalers[target_type].inverse_transform(y_pred)
-        y_test_original = self.target_scalers[target_type].inverse_transform(y_test)
-        
-        metrics = self._calculate_metrics(y_test_original, y_pred_original, target_names)
-        
-        # Save model
-        model_name = f'neural_network_{target_type}'
-        model_path = self.output_dir / f'{model_name}.h5'
-        model.save(model_path)
-        
-        # Save scalers
-        scaler_path = self.output_dir / f'{model_name}_scalers.pkl'
-        with open(scaler_path, 'wb') as f:
-            pickle.dump({
-                'feature_scaler': self.feature_scaler,
-                'target_scaler': self.target_scalers[target_type],
-                'label_encoder': self.label_encoder,
-                'target_names': target_names
-            }, f)
-        
-        print(f"[OK] Model saved: {model_path}")
-        self._print_metrics(metrics, model_name)
-        
-        return {
-            'model': model,
-            'model_path': model_path,
-            'scaler_path': scaler_path,
-            'metrics': metrics,
-            'type': 'neural_network'
-        }
-    
+    def train_neural_network(self, X_train, X_test, y_train, y_test, target_names,
+                             target_type='primary', epochs=50, batch_size=256):
+        """
+        Train a neural network surrogate.
+
+        The previous TensorFlow/Keras path was removed. HydrAI will standardize on PyTorch
+        for deep models; wire torch.nn + multi-output regression here when ready.
+        """
+        _ = (X_train, X_test, y_train, y_test, target_names, target_type, epochs, batch_size)
+        if not getattr(self, "_pytorch_nn_notice_shown", False):
+            print(
+                "Neural network: PyTorch trainer not implemented yet — skipping. "
+                "Use tree models (RF / XGBoost / GB) or Main_4_train_tree_models.ipynb."
+            )
+            self._pytorch_nn_notice_shown = True
+        return None
+
     def train_random_forest(self, X_train, X_test, y_train, y_test, target_names, 
                            target_type='primary', n_estimators=100, max_depth=20):
         """Train a Random Forest model."""
@@ -481,11 +406,12 @@ class MLModelTrainer:
         target_types : list
             List of target types to train ('primary', 'secondary', 'species')
         models : list
-            List of models to train ('neural_network', 'random_forest', 'xgboost', 
-            'gradient_boosting', or 'all')
+            List of models to train ('neural_network' placeholder until PyTorch; 'random_forest', 'xgboost',
+            'gradient_boosting', or 'all'). ``all`` expands to the three tree/boosting models only.
         """
         if 'all' in models:
-            models = ['neural_network', 'random_forest', 'xgboost', 'gradient_boosting']
+            # Exclude neural_network until PyTorch trainer is implemented (see train_neural_network).
+            models = ['random_forest', 'xgboost', 'gradient_boosting']
         
         all_results = {}
         
@@ -501,7 +427,7 @@ class MLModelTrainer:
             results = {}
             
             # Train each model
-            if 'neural_network' in models and TENSORFLOW_AVAILABLE:
+            if 'neural_network' in models:
                 results['neural_network'] = self.train_neural_network(
                     X_train, X_test, y_train, y_test, target_names, target_type
                 )
@@ -556,7 +482,7 @@ def main():
     
     if len(sys.argv) < 2:
         print("Usage: python model_training.py <config_file.json>")
-        print("Example: python model_training.py configs/ml_training_config.json")
+        print("Example: python model_training.py configs/ml/ml_training_config.json")
         sys.exit(1)
     
     config_file = sys.argv[1]

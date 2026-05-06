@@ -56,6 +56,60 @@ from src.cantera.pfr_simulator import (
     calculate_product_yields
 )
 
+
+def _params_to_conditions_log_row(params):
+    """Map generator param dict to SLURM conditions-log column names (pressure_bar, diameter_mm)."""
+    row = {
+        "temperature_K": params.get("temperature_K"),
+        "pressure_bar": params.get("pressure_bar"),
+        "length_m": params.get("length_m"),
+        "diameter_mm": params.get("diameter_mm"),
+        "mass_flow_rate_kgps": params.get("mass_flow_rate_kgps"),
+        "heat_flux_Wm2": params.get("heat_flux_Wm2"),
+    }
+    if row["pressure_bar"] is None and params.get("pressure_Pa") is not None:
+        row["pressure_bar"] = float(params["pressure_Pa"]) / 1e5
+    if row["diameter_mm"] is None and params.get("diameter_m") is not None:
+        row["diameter_mm"] = float(params["diameter_m"]) * 1000.0
+    return row
+
+
+def _write_generation_progress(
+    path,
+    task_id,
+    ntasks,
+    completed,
+    total,
+    successful,
+    failed,
+    elapsed_s,
+):
+    """Atomic JSON status for monitoring (e.g. tail/monitor on HPC)."""
+    if not path:
+        return
+    try:
+        p = Path(path)
+        p.parent.mkdir(parents=True, exist_ok=True)
+        pct = (100.0 * completed / total) if total else 0.0
+        data = {
+            "task_id": task_id,
+            "ntasks": ntasks,
+            "completed": completed,
+            "total_this_task": total,
+            "successful": successful,
+            "failed": failed,
+            "percent_this_task": round(pct, 2),
+            "elapsed_s": round(elapsed_s, 1),
+            "updated": datetime.now().isoformat(timespec="seconds"),
+        }
+        tmp = p.with_suffix(p.suffix + ".tmp")
+        with open(tmp, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2)
+        tmp.replace(p)
+    except Exception:
+        pass
+
+
 class TrainingDataGenerator:
     """Generate training data by running parameter sweeps."""
     
@@ -409,7 +463,10 @@ class TrainingDataGenerator:
     def generate_dataset(self, reactants=None, max_combinations_per_reactant=100, 
                         random_sample=True, save_interval=10, random_sample_bounds=None,
                         n_jobs=1, sampling_method='random', lhs_seed=42, save_metadata=True, save_training_data=True,
-                        save_complete_csv=False, task_id=None, ntasks=None):
+                        save_complete_csv=False, task_id=None, ntasks=None,
+                        conditions_log_path=None, append_condition_log=None,
+                        record_completed_run=None, n_runs_this_task=None,
+                        progress_status_path=None, **kwargs):
         """
         Generate complete training dataset.
         
@@ -443,6 +500,16 @@ class TrainingDataGenerator:
             simulations where global_index % ntasks == task_id for balanced parallelism.
         ntasks : int, optional
             Total number of parallel tasks. Use with task_id.
+        conditions_log_path : str, optional
+            Path to append per-run conditions (used with ``append_condition_log``).
+        append_condition_log : callable, optional
+            ``f(csv_path, conditions_dict)`` invoked before each simulation.
+        record_completed_run : callable, optional
+            ``f(completed, total_n)`` invoked after each simulation (SLURM chunk logging).
+        n_runs_this_task : int, optional
+            Total runs for this process; passed to ``record_completed_run``.
+        progress_status_path : str, optional
+            JSON file rewritten after each simulation with completion counts (for monitoring).
         
         Returns:
         --------
@@ -510,6 +577,10 @@ class TrainingDataGenerator:
             all_tasks = [t for i, t in enumerate(all_tasks) if i % ntasks == task_id]
             total_simulations = len(all_tasks)
             print(f"  Task chunk: {task_id}/{ntasks} -> {total_simulations} simulations for this process")
+
+        _write_generation_progress(
+            progress_status_path, task_id, ntasks, 0, total_simulations, 0, 0, 0.0
+        )
         
         # Run simulations (parallel or sequential)
         if n_jobs > 1:
@@ -565,6 +636,10 @@ class TrainingDataGenerator:
                               f"✗ Failed: {failed_simulations} | "
                               f"Data points: {current_rows:,} | "
                               f"ETA: {remaining/60:.1f} min")
+                        _write_generation_progress(
+                            progress_status_path, task_id, ntasks, completed, total_simulations,
+                            successful_simulations, failed_simulations, elapsed,
+                        )
                     
                     # Save periodically (only if saving training data to disk)
                     if save_training_data and completed % save_interval == 0:
@@ -583,6 +658,8 @@ class TrainingDataGenerator:
             completed = 0
             for reactant_key, params, sim_id in all_tasks:
                 completed += 1
+                if append_condition_log is not None and conditions_log_path:
+                    append_condition_log(conditions_log_path, _params_to_conditions_log_row(params))
                 if completed == 1 or (completed - 1) % 50 == 0:
                     print(f"\n{'='*60}")
                     print(f"Processing reactant: {reactant_key} (sim {completed}/{total_simulations})")
@@ -606,6 +683,13 @@ class TrainingDataGenerator:
                           f"✗ Failed: {failed_simulations} | "
                           f"Data points: {current_rows:,} | "
                           f"ETA: {remaining/60:.1f} min")
+                _cb_total = n_runs_this_task if n_runs_this_task is not None else total_simulations
+                if record_completed_run is not None and _cb_total:
+                    record_completed_run(completed, _cb_total)
+                _write_generation_progress(
+                    progress_status_path, task_id, ntasks, completed, total_simulations,
+                    successful_simulations, failed_simulations, elapsed,
+                )
                 # Save periodically
                 if save_training_data and completed % save_interval == 0:
                     if all_data:
@@ -781,7 +865,7 @@ def main():
     
     if len(sys.argv) < 2:
         print("Usage: python data_generation.py <config_file.json>")
-        print("Example: python data_generation.py configs/ml_data_generation_config.json")
+        print("Example: python data_generation.py configs/ml/ml_data_generation_config.json")
         sys.exit(1)
     
     config_file = sys.argv[1]

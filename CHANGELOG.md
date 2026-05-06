@@ -14,13 +14,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Main_3 NaN handling** - Load step drops rows with NaN and reports how many were dropped
 - **Structured grid sampling** - `sampling_method: "full_grid"`, `"structured_grid"`, or `"grid"` uses all combinations from `parameter_ranges` ([min, max, n_points] per parameter); total runs = product of n_points
 - **Pipeline-order notebook names** - Notebooks renamed to `Main_1_run_pfr.ipynb`, `Main_2_generate_training_data.ipynb`, `Main_3_data_exploration_feature_engineering.ipynb`, `Main_4_train_tree_models.ipynb` to reflect workflow steps
-- **AdaBoost** - Tree-based training notebook (`Main_4_train_tree_models.ipynb`) now includes AdaBoost; config section `adaboost` in `ml_training_config.json`
+- **AdaBoost** - Tree-based training notebook (`Main_4_train_tree_models.ipynb`) now includes AdaBoost; config section `adaboost` in `configs/ml/ml_training_config.json`
+- **Figure aesthetics path** - `figure_aesthetics.json` lives under **`configs/style/`** (preferred); `load_aesthetics()` falls back to flat `configs/figure_aesthetics.json` or legacy `styles/figure_aesthetics.json`
+
+### Documentation
+- **Contributing** - `CONTRIBUTING.md` moved to `.github/CONTRIBUTING.md` (GitHub conventions); links updated in README, CHANGELOG, `.githooks/README.md`.
+- **Git / repo hygiene** - Expanded `.gitignore` (`logs/`, `data/figures/`, PyTorch/other ML export globs, `.cursor/`, `.env` / `.env.local`, `.ruff_cache/`); README **Version control** subsection; `.github/CONTRIBUTING.md` (Git and large files); `STRUCTURE.md` §8; `DIRECTORY_STRUCTURE.md` generated-files list and mechanisms note. README **Required External Files** aligned with ignored `mechanisms/*.yaml`.
+- Full pass (historical): README, STRUCTURE.md, DIRECTORY_STRUCTURE.md, docs/ml (README, QUICKSTART, IMPLEMENTATION_SUMMARY), ML_CONFIG_GUIDE, API_REFERENCE, UPDATES_v3.0, CHANGELOG, scripts. All references use `Main_N_` notebook names; tree models (RF, GB, XGBoost, AdaBoost) and joblib artifacts documented; training data described as pkl-primary; "Coming Soon" removed for tree training
 
 ### Changed
-- **ML config defaults** - `gradient_boosting` and `xgboost` use `n_estimators: 150` in `ml_training_config.json` when tuning is off
+- **Neural network training script** — Removed TensorFlow/Keras from `model_training.py`. Deep models are planned on **PyTorch** (`train_neural_network` is a no-op with a one-time notice until implemented). No import-time TensorFlow warning.
+- **Config folder layout** - JSON configs grouped under `configs/simulation/` (reactant DB, PFR template, heat flux), `configs/ml/` (data generation, training, inference), and `configs/style/` (`figure_aesthetics.json`). `plot_style` and `pfr_simulator` resolve new paths; legacy flat `configs/figure_aesthetics.json` and `configs/heat_flux_profile.json` in templates still work via fallbacks where noted.
+- **ML config defaults** - `gradient_boosting` and `xgboost` use `n_estimators: 150` in `configs/ml/ml_training_config.json` when tuning is off
 - **Main_3 documentation** - Concise markdown docs and Summary aligned with actual steps (load, drop NaNs, organize, export)
 - **ML config** - `parameter_ranges` is documented and used for grid/structured_grid/full_grid only; `random_sample_bounds` for random/LHS. Removed redundant `random_sample` config key (sampling controlled only by `sampling_method`)
-- **Documentation** - Full pass: README, STRUCTURE.md, DIRECTORY_STRUCTURE.md, docs/ml (README, QUICKSTART, IMPLEMENTATION_SUMMARY), ML_CONFIG_GUIDE, API_REFERENCE, UPDATES_v3.0, CHANGELOG, scripts. All references use `Main_N_` notebook names; tree models (RF, GB, XGBoost, AdaBoost) and joblib artifacts documented; training data described as pkl-primary; "Coming Soon" removed for tree training
 
 ## [3.0.3] - 2025-01-17
 

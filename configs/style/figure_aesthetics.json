@@ -1,14 +1,14 @@
 {
-    "_comment": "Centralized figure aesthetics configuration for all plots",
-    "_description": "Modify these settings to maintain consistent styling across all generated figures",
-    
+    "_comment": "Figure aesthetics for Matplotlib (PFR plots, notebooks). Edit this file to change colors, fonts, DPI, and profile styling project-wide.",
+    "_description": "Loaded by default from configs/style/figure_aesthetics.json (legacy: configs/figure_aesthetics.json or styles/figure_aesthetics.json).",
+
     "figure": {
         "figsize": [10, 6],
         "dpi": 150,
         "facecolor": "white",
         "edgecolor": "none"
     },
-    
+
     "axes": {
         "grid": true,
         "grid_alpha": 0.3,
@@ -17,7 +17,7 @@
         "spines_top": false,
         "spines_right": false
     },
-    
+
     "font": {
         "family": "sans-serif",
         "size": 12,
@@ -27,7 +27,7 @@
         "label_size": 12,
         "tick_size": 10
     },
-    
+
     "colors": {
         "primary": "#1f77b4",
         "secondary": "#ff7f0e",
@@ -39,7 +39,7 @@
         "octonary": "#7f7f7f",
         "nonary": "#bcbd22",
         "denary": "#17becf",
-        
+
         "temperature": "#d62728",
         "pressure": "#1f77b4",
         "velocity": "#2ca02c",
@@ -55,7 +55,7 @@
         "conversion": "#e377c2",
         "products": "#7f7f7f"
     },
-    
+
     "line": {
         "width": 2,
         "style": "-",
@@ -63,7 +63,7 @@
         "marker": "none",
         "markersize": 6
     },
-    
+
     "legend": {
         "show": true,
         "location": "best",
@@ -74,14 +74,14 @@
         "fontsize": 10,
         "framealpha": 0.9
     },
-    
+
     "layout": {
         "tight_layout": true,
         "pad": 1.08,
         "hspace": 0.3,
         "wspace": 0.3
     },
-    
+
     "save": {
         "format": "png",
         "dpi": 150,
@@ -90,7 +90,7 @@
         "edgecolor": "none",
         "transparent": false
     },
-    
+
     "profiles": {
         "temperature": {
             "color": "#d62728",

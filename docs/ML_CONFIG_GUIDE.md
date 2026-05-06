@@ -6,7 +6,7 @@ All ML scripts now use JSON configuration files instead of command-line argument
 
 ### 1. Training Data Generation
 
-**File**: `configs/ml_data_generation_config.json`
+**File**: `configs/ml/ml_data_generation_config.json`
 
 ```json
 {
@@ -33,8 +33,10 @@ All ML scripts now use JSON configuration files instead of command-line argument
 
 **Usage:**
 ```bash
-python src/ml/data_generation.py configs/ml_data_generation_config.json
+python src/ml/data_generation.py configs/ml/ml_data_generation_config.json
 ```
+
+**Optional — SLURM chunk runner** (`scripts/cluster/run_main2_slurm_chunk.py`): set `HYDRAI_ML_CONFIG` to a JSON path (absolute or relative to repo root) to override the default `configs/ml/ml_data_generation_config.json`. For a minimal test workload use `configs/ml/ml_data_generation_config.smoke.json`. Each task writes live status to `logs/data_generation_progress_task_<TASK_ID>.json`. See `README.md` (HPC / SLURM).
 
 **Parameters:**
 
@@ -118,13 +120,13 @@ The notebook defines flags that override saving/display behavior (config does no
 
 ### 2. ML Model Training
 
-**Notebook (tree models):** `notebooks/Main_4_train_tree_models.ipynb` loads the latest `features_targets_*.pkl` from `data/processed/`, trains RF, Gradient Boosting, XGBoost, and AdaBoost (each via `MultiOutputRegressor`), with optional hyperparameter tuning (`RandomizedSearchCV` for all four; N_ITER=100, CV=5). Exports trained models, scalers, and train/test splits as `tree_models_<mode>_<timestamp>.joblib` to `models/`. Config: `configs/ml_training_config.json`.
+**Notebook (tree models):** `notebooks/Main_4_train_tree_models.ipynb` loads the latest `features_targets_*.pkl` from `data/processed/`, trains RF, Gradient Boosting, XGBoost, and AdaBoost (each via `MultiOutputRegressor`), with optional hyperparameter tuning (`RandomizedSearchCV` for all four; N_ITER=100, CV=5). Exports trained models, scalers, and train/test splits as `tree_models_<mode>_<timestamp>.joblib` to `models/`. Config: `configs/ml/ml_training_config.json`.
 
 **Notebook (model comparison):** `notebooks/Main_4b_tree_models_comparison.ipynb` loads exported artifacts from Main_4 and evaluates all models on the held-out test set. Computes 8 error metrics (R², MAE, MedAE, RMSE, NRMSE, MAPE, MaxErr, MBE), ranks models by MAPE, and produces per-sample actual-vs-predicted scatter plots and grouped MAPE/R² box plots across target categories.
 
-**Script (all model types):** `python src/ml/model_training.py configs/ml_training_config.json`
+**Script (tree / boosting models from JSON):** `python src/ml/model_training.py configs/ml/ml_training_config.json`
 
-**File**: `configs/ml_training_config.json`
+**File**: `configs/ml/ml_training_config.json`
 
 ```json
 {
@@ -162,26 +164,26 @@ The notebook defines flags that override saving/display behavior (config does no
 
 **Usage (script for all types):**
 ```bash
-python src/ml/model_training.py configs/ml_training_config.json
+python src/ml/model_training.py configs/ml/ml_training_config.json
 ```
 
 **Parameters:**
 - `data_file`: Path to training data CSV (supports glob patterns)
 - `output_dir`: Directory to save trained models
 - `target_types`: List of target types (`primary`, `secondary`, `species`, `all`)
-- `models`: List of models to train (`neural_network`, `random_forest`, `xgboost`, `gradient_boosting`, `adaboost`, `all`)
+- `models`: List of models to train (`neural_network` is a PyTorch placeholder — omit or list explicitly; `random_forest`, `xgboost`, `gradient_boosting`, `adaboost`; `all` = RF + XGBoost + GB only until NN is implemented)
 - `test_size`: Fraction of data for testing (0.0-1.0)
 - `random_state`: Random seed for reproducibility
 - Model-specific parameters: See individual model sections
 
 ### 3. ML Inference
 
-**File**: `configs/ml_inference_config.json`
+**File**: `configs/ml/ml_inference_config.json`
 
 ```json
 {
     "model_dir": "models",
-    "model_type": "neural_network",
+    "model_type": "xgboost",
     "target_type": "primary",
     "simulation_parameters": {
         "initial_temperature_K": 925.0,
@@ -206,12 +208,12 @@ python src/ml/model_training.py configs/ml_training_config.json
 
 **Usage:**
 ```bash
-python src/ml/inference.py configs/ml_inference_config.json
+python src/ml/inference.py configs/ml/ml_inference_config.json
 ```
 
 **Parameters:**
 - `model_dir`: Directory containing trained models
-- `model_type`: Type of model to use (`neural_network`, `random_forest`, `xgboost`, `gradient_boosting`)
+- `model_type`: Tree model key to use (`random_forest`, `xgboost`, `gradient_boosting`, `adaboost`)
 - `target_type`: Type of targets (`primary`, `secondary`, `species`)
 - `simulation_parameters`: Reactor operating conditions
 - `prediction_settings`: Prediction configuration
@@ -224,7 +226,7 @@ python src/ml/inference.py configs/ml_inference_config.json
 
 ## Creating Custom Configurations
 
-1. Copy the template config file from `configs/`
+1. Copy the template config file from `configs/ml/`
 2. Modify parameters as needed
 3. Save with a descriptive name
 4. Run the script with your config file
@@ -232,12 +234,12 @@ python src/ml/inference.py configs/ml_inference_config.json
 **Example:**
 ```bash
 # Copy template
-cp configs/ml_data_generation_config.json configs/my_training_config.json
+cp configs/ml/ml_data_generation_config.json configs/ml/my_training_config.json
 
-# Edit my_training_config.json with your parameters
+# Edit configs/ml/my_training_config.json with your parameters
 
 # Run with custom config
-python src/ml/data_generation.py configs/my_training_config.json
+python src/ml/data_generation.py configs/ml/my_training_config.json
 ```
 
 ## Benefits of JSON Configuration

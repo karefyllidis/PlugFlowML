@@ -19,18 +19,20 @@ HydrAI/
 │       └── example_usage.py      # ML usage examples
 │
 ├── configs/                      # Configuration files
-│   ├── config_template.json      # Configuration template
-│   ├── reactant_database.json    # Reactant definitions
-│   ├── heat_flux_profile.json    # Heat flux profiles
-│   ├── ml_data_generation_config.json
-│   ├── ml_training_config.json
-│   └── ml_inference_config.json
+│   ├── simulation/               # PFR templates, reactants, heat flux
+│   │   ├── config_template.json
+│   │   ├── reactant_database.json
+│   │   └── heat_flux_profile.json
+│   ├── style/
+│   │   └── figure_aesthetics.json # Matplotlib styling (colors, fonts, save DPI)
+│   └── ml/
+│       ├── ml_data_generation_config.json
+│       ├── ml_data_generation_config.smoke.json
+│       ├── ml_training_config.json
+│       └── ml_inference_config.json
 │
-├── mechanisms/                    # Chemical kinetic mechanisms
-│   ├── Ethane_Kinetic-Model_species_35.yaml
-│   ├── Propane_Kinetic-Model_species_53.yaml
-│   ├── Naphtha_Kinetic-Model_species_1951.yaml
-│   └── n-Hexane_Kinetic-Model_species_153.yaml
+├── mechanisms/                    # Chemical kinetic mechanisms (YAMLs git-ignored; add locally)
+│   └── .gitkeep                   # Filenames listed in README “Required External Files”
 │
 ├── data/                         # Data directory
 │   ├── training/                 # Training data (generated)
@@ -59,22 +61,36 @@ HydrAI/
 ├── examples/                     # Usage examples
 │   └── basic_usage.py
 │
-├── scripts/                      # Utility scripts
-│   ├── run_simulation.sh
-│   └── show_structure.sh
+├── scripts/                      # Organized by use case (paths from repo root)
+│   ├── cluster/
+│   │   ├── run_main2_slurm_chunk.py      # Main_2 chunk worker (TASK_ID, NTASKS; optional HYDRAI_ML_CONFIG)
+│   │   ├── run_training_mul_CPUs.sh      # Multi-node CPU SLURM example
+│   │   ├── run_training_smoke_gpu_partition.sh  # Short smoke job (tiny config; edit #SBATCH for site)
+│   │   ├── run_trainning_mul_CPUs.sh     # Site-specific duplicate spelling
+│   │   └── run_trainning_mul_GPUs.sh     # Legacy name; same smoke defaults
+│   ├── local/
+│   │   ├── run_main2_local_parallel.py   # Multi-process Main_2 on one machine
+│   │   └── run_main1_local_simulation.sh # Launches Main_1 notebook (bash)
+│   ├── notebook/
+│   │   ├── run_simulation.sh             # Launches Main_1 notebook (bash)
+│   │   └── run_simulation_ipynb.sh
+│   └── dev/
+│       ├── check_complete_runs.py        # Training sweep summary / manifests
+│       └── show_structure.sh             # Requires `tree`
 │
-├── styles/                       # Figure aesthetics
-│   ├── figure_aesthetics.json   # Centralized styling config
-│   └── README.md                 # Aesthetics documentation
+├── styles/                       # Figure aesthetics docs + examples (JSON in configs/style/)
+│   ├── README.md                 # Points to configs/style/figure_aesthetics.json
+│   └── example_usage.py          # Optional plot_style demos
 │
 ├── temp/                         # Temporary files (auto-generated, git-ignored)
 │   └── .gitkeep                  # Preserves directory structure
 │
 ├── notebooks/
-│   ├── Main_1_run_pfr.ipynb                       # Step 1: PFR simulations (Jupyter notebook)
-│   ├── Main_2_generate_training_data.ipynb        # Step 2: ML training data generation (Jupyter notebook)
-│   ├── Main_3_data_exploration_feature_engineering.ipynb  # Step 3: Data exploration and feature engineering
-│   └── Main_4_train_tree_models.ipynb            # Step 4: Tree-based ML training (RF, GB, XGBoost)
+│   ├── Main_1_run_pfr.ipynb                       # Step 1: PFR simulations
+│   ├── Main_2_generate_training_data.ipynb        # Step 2: ML training data generation
+│   ├── Main_3_data_exploration_feature_engineering.ipynb
+│   ├── Main_4_train_tree_models.ipynb             # Step 4: Tree-based ML training
+│   └── Main_4b_tree_models_comparison.ipynb       # Step 5: Model comparison metrics & plots
 ├── requirements.txt
 ├── README.md
 ├── LICENSE
@@ -89,7 +105,7 @@ HydrAI/
 
 ### 2. Configuration Files
 - **Before**: Config files at root (`config_template.json`, `reactant_database.json`)
-- **After**: All configs in `configs/` directory
+- **After**: Configs live under `configs/simulation/`, `configs/ml/`, and `configs/style/` (see tree above). `plot_style` prefers `configs/style/figure_aesthetics.json`; legacy flat `configs/figure_aesthetics.json` or `styles/figure_aesthetics.json` still work if present.
 
 ### 3. Mechanisms
 - **Before**: `mechanisms/` directory
@@ -97,7 +113,13 @@ HydrAI/
 
 ### 4. Notebooks
 - **Location**: All interactive entry points are in **`notebooks/`**
-- **Naming**: Notebooks use **`Main_N_`** prefix for pipeline order (e.g. `Main_1_run_pfr.ipynb`, `Main_2_generate_training_data.ipynb`, `Main_3_data_exploration_feature_engineering.ipynb`, `Main_4_train_tree_models.ipynb`)
+- **Naming**: Notebooks use **`Main_N_`** prefix for pipeline order through **`Main_4b`** (comparison after training).
+
+### 4b. Scripts & SLURM monitoring
+
+- **Cluster:** submit `scripts/cluster/*.sh` from the repo root; each task runs `run_main2_slurm_chunk.py`. Override the JSON config with `export HYDRAI_ML_CONFIG=...` (absolute path or relative to repo root).
+- **Progress files:** during chunk runs, each task updates `logs/data_generation_progress_task_<TASK_ID>.json` after every completed simulation. Per-run CSV logs: `temp/conditions_run_task_<TASK_ID>.csv`; completion lines: `temp/completed_runs_task_<TASK_ID>.txt`.
+- **Diagnostics:** `python scripts/dev/check_complete_runs.py` aggregates sweep status from config + `data/training/`.
 
 ### 5. ML Surrogate Models
 - **Before**: `phase_b/` directory with mixed files
@@ -110,6 +132,12 @@ HydrAI/
 ### 7. Data and Models
 - **New**: `data/` directory for training data
 - **New**: `models/` directory for trained ML models
+
+### 8. Version control (`.gitignore`)
+- **Generated / large**: `data/training/`, `data/processed/`, `data/figures/`, `outputs/results/`, `outputs/figures/`, `models/`, `logs/`, `temp/`, common ML binaries (`*.pkl`, `*.joblib`, `*.pt`, `*.pth`, …), run metadata (`metadata_*.json`), and training CSVs matching `training_data_*.csv`.
+- **Mechanisms**: `mechanisms/*.yaml` are excluded by default so clones stay small; only `mechanisms/.gitkeep` is tracked. Add YAMLs locally per `README.md`.
+- **Local-only**: `.cursor/`, `.vscode/`, `.env`, `.env.local` (see root `.gitignore`).
+- Summary table for contributors: **Version control** section in `README.md`.
 
 ## Usage
 
@@ -148,7 +176,7 @@ Trains Random Forest, Gradient Boosting, XGBoost, and AdaBoost (one model per pr
 
 **Alternative (all model types including neural network):**
 ```bash
-python src/ml/model_training.py configs/ml_training_config.json
+python src/ml/model_training.py configs/ml/ml_training_config.json
 ```
 
 **Note:** All workflows use Jupyter notebooks for interactive use. Command-line scripts are available in `src/ml/` for batch processing.
@@ -187,11 +215,13 @@ fig, ax = plot_profile(z, temperature, 'temperature', output_path='outputs/figur
 ### Path Changes
 
 All file paths are now relative to project root:
-- Configs: `configs/`
+- Configs: `configs/simulation/`, `configs/ml/`, `configs/style/` (see project tree)
 - Mechanisms: `mechanisms/`
 - Outputs: `outputs/results/` and `outputs/figures/`
 - Training data: `data/training/`
 - Models: `models/`
+- SLURM progress (generated): `logs/data_generation_progress_task_*.json`
+- Run logs / temp CSV (generated): `temp/conditions_run_task_*.csv`, `temp/completed_runs_task_*.txt`
 
 ## Benefits
 

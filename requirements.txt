@@ -25,9 +25,8 @@ ipykernel>=6.25.0
 nbconvert>=7.10.0
 
 # ── Optional (uncomment as needed) ────────────────────────────────────────────
-# tensorflow>=2.8.0
 # lightgbm>=3.3.0
-# seaborn>=0.12.0
+# torch>=2.0.0  # future PyTorch neural-network training in src/ml/model_training.py
 
 # ── Development & testing ─────────────────────────────────────────────────────
 pytest>=7.4.0

@@ -1,18 +1,18 @@
 #!/bin/bash
 # HydrAI Simulation Runner Script
 # ===============================
-# This script launches the Jupyter notebook for interactive simulations
-# Usage: ./run_simulation.sh
-# 
-# Note: For interactive use, launch the notebook directly:
+# Launches Jupyter with Main_1 (same behaviour as scripts/notebook/run_simulation.sh).
+# Usage from repo root:
+#   ./scripts/local/run_main1_local_simulation.sh
+#
+# Or open the notebook directly:
 #   jupyter notebook notebooks/Main_1_run_pfr.ipynb
 #   jupyter lab notebooks/Main_1_run_pfr.ipynb
 
-# Get the directory where this script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Change to project root
-cd "$SCRIPT_DIR/.."
+# scripts/local -> repo root
+cd "$SCRIPT_DIR/../.." || exit 1
 
 # Check if Jupyter is installed
 if ! python3 -c "import jupyter" 2>/dev/null; then

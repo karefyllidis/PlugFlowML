@@ -8,7 +8,7 @@ Install ML dependencies:
 ```bash
 pip install scikit-learn joblib
 # Optional but recommended:
-pip install tensorflow xgboost
+pip install xgboost
 ```
 
 ## Step 1: Generate Training Data (5-30 minutes)
@@ -17,7 +17,7 @@ Generate training data from Cantera simulations:
 
 ```bash
 # Using JSON config file (recommended)
-python src/ml/data_generation.py configs/ml_data_generation_config.json
+python src/ml/data_generation.py configs/ml/ml_data_generation_config.json
 ```
 
 Or use the Jupyter notebook:
@@ -63,7 +63,7 @@ Trains Random Forest, Gradient Boosting, XGBoost, and AdaBoost. Saves one artifa
 
 **Option B – All model types (command-line):**
 ```bash
-python src/ml/model_training.py configs/ml_training_config.json
+python src/ml/model_training.py configs/ml/ml_training_config.json
 ```
 
 **What this does:**
@@ -80,7 +80,7 @@ Use trained models for fast predictions:
 
 ```bash
 # Predict reactor profile using JSON config
-python src/ml/inference.py configs/ml_inference_config.json
+python src/ml/inference.py configs/ml/ml_inference_config.json
 ```
 
 **What this does:**
@@ -96,7 +96,7 @@ from src.ml.inference import MLPFRPredictor
 # Load predictor
 predictor = MLPFRPredictor(
     model_dir='models',
-    model_type='neural_network',
+    model_type='xgboost',
     target_type='primary'
 )
 
@@ -139,7 +139,7 @@ python src/ml/example_usage.py
 ## Troubleshooting
 
 ### "Model not found" error
-**Solution**: Train models first (Step 3); run `Main_4_train_tree_models.ipynb` or `python src/ml/model_training.py configs/ml_training_config.json`
+**Solution**: Train models first (Step 3); run `Main_4_train_tree_models.ipynb` or `python src/ml/model_training.py configs/ml/ml_training_config.json`
 
 ### "Out of memory" during training
 **Solution**: Reduce `max_combinations_per_reactant` in config file
@@ -160,26 +160,26 @@ python src/ml/example_usage.py
 
 ## Performance Tips
 
-- **Fast predictions**: Use `neural_network` or `xgboost`
+- **Fast predictions**: **XGBoost** or **Random Forest** (tree surrogates)
 - **Interpretable models**: Use `random_forest`
-- **Large datasets**: Neural networks scale best
+- **Large datasets**: XGBoost / gradient boosting; deep **PyTorch** NNs planned
 - **Small datasets**: Random Forest or XGBoost often better
 
 ## Full Workflow
 
 ```bash
-# 1. Generate data (edit configs/ml_data_generation_config.json first)
-python src/ml/data_generation.py configs/ml_data_generation_config.json
+# 1. Generate data (edit configs/ml/ml_data_generation_config.json first)
+python src/ml/data_generation.py configs/ml/ml_data_generation_config.json
 
 # 2. (Optional) Explore data
 jupyter notebook notebooks/Main_3_data_exploration_feature_engineering.ipynb
 
 # 3. Train models (notebook for tree models, or script for all types)
 jupyter notebook notebooks/Main_4_train_tree_models.ipynb
-# Or: python src/ml/model_training.py configs/ml_training_config.json
+# Or: python src/ml/model_training.py configs/ml/ml_training_config.json
 
 # 4. Test predictions
-python src/ml/inference.py configs/ml_inference_config.json
+python src/ml/inference.py configs/ml/ml_inference_config.json
 
 # 5. Run examples
 python src/ml/example_usage.py

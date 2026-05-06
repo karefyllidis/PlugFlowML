@@ -39,6 +39,7 @@ ct-env/
 # IDE
 .vscode/
 .idea/
+.cursor/
 *.swp
 *.swo
 *~
@@ -81,6 +82,9 @@ Heatflux.dat
 .dmypy.json
 dmypy.json
 
+# Ruff
+.ruff_cache/
+
 # Pyre type checker
 .pyre/
 
@@ -114,14 +118,24 @@ data/processed/*
 data/raw/*
 !data/raw/.gitkeep
 !data/training/.gitkeep
+# Optional EDA / notebook exports under data/ (e.g. Main_3 figures next to processed/)
+data/figures/
 models/*
 !models/.gitkeep
+
+# Run logs (SLURM chunk progress, local diagnostics)
+logs/
 
 
 # ML model and data files
 *.pkl
 *.h5
 *.joblib
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+*.onnx
 training_data_*.csv
 metadata_*.json
 
@@ -155,8 +169,13 @@ temp_*.csv
 # Local YAML overrides (not committed)
 *.local.yaml
 
+# Secrets / machine-specific env (never commit tokens or cluster paths)
+.env
+.env.local
+
 # Cantera kinetic mechanisms — large / environment-specific; keep folder via .gitkeep only
 # Obtain YAML files separately (see README "Required External Files").
+# To version mechanisms in your fork, remove the two lines below and git add the YAMLs.
 mechanisms/*
 !mechanisms/.gitkeep
 

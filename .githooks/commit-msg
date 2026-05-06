@@ -1,9 +1,11 @@
 #!/bin/sh
-# Strip Co-authored-by lines that mention Cursor/AI so commits never attribute to Cursor AI.
-# Removes e.g. "Co-authored-by: Cursor <cursoragent@cursor.com>"
+# Remove Co-authored-by lines that mention Cursor only (never attribute commits to Cursor).
+# Does not match other tools or generic "AI" text.
 MSG_FILE="$1"
 [ ! -f "$MSG_FILE" ] && exit 0
 tmp=$(mktemp)
-grep -ivE '^Co-authored-by:.*(Cursor|AI|cursor\.com|cursoragent)' "$MSG_FILE" > "$tmp" 2>/dev/null || cat "$MSG_FILE" > "$tmp"
+# Strip lines like: Co-authored-by: Cursor <cursoragent@cursor.com>
+# Case-insensitive; requires "cursor" in the trailer (name or email domain).
+grep -ivE '^Co-authored-by:.*cursor' "$MSG_FILE" > "$tmp" 2>/dev/null || cat "$MSG_FILE" > "$tmp"
 mv "$tmp" "$MSG_FILE"
 exit 0

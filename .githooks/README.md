@@ -1,12 +1,21 @@
 # Git hooks
 
-- **commit-msg** – Removes any `Co-authored-by:` line that mentions Cursor/AI (e.g. `Co-authored-by: Cursor <cursoragent@cursor.com>`) so Cursor is never listed as co-author.
+## commit-msg
 
-**You must enable the hook** or it will not run. From the repo root, run once:
+Removes any `Co-authored-by:` line that refers to **Cursor** (e.g. `Co-authored-by: Cursor <cursoragent@cursor.com>`, or any trailer containing `cursor` in the attribution). Other co-authors are left unchanged.
+
+This is intentionally narrow: it does not strip lines just because they contain the letters "AI".
+
+**Enable once** from the repository root:
 
 ```bash
 git config core.hooksPath .githooks
+```
+
+On Unix-like systems you may also run:
+
+```bash
 chmod +x .githooks/commit-msg
 ```
 
-Then future commits will have those lines stripped automatically.
+See `.github/CONTRIBUTING.md` for the project policy on attribution.
