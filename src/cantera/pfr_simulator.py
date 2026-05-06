@@ -89,7 +89,7 @@ class SuppressRankMessages:
 # Import plot style utilities
 from src.utils.plot_style import (
     load_aesthetics, apply_style, create_figure, setup_axes,
-    get_profile_style, get_color, save_figure, setup_legend
+    get_profile_style, get_color, save_figure, setup_legend, plot_profile
 )
 
 # =============================================================================
@@ -99,9 +99,31 @@ def get_project_root():
     """Get the project root directory."""
     return os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-def get_config_path(filename):
-    """Get path to a config file."""
-    return os.path.join(get_project_root(), 'configs', filename)
+def get_config_path(*parts):
+    """Path under ``configs/`` (e.g. ``get_config_path('simulation', 'reactant_database.json')``)."""
+    return os.path.join(get_project_root(), 'configs', *parts)
+
+
+def resolve_heat_flux_file_path(heat_flux_file: str) -> str:
+    """
+    Resolve ``mechanism.heat_flux_file`` to an absolute path.
+
+    Supports repo-relative ``configs/...`` paths, bare ``heat_flux_profile.json``,
+    and legacy flat ``configs/heat_flux_profile.json`` (under ``configs/simulation/``).
+    """
+    root = get_project_root()
+    if os.path.isabs(heat_flux_file):
+        return heat_flux_file
+    if heat_flux_file == 'heat_flux_profile.json':
+        return get_config_path('simulation', 'heat_flux_profile.json')
+    if heat_flux_file.startswith('configs/'):
+        path = os.path.normpath(os.path.join(root, heat_flux_file.replace('/', os.sep)))
+        if os.path.isfile(path):
+            return path
+        if heat_flux_file == 'configs/heat_flux_profile.json':
+            return get_config_path('simulation', 'heat_flux_profile.json')
+        return path
+    return os.path.join(root, heat_flux_file)
 
 def get_output_path(subdir, filename):
     """Get path to an output file."""
@@ -143,7 +165,7 @@ def load_reactant_database():
     json.JSONDecodeError
         If the JSON file is malformed
     """
-    config_path = get_config_path('reactant_database.json')
+    config_path = get_config_path('simulation', 'reactant_database.json')
     with open(config_path, 'r') as f:
         return json.load(f)
 
@@ -198,7 +220,7 @@ def generate_config_for_reactant(reactant_key: str, database: dict) -> dict:
     reactant_info = database['reactants'][reactant_key]
     
     # Load configuration template
-    config_path = get_config_path('config_template.json')
+    config_path = get_config_path('simulation', 'config_template.json')
     with open(config_path, 'r') as f:
         config_template = json.load(f)
     
@@ -300,13 +322,7 @@ def setup_heat_flux(config: dict):
     """Setup heat flux profile from JSON file."""
     import json
     
-    heat_flux_file = config['mechanism']['heat_flux_file']
-    # Resolve heat flux file path
-    if not os.path.isabs(heat_flux_file):
-        if heat_flux_file.startswith('configs/') or heat_flux_file == 'heat_flux_profile.json':
-            heat_flux_file = get_config_path('heat_flux_profile.json')
-        else:
-            heat_flux_file = os.path.join(get_project_root(), heat_flux_file)
+    heat_flux_file = resolve_heat_flux_file_path(config['mechanism']['heat_flux_file'])
     reactor_length = config['reactor_geometry']['length_m']
     
     # Load heat flux profile from JSON
@@ -523,454 +539,234 @@ def process_and_visualize_results(gas, states1, config, reactant_info, hf, T_0, 
     return conversion, yields
 
 def create_visualizations(gas, states1, config, reactant_info, hf, conversion, yields):
-    """Create all visualization plots."""
-    # Temperature profile
-    plt.figure(figsize=(10, 6))
-    plt.plot(states1.z, states1.T, 'r-', linewidth=2, label='Temperature')
-    plt.xlabel('$z$ [m]')
-    plt.ylabel('$T$ [K]')
-    plt.title('Temperature Profile')
-    plt.legend(loc=0)
-    plt.xlim(left=0)
-    plt.grid(True, alpha=0.3)
-    plt.tight_layout()
-    output_path = get_output_path('figures', 'temperature_profile.png')
-    os.makedirs(os.path.dirname(output_path), exist_ok=True)
-    plt.savefig(output_path, dpi=150, bbox_inches='tight')
-    plt.close()
-    print(f"Saved temperature profile to {output_path}")
-    
-    # Pressure profile
-    plt.figure(figsize=(10, 6))
-    plt.plot(states1.z, states1.P/1e5, 'b-', linewidth=2, label='Pressure')
-    plt.xlabel('$z$ [m]')
-    plt.ylabel('$p$ [bar]')
-    plt.title('Pressure Profile')
-    plt.legend(loc=0)
-    plt.xlim(left=0)
-    plt.grid(True, alpha=0.3)
-    plt.tight_layout()
-    output_path = get_output_path('figures', 'pressure_profile.png')
+    """Create all visualization plots using ``configs/style/figure_aesthetics.json``."""
+    aesthetics = load_aesthetics()
+    apply_style(aesthetics)
 
-    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    def _save_profile(profile_key: str, y, filename: str, **plot_kw):
+        path = get_output_path('figures', filename)
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        fig, _ = plot_profile(
+            states1.z, y, profile_key,
+            aesthetics=aesthetics,
+            output_path=path,
+            **plot_kw,
+        )
+        plt.close(fig)
+        print(f"Saved {filename} to {path}")
 
-    plt.savefig(output_path, dpi=150, bbox_inches='tight')
-    plt.close()
-    print("Saved pressure profile to fig/pressure_profile.png")
-    
-    # Velocity profile
-    plt.figure(figsize=(10, 6))
-    plt.plot(states1.z, states1.velocity, 'g-', linewidth=2, label='Velocity')
-    plt.xlabel('$z$ [m]')
-    plt.ylabel('$u$ [m/s]')
-    plt.title('Velocity Profile')
-    plt.legend(loc=0)
-    plt.xlim(left=0)
-    plt.grid(True, alpha=0.3)
-    plt.tight_layout()
-    output_path = get_output_path('figures', 'velocity_profile.png')
-
-    os.makedirs(os.path.dirname(output_path), exist_ok=True)
-
-    plt.savefig(output_path, dpi=150, bbox_inches='tight')
-    plt.close()
-    print("Saved velocity profile to fig/velocity_profile.png")
-    
-    # Density profile
-    plt.figure(figsize=(10, 6))
-    plt.plot(states1.z, states1.density, 'm-', linewidth=2, label='Density')
-    plt.xlabel('$z$ [m]')
-    plt.ylabel('$\\rho$ [kg/m³]')
-    plt.title('Density Profile')
-    plt.legend(loc=0)
-    plt.xlim(left=0)
-    plt.grid(True, alpha=0.3)
-    plt.tight_layout()
-    output_path = get_output_path('figures', 'density_profile.png')
-
-    os.makedirs(os.path.dirname(output_path), exist_ok=True)
-
-    plt.savefig(output_path, dpi=150, bbox_inches='tight')
-    plt.close()
-    print("Saved density profile to fig/density_profile.png")
-    
-    # Heat flux profile
-    plt.figure(figsize=(10, 6))
+    _save_profile('temperature', states1.T, 'temperature_profile.png')
+    _save_profile('pressure', states1.P / 1e5, 'pressure_profile.png')
+    _save_profile('velocity', states1.velocity, 'velocity_profile.png')
+    _save_profile('density', states1.density, 'density_profile.png')
     heat_flux_values = [hf(z) for z in states1.z]
-    plt.plot(states1.z, heat_flux_values, 'red', linewidth=5, label='Heat Flux')
-    plt.xlabel('$z$ [m]')
-    plt.ylabel('$q$ [W/m²]')
-    plt.title('Heat Flux Profile')
-    plt.legend(loc=0)
-    plt.xlim(left=0)
-    plt.grid(True, alpha=0.3)
-    plt.tight_layout()
-    output_path = get_output_path('figures', 'heat_flux_profile.png')
+    _save_profile('heat_flux', heat_flux_values, 'heat_flux_profile.png')
+    _save_profile('molecular_weight', states1.mean_molecular_weight, 'molecular_weight_profile.png')
 
-    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    create_heat_flux_relative_figure(config, hf, aesthetics)
+    create_species_plots(gas, states1, config, reactant_info, aesthetics)
 
-    plt.savefig(output_path, dpi=150, bbox_inches='tight')
-    plt.close()
-    print("Saved heat flux profile to fig/heat_flux_profile.png")
-    
-    # Molecular weight profile
-    plt.figure(figsize=(10, 6))
-    plt.plot(states1.z, states1.mean_molecular_weight, 'c-', linewidth=2, label='MW')
-    plt.xlabel('$z$ [m]')
-    plt.ylabel('$MW$ [kg/kmol]')
-    plt.title('Mean Molecular Weight')
-    plt.legend(loc=0)
-    plt.xlim(left=0)
-    plt.grid(True, alpha=0.3)
-    plt.tight_layout()
-    output_path = get_output_path('figures', 'molecular_weight_profile.png')
-
-    os.makedirs(os.path.dirname(output_path), exist_ok=True)
-
-    plt.savefig(output_path, dpi=150, bbox_inches='tight')
-    plt.close()
-    print("Saved molecular weight profile to fig/molecular_weight_profile.png")
-    
-    # Heat flux vs relative position
-    create_heat_flux_relative_figure(config, hf)
-    
-    # Species profiles
-    create_species_plots(gas, states1, config, reactant_info)
-
-def create_heat_flux_relative_figure(config, hf):
-    """Create heat flux vs relative position figure."""
+def create_heat_flux_relative_figure(config, hf, aesthetics=None):
+    """Create heat flux vs relative position figure (uses centralized aesthetics)."""
     import json
-    
-    # Load the heat flux profile to get the original data points
-    heat_flux_file = config['mechanism']['heat_flux_file']
-    # Resolve heat flux file path
-    if not os.path.isabs(heat_flux_file):
-        if heat_flux_file.startswith('configs/') or heat_flux_file == 'heat_flux_profile.json':
-            heat_flux_file = get_config_path('heat_flux_profile.json')
-        else:
-            heat_flux_file = os.path.join(get_project_root(), heat_flux_file)
+
+    if aesthetics is None:
+        aesthetics = load_aesthetics()
+        apply_style(aesthetics)
+
+    heat_flux_file = resolve_heat_flux_file_path(config['mechanism']['heat_flux_file'])
     with open(heat_flux_file, 'r') as f:
         heat_flux_data = json.load(f)
-    
-    # Extract data points and interpolation method
+
     data_points = heat_flux_data['heat_flux_profile']['data_points']
     interpolation_method = heat_flux_data['heat_flux_profile'].get('interpolation_method', 'linear')
-    
+
     z_profile_relative = np.array([point['position'] for point in data_points])
     heatflux_profile = np.array([point['heat_flux'] for point in data_points])
-    
-    # Create fine resolution for smooth plotting
+
     z_fine = np.linspace(0.0, 1.0, 1000)
-    
-    # Calculate heat flux values for the current interpolation method
+
     if interpolation_method == 'step':
-        # Step-wise interpolation
         heat_flux_fine = np.zeros_like(z_fine)
         for i, z in enumerate(z_fine):
             idx = np.searchsorted(z_profile_relative, z, side='right')
             idx = max(0, min(idx - 1, len(heatflux_profile) - 1))
             heat_flux_fine[i] = heatflux_profile[idx]
     else:
-        # Linear interpolation
         heat_flux_fine = np.interp(z_fine, z_profile_relative, heatflux_profile)
-    
-    # Create the figure
-    plt.figure(figsize=(12, 8))
-    
-    # Plot the interpolated curve
-    plt.plot(z_fine, heat_flux_fine, 'b-', linewidth=2, 
-             label=f'{interpolation_method.capitalize()} interpolation')
-    
-    # Plot the data points
-    plt.plot(z_profile_relative, heatflux_profile, 'rs', markersize=8, 
-             label='Data points', markeredgecolor='darkred', markeredgewidth=1)
-    
-    # Customize the plot
-    plt.xlabel('Relative Position', fontsize=14)
-    plt.ylabel('Heat Flux [W/m²]', fontsize=14)
-    plt.title('Heat Flux Profile vs Relative Position', fontsize=16, fontweight='bold')
-    plt.grid(True, alpha=0.3)
-    plt.legend(fontsize=12)
-    
-    # Set axis limits and ticks
-    plt.xlim(0, 1)
-    plt.xticks(np.arange(0, 1.1, 0.1), fontsize=12)
-    plt.yticks(fontsize=12)
-    
-    # Add text box with interpolation method info
-    textstr = f'Interpolation Method: {interpolation_method.capitalize()}\nData Points: {len(data_points)}'
+
+    line_st = get_profile_style('heat_flux', aesthetics)
+    font = aesthetics.get('font', {})
+    fig = create_figure(aesthetics)
+    ax = fig.add_subplot(111)
+
+    ax.plot(
+        z_fine, heat_flux_fine,
+        color=line_st['color'],
+        linewidth=line_st['linewidth'],
+        linestyle=line_st['linestyle'],
+        label=f"{interpolation_method.capitalize()} interpolation",
+    )
+    ax.plot(
+        z_profile_relative, heatflux_profile,
+        's', color=get_color('quaternary', aesthetics), markersize=8,
+        markeredgecolor=get_color('tertiary', aesthetics), markeredgewidth=1,
+        label='Data points',
+    )
+
+    ax.set_xlabel('Relative position', fontsize=font.get('label_size', 12))
+    ax.set_ylabel('Heat flux [W/m²]', fontsize=font.get('label_size', 12))
+    ax.set_title(
+        'Heat flux profile vs relative position',
+        fontsize=font.get('title_size', 14),
+        fontweight=font.get('title_weight', 'bold'),
+    )
+    axes_cfg = aesthetics.get('axes', {})
+    if axes_cfg.get('grid', True):
+        ax.grid(True, alpha=axes_cfg.get('grid_alpha', 0.3), linestyle=axes_cfg.get('grid_style', '-'),
+                color=axes_cfg.get('grid_color', 'gray'))
+    if axes_cfg.get('spines_top', False) is False:
+        ax.spines['top'].set_visible(False)
+    if axes_cfg.get('spines_right', False) is False:
+        ax.spines['right'].set_visible(False)
+    ax.set_xlim(0, 1)
+    ax.set_xticks(np.arange(0, 1.1, 0.1))
+    ax.tick_params(axis='both', labelsize=font.get('tick_size', 10))
+    setup_legend(ax, aesthetics)
+    textstr = f'Interpolation: {interpolation_method.capitalize()}\nData points: {len(data_points)}'
     props = dict(boxstyle='round', facecolor='wheat', alpha=0.8)
-    plt.text(0.02, 0.98, textstr, transform=plt.gca().transAxes, fontsize=10,
-             verticalalignment='top', bbox=props)
-    
-    # Tight layout and save
-    plt.tight_layout()
+    ax.text(0.02, 0.98, textstr, transform=ax.transAxes, fontsize=font.get('tick_size', 10),
+            verticalalignment='top', bbox=props)
+
+    layout_config = aesthetics.get('layout', {})
+    if layout_config.get('tight_layout', True):
+        plt.tight_layout(pad=layout_config.get('pad', 1.08))
+
     output_path = get_output_path('figures', 'heat_flux_vs_relative_position.png')
-
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    save_figure(fig, output_path, aesthetics)
+    plt.close(fig)
+    print(f"Saved heat_flux_vs_relative_position.png to {output_path}")
 
-    plt.savefig(output_path, dpi=150, bbox_inches='tight')
-    plt.close()
-    print("Saved heat flux vs relative position to fig/heat_flux_vs_relative_position.png")
+def create_species_plots(gas, states1, config, reactant_info, aesthetics):
+    """Create species and property plots using ``configs/style/figure_aesthetics.json``."""
+    line_cfg = aesthetics.get('line', {})
+    lw = line_cfg.get('width', 2)
+    layout_cfg = aesthetics.get('layout', {})
 
-def create_species_plots(gas, states1, config, reactant_info):
-    """Create comprehensive species concentration plots."""
-    # Reactant conversion
-    plt.figure(figsize=(10, 6))
     feed_species = reactant_info.get('feed_species', '')
-    # Extract species name from composition string (remove ratio part)
     if ':' in feed_species:
         species_name = feed_species.split(':')[0]
     else:
         species_name = feed_species
-    
+
+    out_conv = get_output_path('figures', 'reactant_conversion.png')
+    os.makedirs(os.path.dirname(out_conv), exist_ok=True)
     try:
         species_idx = gas.species_index(species_name)
-        plt.plot(states1.z, states1.Y[:, species_idx], 'r-', linewidth=2, 
-                label=f'{reactant_info["name"]}')
-        plt.xlabel('$z$ [m]')
-        plt.ylabel(f'$Y_{{{reactant_info["name"]}}}$ [-]')
-        plt.title(f'{reactant_info["name"]} Conversion')
-        plt.legend(loc=0)
-        plt.xlim(left=0)
-        plt.grid(True, alpha=0.3)
-        plt.tight_layout()
-        output_path = get_output_path('figures', 'reactant_conversion.png')
+        fig, _ = plot_profile(
+            states1.z, states1.Y[:, species_idx], 'conversion',
+            aesthetics=aesthetics,
+            output_path=out_conv,
+            ylabel=f'$Y_{{{reactant_info["name"]}}}$ [-]',
+            title=f'{reactant_info["name"]} conversion',
+            label=reactant_info['name'],
+        )
+        plt.close(fig)
+    except Exception:
+        fig = create_figure(aesthetics)
+        ax = fig.add_subplot(111)
+        ax.text(
+            0.5, 0.5, f'Could not plot {reactant_info["name"]} conversion',
+            transform=ax.transAxes, ha='center',
+        )
+        if layout_cfg.get('tight_layout', True):
+            plt.tight_layout(pad=layout_cfg.get('pad', 1.08))
+        save_figure(fig, out_conv, aesthetics)
+        plt.close(fig)
+    print(f"Saved reactant_conversion.png to {out_conv}")
 
-        os.makedirs(os.path.dirname(output_path), exist_ok=True)
-
-        plt.savefig(output_path, dpi=150, bbox_inches='tight')
-        plt.close()
-        print("Saved reactant conversion to fig/reactant_conversion.png")
-    except:
-        plt.text(0.5, 0.5, f'Could not plot {reactant_info["name"]} conversion', 
-                transform=plt.gca().transAxes, ha='center')
-        plt.tight_layout()
-        output_path = get_output_path('figures', 'reactant_conversion.png')
-
-        os.makedirs(os.path.dirname(output_path), exist_ok=True)
-
-        plt.savefig(output_path, dpi=150, bbox_inches='tight')
-        plt.close()
-        print("Saved reactant conversion to fig/reactant_conversion.png")
-    
-    # Major products (mass fractions)
-    plt.figure(figsize=(12, 8))
     target_products = reactant_info.get('target_products', [])
     product_names = reactant_info.get('product_names', [])
-    colors = ['red', 'blue', 'green', 'orange', 'purple', 'brown', 'pink', 'gray', 'olive', 'cyan']
-    
-    for i, product in enumerate(target_products):  # Plot all products
-        try:
-            product_idx = gas.species_index(product)
-            product_name = product_names[i] if i < len(product_names) else product
-            plt.plot(states1.z, states1.Y[:, product_idx], 
-                    color=colors[i % len(colors)], linewidth=2, label=product_name)
-        except:
-            continue
-    
-    plt.xlabel('$z$ [m]')
-    plt.ylabel('$Y_k$ [-]')
-    plt.title('Major Product Formation (Mass Fractions)')
-    plt.legend(loc='best', bbox_to_anchor=(1.05, 1))
-    plt.xlim(left=0)
-    plt.grid(True, alpha=0.3)
-    plt.tight_layout()
-    output_path = get_output_path('figures', 'product_mass_fractions.png')
+    prod_style = get_profile_style('products', aesthetics)
+    colors = prod_style.get('colors') or [
+        get_color('primary', aesthetics), get_color('secondary', aesthetics),
+    ]
 
-    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    def _save_product_fractions(use_mole: bool, filename: str):
+        fig = create_figure(aesthetics)
+        ax = fig.add_subplot(111)
+        arr = states1.X if use_mole else states1.Y
+        for i, product in enumerate(target_products):
+            try:
+                product_idx = gas.species_index(product)
+                product_name = product_names[i] if i < len(product_names) else product
+                ax.plot(
+                    states1.z, arr[:, product_idx],
+                    color=colors[i % len(colors)], linewidth=lw, label=product_name,
+                )
+            except Exception:
+                continue
+        ax.set_xlabel('$z$ [m]')
+        if use_mole:
+            ax.set_ylabel('$X_k$ [-]')
+            ax.set_title('Major product formation (mole fractions)')
+        else:
+            ax.set_ylabel(prod_style['ylabel'])
+            ax.set_title(prod_style['title'])
+        setup_axes(ax, aesthetics)
+        setup_legend(ax, aesthetics, loc='best', bbox_to_anchor=(1.05, 1))
+        if layout_cfg.get('tight_layout', True):
+            plt.tight_layout(pad=layout_cfg.get('pad', 1.08))
+        path = get_output_path('figures', filename)
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        save_figure(fig, path, aesthetics)
+        plt.close(fig)
+        print(f"Saved {filename} to {path}")
 
-    plt.savefig(output_path, dpi=150, bbox_inches='tight')
-    plt.close()
-    print("Saved product mass fractions to fig/product_mass_fractions.png")
-    
-    # Major products (mole fractions)
-    plt.figure(figsize=(12, 8))
-    for i, product in enumerate(target_products):  # Plot all products
-        try:
-            product_idx = gas.species_index(product)
-            product_name = product_names[i] if i < len(product_names) else product
-            plt.plot(states1.z, states1.X[:, product_idx], 
-                    color=colors[i % len(colors)], linewidth=2, label=product_name)
-        except:
-            continue
-    
-    plt.xlabel('$z$ [m]')
-    plt.ylabel('$X_k$ [-]')
-    plt.title('Major Product Formation (Mole Fractions)')
-    plt.legend(loc='best', bbox_to_anchor=(1.05, 1))
-    plt.xlim(left=0)
-    plt.grid(True, alpha=0.3)
-    plt.tight_layout()
-    output_path = get_output_path('figures', 'product_mole_fractions.png')
+    _save_product_fractions(False, 'product_mass_fractions.png')
+    _save_product_fractions(True, 'product_mole_fractions.png')
 
-    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    def _save_z_profile(profile_key: str, y, filename: str, **kw):
+        path = get_output_path('figures', filename)
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        fig, _ = plot_profile(states1.z, y, profile_key, aesthetics=aesthetics, output_path=path, **kw)
+        plt.close(fig)
+        print(f"Saved {filename} to {path}")
 
-    plt.savefig(output_path, dpi=150, bbox_inches='tight')
-    plt.close()
-    print("Saved product mole fractions to fig/product_mole_fractions.png")
-    
-    # Mean heat capacity at constant pressure (Cp)
-    plt.figure(figsize=(10, 6))
-    plt.plot(states1.z, states1.cp, 'purple', linewidth=2, label='Cp [J/kg·K]')
-    plt.xlabel('$z$ [m]')
-    plt.ylabel('$C_p$ [J/kg·K]')
-    plt.title('Mean Heat Capacity at Constant Pressure')
-    plt.legend(loc=0)
-    plt.xlim(left=0)
-    plt.grid(True, alpha=0.3)
-    plt.tight_layout()
-    output_path = get_output_path('figures', 'heat_capacity_cp.png')
+    _save_z_profile('heat_capacity_cp', states1.cp, 'heat_capacity_cp.png')
+    _save_z_profile('heat_capacity_cv', states1.cv, 'heat_capacity_cv.png')
 
-    os.makedirs(os.path.dirname(output_path), exist_ok=True)
-
-    plt.savefig(output_path, dpi=150, bbox_inches='tight')
-    plt.close()
-    print("Saved heat capacity Cp to fig/heat_capacity_cp.png")
-    
-    # Mean heat capacity at constant volume (Cv)
-    plt.figure(figsize=(10, 6))
-    plt.plot(states1.z, states1.cv, 'orange', linewidth=2, label='Cv [J/kg·K]')
-    plt.xlabel('$z$ [m]')
-    plt.ylabel('$C_v$ [J/kg·K]')
-    plt.title('Mean Heat Capacity at Constant Volume')
-    plt.legend(loc=0)
-    plt.xlim(left=0)
-    plt.grid(True, alpha=0.3)
-    plt.tight_layout()
-    output_path = get_output_path('figures', 'heat_capacity_cv.png')
-
-    os.makedirs(os.path.dirname(output_path), exist_ok=True)
-
-    plt.savefig(output_path, dpi=150, bbox_inches='tight')
-    plt.close()
-    print("Saved heat capacity Cv to fig/heat_capacity_cv.png")
-    
-    # Residence time
-    plt.figure(figsize=(10, 6))
-    # Calculate cumulative residence time
     dz = np.diff(states1.z)
     dt = dz / states1.velocity[1:]
     residence_time = np.cumsum(np.concatenate([[0], dt]))
-    plt.plot(states1.z, residence_time, 'brown', linewidth=2, label='Residence Time')
-    plt.xlabel('$z$ [m]')
-    plt.ylabel('$t$ [s]')
-    plt.title('Cumulative Residence Time')
-    plt.legend(loc=0)
-    plt.xlim(left=0)
-    plt.grid(True, alpha=0.3)
-    plt.tight_layout()
-    output_path = get_output_path('figures', 'residence_time.png')
+    _save_z_profile('residence_time', residence_time, 'residence_time.png')
 
-    os.makedirs(os.path.dirname(output_path), exist_ok=True)
-
-    plt.savefig(output_path, dpi=150, bbox_inches='tight')
-    plt.close()
-    print("Saved residence time to fig/residence_time.png")
-    
-    # Heat capacity ratio (Cp/Cv)
-    plt.figure(figsize=(10, 6))
+    ratio_path = get_output_path('figures', 'heat_capacity_ratio.png')
+    os.makedirs(os.path.dirname(ratio_path), exist_ok=True)
     try:
         cp_cv_ratio = states1.cp / states1.cv
-        plt.plot(states1.z, cp_cv_ratio, 'purple', linewidth=2, label='$C_p/C_v$')
-        plt.xlabel('$z$ [m]')
-        plt.ylabel('$C_p/C_v$ [-]')
-        plt.title('Heat Capacity Ratio')
-        plt.legend(loc=0)
-        plt.xlim(left=0)
-        plt.grid(True, alpha=0.3)
-        plt.tight_layout()
-        output_path = get_output_path('figures', 'heat_capacity_ratio.png')
+        fig, _ = plot_profile(
+            states1.z, cp_cv_ratio, 'heat_capacity_ratio',
+            aesthetics=aesthetics, output_path=ratio_path,
+            label='$C_p/C_v$',
+        )
+        plt.close(fig)
+    except Exception:
+        fig = create_figure(aesthetics)
+        ax = fig.add_subplot(111)
+        ax.text(0.5, 0.5, 'Heat capacity ratio not available', transform=ax.transAxes, ha='center')
+        if layout_cfg.get('tight_layout', True):
+            plt.tight_layout(pad=layout_cfg.get('pad', 1.08))
+        save_figure(fig, ratio_path, aesthetics)
+        plt.close(fig)
+    print(f"Saved heat_capacity_ratio.png to {ratio_path}")
 
-        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    _save_z_profile('enthalpy', states1.h, 'enthalpy_profile.png')
+    _save_z_profile('entropy', states1.s, 'entropy_profile.png')
+    _save_z_profile('viscosity', states1.viscosity, 'viscosity_profile.png')
+    _save_z_profile('thermal_conductivity', states1.thermal_conductivity, 'thermal_conductivity_profile.png')
 
-        plt.savefig(output_path, dpi=150, bbox_inches='tight')
-        plt.close()
-        print("Saved heat capacity ratio to fig/heat_capacity_ratio.png")
-    except:
-        plt.text(0.5, 0.5, 'Heat capacity ratio not available', 
-                transform=plt.gca().transAxes, ha='center')
-        plt.tight_layout()
-        output_path = get_output_path('figures', 'heat_capacity_ratio.png')
-
-        os.makedirs(os.path.dirname(output_path), exist_ok=True)
-
-        plt.savefig(output_path, dpi=150, bbox_inches='tight')
-        plt.close()
-        print("Saved heat capacity ratio to fig/heat_capacity_ratio.png")
-    
-    # Enthalpy profile
-    plt.figure(figsize=(10, 6))
-    plt.plot(states1.z, states1.h, 'darkgreen', linewidth=2, label='Enthalpy')
-    plt.xlabel('$z$ [m]')
-    plt.ylabel('$h$ [J/kg]')
-    plt.title('Specific Enthalpy Profile')
-    plt.legend(loc=0)
-    plt.xlim(left=0)
-    plt.grid(True, alpha=0.3)
-    plt.tight_layout()
-    output_path = get_output_path('figures', 'enthalpy_profile.png')
-
-    os.makedirs(os.path.dirname(output_path), exist_ok=True)
-
-    plt.savefig(output_path, dpi=150, bbox_inches='tight')
-    plt.close()
-    print("Saved enthalpy profile to fig/enthalpy_profile.png")
-    
-    # Entropy profile
-    plt.figure(figsize=(10, 6))
-    plt.plot(states1.z, states1.s, 'darkred', linewidth=2, label='Entropy')
-    plt.xlabel('$z$ [m]')
-    plt.ylabel('$s$ [J/kg·K]')
-    plt.title('Specific Entropy Profile')
-    plt.legend(loc=0)
-    plt.xlim(left=0)
-    plt.grid(True, alpha=0.3)
-    plt.tight_layout()
-    output_path = get_output_path('figures', 'entropy_profile.png')
-
-    os.makedirs(os.path.dirname(output_path), exist_ok=True)
-
-    plt.savefig(output_path, dpi=150, bbox_inches='tight')
-    plt.close()
-    print("Saved entropy profile to fig/entropy_profile.png")
-    
-    # Viscosity profile
-    plt.figure(figsize=(10, 6))
-    plt.plot(states1.z, states1.viscosity, 'navy', linewidth=2, label='Viscosity')
-    plt.xlabel('$z$ [m]')
-    plt.ylabel('$\\mu$ [Pa·s]')
-    plt.title('Dynamic Viscosity Profile')
-    plt.legend(loc=0)
-    plt.xlim(left=0)
-    plt.grid(True, alpha=0.3)
-    plt.tight_layout()
-    output_path = get_output_path('figures', 'viscosity_profile.png')
-
-    os.makedirs(os.path.dirname(output_path), exist_ok=True)
-
-    plt.savefig(output_path, dpi=150, bbox_inches='tight')
-    plt.close()
-    print("Saved viscosity profile to fig/viscosity_profile.png")
-    
-    # Thermal conductivity profile
-    plt.figure(figsize=(10, 6))
-    plt.plot(states1.z, states1.thermal_conductivity, 'teal', linewidth=2, label='Thermal Conductivity')
-    plt.xlabel('$z$ [m]')
-    plt.ylabel('$k$ [W/m·K]')
-    plt.title('Thermal Conductivity Profile')
-    plt.legend(loc=0)
-    plt.xlim(left=0)
-    plt.grid(True, alpha=0.3)
-    plt.tight_layout()
-    output_path = get_output_path('figures', 'thermal_conductivity_profile.png')
-
-    os.makedirs(os.path.dirname(output_path), exist_ok=True)
-
-    plt.savefig(output_path, dpi=150, bbox_inches='tight')
-    plt.close()
-    print("Saved thermal conductivity profile to fig/thermal_conductivity_profile.png")
-    
     # Note: compressibility_factor not available in this Cantera version
 
 def export_results(gas, states1, config, reactant_info, conversion, yields, T_0, p_0, u_0, hf):
@@ -1075,7 +871,7 @@ def create_summary_file(config, reactant_info, conversion, yields, states1, T_0,
         f.write(f"# Temperature Rise: {states1.T[-1] - T_0:.1f} K\n")
         f.write(f"# Final Pressure: {states1.P[-1]/1e5:.2f} bar\n")
         f.write(f"# Pressure Drop: {(p_0 - states1.P[-1])/1e5:.2f} bar\n")
-        f.write(f"# Residence Time: {np.trapezoid(1/states1.velocity, states1.z):.3f} s\n")
+        f.write(f"# Residence Time: {np.trapz(1/states1.velocity, states1.z):.3f} s\n")
         f.write("#\n")
         f.write("# CONVERSION AND YIELDS\n")
         f.write("# =====================\n")
@@ -1163,7 +959,7 @@ def main():
     print(f"[OK] {reactant_info['name']} conversion: {conversion:.1f}%")
     print(f"[OK] Temperature rise: {states1.T[-1] - T_0:.1f} K")
     print(f"[OK] Pressure drop: {(p_0 - states1.P[-1])/1e5:.2f} bar")
-    print(f"[OK] Residence time: {np.trapezoid(1/states1.velocity, states1.z):.3f} s")
+    print(f"[OK] Residence time: {np.trapz(1/states1.velocity, states1.z):.3f} s")
     print(f"[OK] Files generated:")
     print(f"  - fig/*.png: Visualization plots")
     print(f"  - results/*.csv: Simulation data")

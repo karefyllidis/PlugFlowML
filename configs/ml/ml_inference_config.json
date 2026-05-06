@@ -1,7 +1,7 @@
 {
     "_comment": "Configuration for ML inference/prediction",
     "model_dir": "models",
-    "model_type": "neural_network",
+    "model_type": "xgboost",
     "target_type": "primary",
     "simulation_parameters": {
         "initial_temperature_K": 925.0,

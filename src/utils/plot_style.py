@@ -115,6 +115,21 @@ def get_project_root():
     return os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
+def default_figure_aesthetics_path() -> str:
+    """Prefer ``configs/style/figure_aesthetics.json``; fall back to flat ``configs/`` or ``styles/``."""
+    root = get_project_root()
+    preferred = os.path.join(root, 'configs', 'style', 'figure_aesthetics.json')
+    legacy_flat = os.path.join(root, 'configs', 'figure_aesthetics.json')
+    legacy_styles = os.path.join(root, 'styles', 'figure_aesthetics.json')
+    if os.path.isfile(preferred):
+        return preferred
+    if os.path.isfile(legacy_flat):
+        return legacy_flat
+    if os.path.isfile(legacy_styles):
+        return legacy_styles
+    return preferred
+
+
 def load_aesthetics(config_file: Optional[str] = None) -> Dict[str, Any]:
     """
     Load figure aesthetics from JSON configuration file.
@@ -122,7 +137,8 @@ def load_aesthetics(config_file: Optional[str] = None) -> Dict[str, Any]:
     Parameters:
     -----------
     config_file : str, optional
-        Path to aesthetics config file. If None, uses default.
+        Path to aesthetics config file. If None, uses ``configs/style/figure_aesthetics.json``,
+        then legacy flat ``configs/figure_aesthetics.json`` or ``styles/figure_aesthetics.json``.
     
     Returns:
     --------
@@ -130,7 +146,7 @@ def load_aesthetics(config_file: Optional[str] = None) -> Dict[str, Any]:
         Aesthetics configuration dictionary
     """
     if config_file is None:
-        config_file = os.path.join(get_project_root(), 'styles', 'figure_aesthetics.json')
+        config_file = default_figure_aesthetics_path()
     
     if not os.path.exists(config_file):
         raise FileNotFoundError(f"Aesthetics config file not found: {config_file}")
@@ -278,6 +294,8 @@ def get_profile_style(profile_name: str,
         'ylabel': profile_config.get('ylabel', 'Value'),
         'title': profile_config.get('title', f'{profile_name.title()} Profile')
     }
+    if 'colors' in profile_config:
+        style['colors'] = list(profile_config['colors'])
     
     return style
 
@@ -396,6 +414,9 @@ def plot_profile(x, y, profile_name: str,
                 aesthetics: Optional[Dict[str, Any]] = None,
                 config_file: Optional[str] = None,
                 output_path: Optional[str] = None,
+                ylabel: Optional[str] = None,
+                title: Optional[str] = None,
+                label: Optional[str] = None,
                 **plot_kwargs):
     """
     Create a profile plot with aesthetics applied.
@@ -416,6 +437,8 @@ def plot_profile(x, y, profile_name: str,
         Path to aesthetics config file. Used if aesthetics is None.
     output_path : str, optional
         Path to save figure. If None, figure is not saved.
+    ylabel, title, label : optional
+        Override values from ``profiles`` in the JSON (e.g. species-specific labels).
     **plot_kwargs
         Additional arguments to pass to plot()
     
@@ -442,17 +465,20 @@ def plot_profile(x, y, profile_name: str,
         'alpha': style['alpha'],
         'marker': style['marker'],
         'markersize': style['markersize'],
-        'label': style['label']
+        'label': label if label is not None else style['label']
     }
     plot_params.update(plot_kwargs)
+    if plot_params.get('marker') in (None, 'none', 'None'):
+        plot_params.pop('marker', None)
+        plot_params.pop('markersize', None)
     
     # Plot
     ax.plot(x, y, **plot_params)
     
     # Setup axes
     ax.set_xlabel(xlabel)
-    ax.set_ylabel(style['ylabel'])
-    ax.set_title(style['title'])
+    ax.set_ylabel(style['ylabel'] if ylabel is None else ylabel)
+    ax.set_title(style['title'] if title is None else title)
     setup_axes(ax, aesthetics)
     setup_legend(ax, aesthetics)
     

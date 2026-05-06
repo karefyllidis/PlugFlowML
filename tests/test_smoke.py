@@ -35,25 +35,25 @@ def test_import_plot_style():
 
 # ── 2. Configuration files ────────────────────────────────────────────────────
 
-@pytest.mark.parametrize("config_name", [
-    "ml_data_generation_config.json",
-    "ml_training_config.json",
-    "ml_inference_config.json",
-    "reactant_database.json",
-    "heat_flux_profile.json",
+@pytest.mark.parametrize("rel_path", [
+    "ml/ml_data_generation_config.json",
+    "ml/ml_training_config.json",
+    "ml/ml_inference_config.json",
+    "simulation/reactant_database.json",
+    "simulation/heat_flux_profile.json",
 ])
-def test_config_files_are_valid_json(config_name):
+def test_config_files_are_valid_json(rel_path):
     """Every shipped JSON config must parse without errors."""
-    path = PROJECT_ROOT / "configs" / config_name
+    path = PROJECT_ROOT / "configs" / rel_path
     assert path.exists(), f"Missing config file: {path}"
     with open(path, "r", encoding="utf-8") as f:
         data = json.load(f)
-    assert isinstance(data, dict), f"{config_name} must be a JSON object"
+    assert isinstance(data, dict), f"{rel_path} must be a JSON object"
 
 
 def test_reactant_database_mechanisms_exist():
     """Every reactant entry must reference a mechanism YAML file (Cantera-bundled mechs are skipped)."""
-    db_path = PROJECT_ROOT / "configs" / "reactant_database.json"
+    db_path = PROJECT_ROOT / "configs" / "simulation" / "reactant_database.json"
     with open(db_path, "r", encoding="utf-8") as f:
         db = json.load(f)
     reactants = db.get("reactants", {})
