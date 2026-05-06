@@ -1,8 +1,5 @@
 #!/bin/bash
-# Legacy name kept for existing sbatch scripts. Prefer:
-#   scripts/cluster/run_training_smoke_gpu_partition.sh
-#
-# This file forwards to the same smoke-test GPU-partition settings.
+# Canonical GPU smoke script name.
 
 #SBATCH -J hydrai-smoke
 #SBATCH -A YOUR-SLURM-ACCOUNT-GPU

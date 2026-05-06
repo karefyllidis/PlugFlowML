@@ -66,8 +66,9 @@ HydrAI/
 │   │   ├── run_main2_slurm_chunk.py      # Main_2 chunk worker (TASK_ID, NTASKS; optional HYDRAI_ML_CONFIG)
 │   │   ├── run_training_mul_CPUs.sh      # Multi-node CPU SLURM example
 │   │   ├── run_training_smoke_gpu_partition.sh  # Short smoke job (tiny config; edit #SBATCH for site)
-│   │   ├── run_trainning_mul_CPUs.sh     # Site-specific duplicate spelling
-│   │   └── run_trainning_mul_GPUs.sh     # Legacy name; same smoke defaults
+│   │   ├── run_trainning_mul_CPUs.sh     # Legacy typo alias (for compatibility)
+│   │   ├── run_training_mul_GPUs.sh      # Canonical GPU smoke alias
+│   │   └── run_trainning_mul_GPUs.sh     # Legacy typo alias (for compatibility)
 │   ├── local/
 │   │   ├── run_main2_local_parallel.py   # Multi-process Main_2 on one machine
 │   │   └── run_main1_local_simulation.sh # Launches Main_1 notebook (bash)

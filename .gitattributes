@@ -1,0 +1,5 @@
+# Keep shell scripts Linux-compatible on HPC clusters.
+*.sh text eol=lf
+
+# Preserve Windows launcher behavior.
+*.bat text eol=crlf

@@ -1,5 +1,5 @@
 {
-    "_comment": "Minimal sampling for SLURM/local smoke tests. Submit with HYDRAI_ML_CONFIG pointing here (see scripts/cluster/run_trainning_smoke_gpu_partition.sh).",
+    "_comment": "Minimal sampling for SLURM/local smoke tests. Submit with HYDRAI_ML_CONFIG pointing here (see scripts/cluster/run_training_smoke_gpu_partition.sh).",
 
     "reactants": ["ethane"],
     "max_combinations_per_reactant": 2,

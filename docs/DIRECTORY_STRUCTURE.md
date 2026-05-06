@@ -74,6 +74,7 @@ HydrAI/
     │   ├── run_training_mul_CPUs.sh
     │   ├── run_training_smoke_gpu_partition.sh
     │   ├── run_trainning_mul_CPUs.sh
+    │   ├── run_training_mul_GPUs.sh
     │   └── run_trainning_mul_GPUs.sh
     ├── local/
     │   ├── run_main2_local_parallel.py
