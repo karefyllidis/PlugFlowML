@@ -162,6 +162,7 @@ Each script starts Jupyter and opens `notebooks/Main_1_run_pfr.ipynb`.
 Submit batch scripts from the repo root (see `README.md` § HPC). Override config for smoke tests:
 `export HYDRAI_ML_CONFIG=$PWD/configs/ml/ml_data_generation_config.smoke.json`.  
 Monitor: `tail -f logs/data_generation_progress_task_0.json` (use the task id of your worker).
+Current `scripts/cluster/*.sh` values are tuned for the University of Cambridge **CSD3** environment; adjust account/partition/QoS/modules for other SLURM clusters.
 
 ---
 

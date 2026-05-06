@@ -77,6 +77,10 @@ pip install -r requirements.txt
 
 → Full config keys: [docs/ML_CONFIG_GUIDE.md](docs/ML_CONFIG_GUIDE.md) · Detailed layout: [docs/STRUCTURE.md](docs/STRUCTURE.md)
 
+### HPC note
+
+The scripts under `scripts/cluster/` are currently tuned for the **University of Cambridge CSD3** SLURM environment (accounts, partitions, and module names). For other clusters, edit the `#SBATCH` headers and `module load` lines before submission.
+
 ---
 
 ## Roadmap
