@@ -2,10 +2,19 @@
 Portable pickle I/O for training DataFrames.
 
 ``StringDtype`` and some Arrow-backed columns pickle in a way that breaks when
-loading with another pandas minor version. We coerce those columns before save.
+loading with another pandas minor version. ``save_dataframe_pickle`` coerces
+those columns to plain ``object`` dtype before saving so the resulting ``.pkl``
+loads cleanly across pandas/Python versions.
 
-On load, if unpickling fails and a legacy sibling ``training_data_complete_*.csv``
-exists (from an older run when CSV was enabled), that file is used automatically.
+On load, if ``pd.read_pickle`` raises a dtype-compat error the fallback chain is:
+  1. Sibling ``.csv`` (legacy runs that set ``save_complete_csv=True``).
+  2. Clear ``RuntimeError`` — re-run Main_2 to regenerate a portable ``.pkl``.
+
+**Root cause of the old file:** the ``training_data_complete_*.pkl`` written
+before this module existed was saved with plain ``pd.DataFrame.to_pickle`` /
+``pickle.dump``, preserving the raw ``StringDtype`` backing.  pandas ≥2.3
+(issue #61763) cannot unpickle that format.  The fix is to re-run Main_2 so
+``save_dataframe_pickle`` writes a new, coerced file.
 """
 
 from __future__ import annotations
@@ -15,10 +24,17 @@ import warnings
 from pathlib import Path
 from typing import Optional, Union
 
+import numpy as np
 import pandas as pd
 
 
 def _is_pickle_compat_error(exc: BaseException) -> bool:
+    """True for dtype / version mismatch during unpickle (not generic bugs)."""
+    if isinstance(exc, NotImplementedError):
+        # pandas NDArrayBacked.__setstate__ + old StringDtype (pandas ≥2.3 / py3.14)
+        text = str(exc)
+        if "StringDtype" in text or "stringdtype" in text.lower():
+            return True
     msg = str(exc).lower()
     return any(
         x in msg
@@ -100,19 +116,21 @@ def save_pickle_portable(
 
 
 def load_portable_pickle(path: Union[str, Path]) -> object:
-    """``pd.read_pickle`` with clearer errors for pandas version / dtype mismatches."""
+    """``pd.read_pickle`` with clear errors for pandas version / dtype mismatches."""
     path = Path(path)
     try:
         return pd.read_pickle(path)
-    except (TypeError, ModuleNotFoundError, AttributeError, pickle.UnpicklingError) as e:
+    except (
+        TypeError,
+        ModuleNotFoundError,
+        AttributeError,
+        pickle.UnpicklingError,
+        NotImplementedError,
+    ) as e:
         if _is_pickle_compat_error(e):
             raise RuntimeError(
-                f"Could not read {path}: the pickle was likely saved with a different "
-                f"pandas version (extension dtypes like StringDtype are fragile across "
-                f"minor releases). Fix: (1) `pip install -U pandas` to match the writer; "
-                f"(2) if this is training data from Main_2, load via `load_dataframe_pickle` "
-                f"which falls back to a sibling `.csv` when present; or (3) re-run Main_2 "
-                f"so a new `.pkl` is written with portable dtypes."
+                f"Could not read {path}: pickle saved with an older pandas/StringDtype "
+                f"format (pandas issue #61763). Re-run Main_2 to regenerate a portable .pkl."
             ) from e
         raise
 
@@ -121,28 +139,51 @@ def load_dataframe_pickle(path: Union[str, Path]) -> pd.DataFrame:
     """
     Load a single-DataFrame pickle.
 
-    If unpickling fails (pandas version / StringDtype), and Main_2 wrote a CSV next to
-    the pickle (``training_data_complete_*.csv``), that file is loaded instead.
+    If ``pd.read_pickle`` raises a pandas dtype/version compat error, the
+    fallback chain is:
+
+    1. Sibling ``.csv`` — if a legacy Main_2 run wrote one (``save_complete_csv=True``).
+    2. ``RuntimeError`` with clear instructions to re-run Main_2.
+
+    The permanent fix for old pickles is to re-run Main_2, which calls
+    ``save_dataframe_pickle`` — this coerces ``StringDtype`` → ``object``
+    before pickling, making the file loadable on any pandas/Python version.
     """
     path = Path(path)
     try:
         obj = pd.read_pickle(path)
-    except (TypeError, ModuleNotFoundError, AttributeError, pickle.UnpicklingError) as e:
+    except (
+        TypeError,
+        ModuleNotFoundError,
+        AttributeError,
+        pickle.UnpicklingError,
+        NotImplementedError,
+    ) as e:
         if not _is_pickle_compat_error(e):
             raise
+
+        # Sibling CSV fallback (legacy runs with save_complete_csv=True)
         csv_path = path.with_suffix(".csv")
         if csv_path.is_file():
             warnings.warn(
-                f"Pickle unreadable ({path.name}); loaded {csv_path.name} instead. "
-                f"For faster loads and exact dtypes, run: pip install -U pandas "
-                f"to match the environment that created the pickle, or re-run Main_2.",
+                f"Pickle unreadable ({path.name}); loaded sibling {csv_path.name} instead. "
+                f"Re-run Main_2 to regenerate a portable .pkl (faster + exact dtypes).",
                 UserWarning,
                 stacklevel=2,
             )
             return pd.read_csv(csv_path, low_memory=False)
+
         raise RuntimeError(
-            f"Could not read {path} and no sibling CSV was found at {csv_path}. "
-            f"Try `pip install -U pandas`, or re-run Main_2 to regenerate both `.pkl` and `.csv`."
+            f"\n{'='*70}\n"
+            f"Cannot load: {path.name}\n"
+            f"{'='*70}\n"
+            f"This pickle was saved with an older pandas version that stored string\n"
+            f"columns as StringDtype — pandas ≥2.3 cannot unpickle that format\n"
+            f"(pandas issue #61763).\n\n"
+            f"FIX → Re-run Main_2 to regenerate the training data file.\n"
+            f"The new .pkl will be saved via save_dataframe_pickle() which coerces\n"
+            f"StringDtype → object dtype before pickling and loads on any version.\n"
+            f"{'='*70}"
         ) from e
 
     if not isinstance(obj, pd.DataFrame):
