@@ -8,7 +8,9 @@
 
 > **HydrAI = Hydrocarbon + AI** — physics-grounded steam-cracking simulation with machine-learning surrogates for fast reactor screening and design.
 
-**Nikolas Karefyllidis, PhD** — [github.com/karefyllidis](https://github.com/karefyllidis)
+**Nikolas Karefyllidis, PhD** — [GitHub](https://github.com/karefyllidis) · [LinkedIn](https://www.linkedin.com/in/karefyllidis/) · [Google Scholar](https://scholar.google.co.uk/citations?user=kLGU85cAAAAJ&hl=en)
+
+Parts of the scientific foundation for this project originate from prior doctoral work: [University of Oxford thesis repository entry](https://ora.ox.ac.uk/objects/uuid:2479abe8-fefb-4574-b573-a309c278a614).
 
 ---
 
@@ -90,3 +92,8 @@ pip install -r requirements.txt
 ## Contributing · License
 
 [.github/CONTRIBUTING.md](.github/CONTRIBUTING.md) · [MIT](LICENSE) © Nikolas Karefyllidis
+
+## Model cards
+
+- Repository model card: [MODEL_CARD.md](MODEL_CARD.md)
+- Hugging Face-ready template: [docs/HF_MODEL_CARD_TEMPLATE.md](docs/HF_MODEL_CARD_TEMPLATE.md)
