@@ -1,17 +1,20 @@
 #!/bin/bash
-# Canonical GPU smoke script name.
+# GPU production run — uses configs/ml/ml_data_generation_config.json (full config).
+# For smoke tests use: scripts/cluster/run_training_smoke_gpu_partition.sh
+#
+# Submit from repo root:
+#   sbatch scripts/cluster/run_training_mul_GPUs.sh
 
-#SBATCH -J hydrai-smoke
+#SBATCH -J hrgpu
 #SBATCH -A YOUR-SLURM-ACCOUNT-GPU
 #SBATCH -p ampere
+# CSD3 ampere: 32 CPUs per GPU — use 32 tasks × 1 CPU for srun fan-out.
 #SBATCH --nodes=1
-#SBATCH --ntasks=1
-#SBATCH --cpus-per-task=128
+#SBATCH --ntasks=32
+#SBATCH --cpus-per-task=1
 #SBATCH --gres=gpu:1
-#SBATCH --qos=INTR
-#SBATCH --time=00:45:00
-#SBATCH --mail-type=NONE
-#SBATCH --exclusive
+#SBATCH --time=12:00:00
+#SBATCH --mail-type=END,FAIL
 
 set -euo pipefail
 
@@ -19,8 +22,8 @@ workdir="${SLURM_SUBMIT_DIR:-.}"
 cd "$workdir" || exit 1
 run_root="$(pwd -P)"
 export HYDRAI_RUN_ROOT="$run_root"
-export HYDRAI_ML_CONFIG="${workdir}/configs/ml/ml_data_generation_config.smoke.json"
-numtasks=${HYDRAI_NTASKS:-${SLURM_CPUS_ON_NODE:-${SLURM_CPUS_PER_TASK:-${SLURM_NTASKS:-1}}}}
+export HYDRAI_ML_CONFIG="${workdir}/configs/ml/ml_data_generation_config.json"
+numtasks=${HYDRAI_NTASKS:-${SLURM_NTASKS:-1}}
 
 module load rhel7/default-ccl 2>/dev/null || true
 
@@ -32,7 +35,7 @@ module load rhel7/default-ccl 2>/dev/null || true
 # ---------------------------------------------------------------------------
 PYTHON="${HYDRAI_PYTHON:-$(which python3)}"
 
-echo "JobID: ${SLURM_JOB_ID:-local}  (smoke test — see run_training_smoke_gpu_partition.sh)"
+echo "JobID: ${SLURM_JOB_ID:-local}"
 echo "HYDRAI_ML_CONFIG=$HYDRAI_ML_CONFIG"
 echo "Tasks: $numtasks"
 echo "SLURM_CPUS_ON_NODE=${SLURM_CPUS_ON_NODE:-unknown}"
@@ -46,16 +49,26 @@ mkdir -p logs
   echo "run_root=${run_root}"
   echo "python=${PYTHON}"
   echo "config=${HYDRAI_ML_CONFIG}"
+  echo "SLURM_NTASKS=${SLURM_NTASKS:-}"
+  echo "SLURM_CPUS_ON_NODE=${SLURM_CPUS_ON_NODE:-}"
+  echo "SLURM_CPUS_PER_TASK=${SLURM_CPUS_PER_TASK:-}"
+  echo "numtasks_for_srun=$numtasks"
 } > logs/RUN_ROOT.txt
 
 if [[ -n "${SLURM_JOB_ID:-}" ]]; then
-  srun --ntasks="$numtasks" --exclusive bash -c "
+  : > logs/srun_step.err
+  if ! srun --ntasks="$numtasks" bash -c "
     export TASK_ID=\$SLURM_PROCID
     export NTASKS=\$SLURM_NTASKS
     export HYDRAI_RUN_ROOT='${HYDRAI_RUN_ROOT}'
     export HYDRAI_ML_CONFIG='${HYDRAI_ML_CONFIG}'
     ${PYTHON} scripts/cluster/run_main2_slurm_chunk.py >> logs/main2_task_\${SLURM_PROCID}.log 2>&1
-  "
+  " 2>> logs/srun_step.err; then
+    srun_ec=$?
+    echo "srun_exit_code=$srun_ec" >> logs/RUN_ROOT.txt
+    echo "hint=see logs/srun_step.err and slurm-${SLURM_JOB_ID}.out" >> logs/RUN_ROOT.txt
+    exit "$srun_ec"
+  fi
 else
   echo "No active SLURM allocation detected; running one local task."
   export TASK_ID=0

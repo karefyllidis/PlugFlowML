@@ -79,7 +79,7 @@ pip install -r requirements.txt
 
 ### HPC note
 
-The scripts under `scripts/cluster/` are currently tuned for the **University of Cambridge CSD3** SLURM environment (accounts, partitions, and module names). For other clusters, edit the `#SBATCH` headers and `module load` lines before submission.
+The scripts under `scripts/cluster/` are currently tuned for the **University of Cambridge CSD3** SLURM environment (accounts, partitions, and module names). On CSD3 **ampere**, GPU jobs cap CPUs per GPU (e.g. 32 CPUs per 1 GPU); parallel `srun` workers use **`--ntasks=N --cpus-per-task=1`**, not one task with `N` CPUs, or `srun` will fail with “More processors requested than permitted.” GPU **smoke** jobs use **`--time=00:10:00`** and **`--qos=INTR`** (interactive-style short runs). For multi-hour production sweeps, use a non-interactive QoS and longer `--time` in `run_training_mul_CPUs.sh` or a custom `#SBATCH` header. For other clusters, edit `#SBATCH` and `module load` before submission.
 
 ---
 

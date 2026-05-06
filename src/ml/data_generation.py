@@ -581,7 +581,14 @@ class TrainingDataGenerator:
         _write_generation_progress(
             progress_status_path, task_id, ntasks, 0, total_simulations, 0, 0, 0.0
         )
-        
+
+        if total_simulations == 0:
+            print(
+                "  [SKIP] No simulations assigned to this task chunk "
+                "(normal when total runs < number of SLURM ranks)."
+            )
+            return None
+
         # Run simulations (parallel or sequential)
         if n_jobs > 1:
             # Parallel execution
