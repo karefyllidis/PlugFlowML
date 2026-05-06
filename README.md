@@ -6,29 +6,23 @@
 [![XGBoost](https://img.shields.io/badge/XGBoost-2.0%2B-red)](https://xgboost.readthedocs.io/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-**Physics-first simulation of steam cracking, accelerated by machine learning.**
-
-**HydrAI** combines detailed **Cantera** plug-flow reactor (PFR) models with **multi-output tree ensembles** to make reactor screening and design loops practical—without sacrificing the fidelity of large-chemistry simulations.
+> **HydrAI = Hydrocarbon + AI** — physics-grounded steam-cracking simulation with machine-learning surrogates for fast reactor screening and design.
 
 **Nikolas Karefyllidis, PhD** — [github.com/karefyllidis](https://github.com/karefyllidis)
 
 ---
 
-![HydrAI Pipeline](assets/pipeline.png)
-
----
-
 ## Why it matters
 
-Steam cracking is central to olefin production and among the most energy-intensive unit operations in the chemical industry. Accurate predictions require **stiff integration coupled to detailed kinetics** (10²–10³ species)—fidelity that is non-negotiable for R&D, but prohibitively slow for repeated design and optimisation loops.
+Steam cracking is central to olefin production and one of the most energy-intensive unit operations in the chemical industry. Accurate predictions demand **stiff ODE integration coupled to detailed kinetics** — mechanisms of 10²–10³ species — fidelity that is essential for R&D but far too slow for iterative design.
 
-HydrAI addresses this with a **reproducible, full-stack workflow**:
+HydrAI closes that gap with a **reproducible, full-stack workflow**:
 
-1. **Generate ground truth** — run Cantera PFR simulations across a broad parameter space for multiple feedstocks (ethane, propane, n-hexane, naphtha).
-2. **Build a fast surrogate** — train multi-output tree ensembles on those simulations; inference takes **milliseconds vs. seconds-to-minutes** for a full chemistry solve.
-3. **Evaluate rigorously** — held-out test metrics (R², RMSE, MAPE, MBE) per model and per output target in a dedicated comparison notebook.
+1. **Simulate** — Cantera PFR solver sweeping a broad operating space across multiple feedstocks (ethane, propane, n-hexane, naphtha).
+2. **Surrogateify** — multi-output tree ensembles trained on that data; inference is **milliseconds vs. seconds–minutes** for a full chemistry solve.
+3. **Evaluate** — rigorous held-out metrics (R², RMSE, MAPE, MBE) per model and per output target in a dedicated comparison notebook.
 
-Representative surrogate accuracy on a large n-hexane dataset: mean test **R² ~ 0.97–0.99** across thermodynamic state variables and species concentrations.
+Representative accuracy on a large n-hexane dataset: mean test **R² ~ 0.97–0.99** across all thermodynamic state variables and species concentrations.
 
 ---
 
@@ -36,23 +30,33 @@ Representative surrogate accuracy on a large n-hexane dataset: mean test **R² ~
 
 | | |
 |--|--|
-| **High-fidelity baseline** | PFR with configurable heat flux, pressure drop (Churchill), and multi-feed kinetics from industry-style YAML mechanisms (35–1951 species). |
-| **Scalable dataset generation** | Latin Hypercube or structured grid sweeps over 6 operating/geometry parameters; **parallel** on a workstation or **SLURM-chunked** on HPC. |
-| **Multi-reactant scope** | A single trained surrogate generalises across chemically distinct feedstocks — ethane, propane, n-hexane, naphtha — not just parameter interpolation within one feed. |
-| **Production-style ML pipeline** | Random Forest, Gradient Boosting, XGBoost, AdaBoost; optional `RandomizedSearchCV`; `MLPFRPredictor` for sub-ms batch inference from saved artifacts. |
-| **Clean architecture** | JSON configs per concern (simulation / ML / style); notebooks for the end-to-end pipeline; importable library under `src/`. |
+| **High-fidelity baseline** | PFR with configurable wall heat flux, Churchill pressure drop, and multi-feed YAML kinetics (35–1951 species). |
+| **Scalable dataset generation** | Latin Hypercube or structured grid sweeps over 6 parameters; parallel on a workstation or SLURM-chunked on HPC. |
+| **Multi-reactant generalisation** | One surrogate trained across chemically distinct feedstocks — not just interpolation within a single feed. |
+| **Production ML pipeline** | RF, Gradient Boosting, XGBoost, AdaBoost; optional `RandomizedSearchCV`; `MLPFRPredictor` for sub-ms batch inference. |
+| **Clean, extensible architecture** | JSON configs per concern (simulation / ML / style); Jupyter notebooks as the end-to-end interface; importable `src/` library. |
 
 ---
 
-## Workflow
+## Axial profiles
 
-```
-Main_1 → Main_2 → Main_3 → Main_4 → Main_4b
-  PFR      Sweep   EDA /    Train    Metrics
-           data    feat.    trees    & plots
-```
+![Representative axial evolution](assets/axial_evolution.png)
 
-Full notebook descriptions and config key reference: [STRUCTURE.md](STRUCTURE.md) · [docs/ML_CONFIG_GUIDE.md](docs/ML_CONFIG_GUIDE.md)
+*Typical axial evolution along normalized reactor length (z/L): temperature rise, pressure drop, and reactant depletion — the full-resolution targets HydrAI learns to predict.*
+
+---
+
+## Repository structure
+
+    HydrAI/
+    ├── notebooks/            # Main_1 .. Main_4b  ·  PFR → sweep → EDA → train → compare
+    ├── src/                  # cantera/, ml/, utils/
+    ├── configs/              # simulation/, ml/, style/
+    ├── scripts/              # cluster/, local/, dev/
+    ├── data/                 # training/, processed/ (generated; git-ignored)
+    ├── models/               # trained artifacts (generated; git-ignored)
+    ├── mechanisms/           # local YAML kinetic files (git-ignored)
+    └── docs/                 # guides, API reference, structure trees
 
 ---
 
@@ -64,20 +68,22 @@ cd HydrAI
 pip install -r requirements.txt
 ```
 
-1. Install **Cantera** for your Python interpreter ([guide](https://cantera.org/stable/install/windows.html)).
-2. Place mechanism **YAML** files in `mechanisms/` — filenames are declared in `configs/simulation/reactant_database.json` (mechanisms are **git-ignored** by design).
-3. Run the notebooks in order under `notebooks/`, or `python run_pipeline.py` (`run_pipeline.bat` on Windows) once data exists.
-4. For parallel sweeps on one machine: `python scripts/local/run_main2_local_parallel.py --ntasks 4`.
+1. Install **Cantera** for your interpreter ([guide](https://cantera.org/stable/install/windows.html)).
+2. Place mechanism **YAML** files in `mechanisms/` — paths declared in `configs/simulation/reactant_database.json`.
+3. Run notebooks in order under `notebooks/`, or `python run_pipeline.py` once data exists.
+4. Parallel sweeps on one machine: `python scripts/local/run_main2_local_parallel.py --ntasks 4`.
+
+→ Full config keys: [docs/ML_CONFIG_GUIDE.md](docs/ML_CONFIG_GUIDE.md) · Detailed layout: [docs/STRUCTURE.md](docs/STRUCTURE.md)
 
 ---
 
 ## Roadmap
 
-- [x] Multi-feed PFR + detailed kinetics
-- [x] LHS / grid sampling, SLURM-aware parallel generation
+- [x] Multi-feed PFR with detailed chemistry
+- [x] LHS / grid sampling, SLURM-aware parallel data generation
 - [x] Multi-output tree surrogates, hyperparameter tuning, comparison notebook
-- [ ] PyTorch / physics-informed surrogate models
-- [ ] Bayesian / gradient-free design optimisation on top of fast predictors
+- [ ] PyTorch / physics-informed neural surrogate
+- [ ] Bayesian / gradient-free design optimisation loop
 
 ---
 
