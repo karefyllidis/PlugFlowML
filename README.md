@@ -81,6 +81,19 @@ pip install -r requirements.txt
 
 The scripts under `scripts/cluster/` are currently tuned for the **University of Cambridge CSD3** SLURM environment (accounts, partitions, and module names). On CSD3 **ampere**, GPU jobs cap CPUs per GPU (e.g. 32 CPUs per 1 GPU); parallel `srun` workers use **`--ntasks=N --cpus-per-task=1`**, not one task with `N` CPUs, or `srun` will fail with “More processors requested than permitted.” GPU **smoke** jobs use **`--time=00:10:00`** and **`--qos=INTR`** (interactive-style short runs). For multi-hour production sweeps, use a non-interactive QoS and longer `--time` in `run_training_mul_CPUs.sh` or a custom `#SBATCH` header. For other clusters, edit `#SBATCH` and `module load` before submission.
 
+**Post-run workflow:**
+1. Monitor: `bash scripts/dev/monitor_run.sh`
+2. Verify: `python scripts/dev/check_complete_runs.py`
+3. Consolidate: `python scripts/dev/consolidate_training_data.py`
+   - Default behavior: merges task outputs and cleans old `data/training/task_*` artifacts.
+   - Keep task files: `python scripts/dev/consolidate_training_data.py --no-cleanup`
+   - Preview only: `python scripts/dev/consolidate_training_data.py --dry-run`
+4. Continue to `notebooks/Main_3_data_exploration_feature_engineering.ipynb`
+
+**Cluster submission tip (avoids CRLF `sbatch` failures):**
+- Use: `bash scripts/dev/sbatch_safe.sh scripts/cluster/run_training_mul_GPUs.sh`
+- The wrapper auto-converts DOS line endings to Unix LF before `sbatch`.
+
 ---
 
 ## Roadmap
@@ -101,3 +114,4 @@ The scripts under `scripts/cluster/` are currently tuned for the **University of
 
 - Repository model card: [MODEL_CARD.md](MODEL_CARD.md)
 - Hugging Face-ready template: [docs/HF_MODEL_CARD_TEMPLATE.md](docs/HF_MODEL_CARD_TEMPLATE.md)
+- Training data generation protocol: [docs/TRAINING_DATA_GENERATION_PROTOCOL_MODEL_CARD.md](docs/TRAINING_DATA_GENERATION_PROTOCOL_MODEL_CARD.md)

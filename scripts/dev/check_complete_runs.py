@@ -17,8 +17,22 @@ LOG_DIR = ROOT / "logs"
 DATA_DIR = ROOT / "data" / "training"
 CONFIG = ROOT / "configs" / "ml" / "ml_data_generation_config.json"
 
-SLURM_CPUS = 224
+SLURM_CPUS_DEFAULT = 224
 SLURM_WALL_H = 1.0  # hours from #SBATCH --time=01:00:00
+
+
+def _load_run_root_values():
+    """Read key=value pairs from logs/RUN_ROOT.txt when available."""
+    run_root = ROOT / "logs" / "RUN_ROOT.txt"
+    vals = {}
+    if not run_root.exists():
+        return vals
+    for line in run_root.read_text(errors="replace").splitlines():
+        if "=" not in line:
+            continue
+        k, v = line.split("=", 1)
+        vals[k.strip()] = v.strip()
+    return vals
 
 
 def main():
@@ -43,12 +57,20 @@ def main():
 
     intended = min(full_grid, max_comb) * len(reactants)
 
+    run_root_vals = _load_run_root_values()
+    slurm_cpus = int(
+        run_root_vals.get("SLURM_CPUS_ON_NODE")
+        or run_root_vals.get("SLURM_NTASKS")
+        or SLURM_CPUS_DEFAULT
+    )
+
     print(f"\n  Config:")
     print(f"    Reactants:       {reactants}")
     print(f"    Method:          {method}")
     print(f"    Full grid:       {full_grid:,} (all combos of {len(param_ranges)-1} params x points)")
     print(f"    max_combinations_per_reactant: {max_comb}")
     print(f"    Intended runs:   {intended}")
+    print(f"    CPUs used (estimate): {slurm_cpus}")
 
     # ---- 2. Count files and unique simulations ----
     task_dirs = sorted(DATA_DIR.iterdir()) if DATA_DIR.is_dir() else []
@@ -56,12 +78,25 @@ def main():
 
     total_files = 0
     sims_with_output = 0  # task dirs that have at least one pkl/csv
+    sims_by_metadata_success = 0
+    sims_by_metadata_total = 0
+    metadata_tasks = 0
 
     for td in task_dirs:
         files = list(td.glob("*.pkl")) + list(td.glob("*.pickle")) + list(td.glob("*.csv"))
         total_files += len(files)
         if files:
             sims_with_output += 1
+        metadata_files = sorted(td.glob("metadata_*.json"))
+        if metadata_files:
+            metadata_tasks += 1
+            try:
+                with open(metadata_files[-1], "r", encoding="utf-8") as f:
+                    md = json.load(f)
+                sims_by_metadata_success += int(md.get("successful_simulations", 0))
+                sims_by_metadata_total += int(md.get("total_simulations", 0))
+            except Exception:
+                pass
 
     # Each task dir = one SLURM task. Tasks 0..(intended-1) got a simulation,
     # tasks intended..223 got nothing. So sims_with_output = tasks that produced data.
@@ -70,6 +105,9 @@ def main():
     print(f"    Task dirs:       {len(task_dirs)}")
     print(f"    Task dirs with output: {sims_with_output}")
     print(f"    Total files:     {total_files}")
+    if metadata_tasks > 0:
+        print(f"    Metadata tasks:  {metadata_tasks}")
+        print(f"    Sims from metadata: success={sims_by_metadata_success}, total={sims_by_metadata_total}")
 
     # ---- 3. Peek at one file to understand structure ----
     sample = None
@@ -183,7 +221,12 @@ def main():
     print("=" * 55)
 
     print(f"\n  Q: How many simulations have been run?")
-    if n_sims > 0:
+    if sims_by_metadata_success > 0:
+        print(
+            f"  A: {sims_by_metadata_success} successful simulations "
+            f"(from per-task metadata; attempted={sims_by_metadata_total})"
+        )
+    elif n_sims > 0:
         print(f"  A: {n_sims} unique simulations (from {total_files} output files)")
     else:
         print(f"  A: {sims_with_output} task dirs have output ({total_files} files)")
@@ -193,7 +236,11 @@ def main():
     print(f"  A: {intended} (config max_combinations_per_reactant = {max_comb})")
     print(f"     Full grid would be {full_grid:,} (if you raise max_combinations)")
 
-    done = n_sims if n_sims > 0 else sims_with_output
+    done = (
+        sims_by_metadata_success
+        if sims_by_metadata_success > 0
+        else (n_sims if n_sims > 0 else sims_with_output)
+    )
     remaining = max(0, intended - done)
     print(f"\n  Q: How many are missing?")
     print(f"  A: {done} / {intended} done  →  {remaining} remaining")
@@ -203,24 +250,24 @@ def main():
 
     print(f"\n  Q: How long to complete?")
     if done > 0:
-        cpu_h_used = SLURM_CPUS * SLURM_WALL_H
+        cpu_h_used = slurm_cpus * SLURM_WALL_H
         h_per_sim = cpu_h_used / done
-        print(f"  A: Based on this run: {done} sims in {SLURM_WALL_H}h using {SLURM_CPUS} CPUs")
+        print(f"  A: Based on this run: {done} sims in {SLURM_WALL_H}h using {slurm_cpus} CPUs")
         print(f"     → ~{h_per_sim * 60:.1f} CPU-min per simulation")
         if remaining > 0:
             cpu_h_remain = remaining * h_per_sim
-            wall_h = cpu_h_remain / SLURM_CPUS
+            wall_h = cpu_h_remain / slurm_cpus
             print(f"     Remaining {remaining} sims need ~{cpu_h_remain:.0f} CPU-h")
-            print(f"     With {SLURM_CPUS} CPUs: ~{wall_h:.1f}h wall time ({wall_h / SLURM_WALL_H:.0f} more jobs)")
+            print(f"     With {slurm_cpus} CPUs: ~{wall_h:.1f}h wall time ({wall_h / SLURM_WALL_H:.0f} more jobs)")
         else:
             print(f"     All {intended} intended runs appear complete!")
 
         if full_grid > intended:
             cpu_h_full = full_grid * h_per_sim
-            wall_h_full = cpu_h_full / SLURM_CPUS
+            wall_h_full = cpu_h_full / slurm_cpus
             print(f"\n     For the FULL GRID ({full_grid:,} sims):")
             print(f"     → {cpu_h_full:,.0f} CPU-hours total")
-            print(f"     → {wall_h_full:,.0f}h wall time with {SLURM_CPUS} CPUs ({wall_h_full / 24:,.0f} days)")
+            print(f"     → {wall_h_full:,.0f}h wall time with {slurm_cpus} CPUs ({wall_h_full / 24:,.0f} days)")
             for cpus in [500, 1000, 2000]:
                 wh = cpu_h_full / cpus
                 print(f"     → {wh:,.0f}h with {cpus} CPUs ({wh / 24:,.0f} days)")
@@ -240,20 +287,27 @@ def main():
         f.write(f"Method: {method}\n")
         f.write(f"Full grid: {full_grid:,}\n")
         f.write(f"max_combinations: {max_comb}\n")
+        f.write(f"CPUs used (estimate): {slurm_cpus}\n")
         f.write(f"Intended: {intended}\n")
         f.write(f"Task dirs with output: {sims_with_output}\n")
         f.write(f"Total files: {total_files}\n")
-        f.write(f"Unique simulations: {n_sims if n_sims else '?'}\n")
+        if sims_by_metadata_success > 0:
+            f.write(
+                "Simulations (metadata): "
+                f"successful={sims_by_metadata_success}, total={sims_by_metadata_total}\n"
+            )
+        else:
+            f.write(f"Unique simulations: {n_sims if n_sims else '?'}\n")
         f.write(f"Log 'Done': {n_done}/{len(logs)}\n")
         f.write(f"Done: {done}/{intended}\n")
         f.write(f"Remaining: {remaining}\n")
         if done > 0:
-            h_per_sim = SLURM_CPUS * SLURM_WALL_H / done
+            h_per_sim = slurm_cpus * SLURM_WALL_H / done
             f.write(f"Est. CPU-min/sim: {h_per_sim * 60:.1f}\n")
             if full_grid > intended:
                 cpu_h_full = full_grid * h_per_sim
                 f.write(f"Est. CPU-h for full grid: {cpu_h_full:,.0f}\n")
-                f.write(f"Est. wall-h for full grid ({SLURM_CPUS} CPUs): {cpu_h_full / SLURM_CPUS:,.0f}\n")
+                f.write(f"Est. wall-h for full grid ({slurm_cpus} CPUs): {cpu_h_full / slurm_cpus:,.0f}\n")
         f.write(f"\nExports (what has run):\n")
         f.write(f"  data/training/training_manifest.csv   - one row per file, with input conditions\n")
         f.write(f"  data/training/unique_conditions_run.csv - one row per unique (T,p,L,d,mfr,q)\n")

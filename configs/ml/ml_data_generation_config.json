@@ -3,7 +3,7 @@
     "sampling_comment": "sampling_method: 'random' | 'latin' (LHS) | 'structured_grid' (all combos from parameter_ranges). Bounds in random_sample_bounds apply to random/latin.",
 
     "reactants": ["n-hexane"],
-    "max_combinations_per_reactant": 100,
+    "max_combinations_per_reactant": 1000,
     "output_dir": "data/training",
     "save_interval": 10,
     "sampling_method": "latin",

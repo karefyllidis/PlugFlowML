@@ -27,6 +27,10 @@ numtasks=${HYDRAI_NTASKS:-${SLURM_NTASKS:-1}}
 
 module load rhel7/default-ccl 2>/dev/null || true
 
+# Safety guard: hard-stop srun if it hangs, so nodes are released.
+# Override if needed, e.g. export HYDRAI_SRUN_TIMEOUT=43000s
+SRUN_TIMEOUT="${HYDRAI_SRUN_TIMEOUT:-42600s}"  # 11h50m for a 12h job
+
 # ---------------------------------------------------------------------------
 # Python interpreter: respect HYDRAI_PYTHON if set, otherwise use the python3
 # active in the current environment (conda/venv/system).
@@ -57,7 +61,7 @@ mkdir -p logs
 
 if [[ -n "${SLURM_JOB_ID:-}" ]]; then
   : > logs/srun_step.err
-  if ! srun --ntasks="$numtasks" bash -c "
+  if ! timeout "$SRUN_TIMEOUT" srun --ntasks="$numtasks" bash -c "
     export TASK_ID=\$SLURM_PROCID
     export NTASKS=\$SLURM_NTASKS
     export HYDRAI_RUN_ROOT='${HYDRAI_RUN_ROOT}'
@@ -66,6 +70,7 @@ if [[ -n "${SLURM_JOB_ID:-}" ]]; then
   " 2>> logs/srun_step.err; then
     srun_ec=$?
     echo "srun_exit_code=$srun_ec" >> logs/RUN_ROOT.txt
+    echo "srun_timeout=$SRUN_TIMEOUT" >> logs/RUN_ROOT.txt
     echo "hint=see logs/srun_step.err and slurm-${SLURM_JOB_ID}.out" >> logs/RUN_ROOT.txt
     exit "$srun_ec"
   fi

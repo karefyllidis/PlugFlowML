@@ -77,6 +77,9 @@ HydrAI/
 │   │   └── run_simulation_ipynb.sh
 │   └── dev/
 │       ├── check_complete_runs.py        # Training sweep summary / manifests
+│       ├── consolidate_training_data.py  # Merge per-task outputs for ML pipeline
+│       ├── monitor_run.sh                # Live cluster run status
+│       ├── clean_completed_runs.py       # Archive completed task artifacts
 │       └── show_structure.sh             # Requires `tree`
 │
 ├── styles/                       # Figure aesthetics docs + examples (JSON in configs/style/)
@@ -122,6 +125,10 @@ HydrAI/
 - **Cluster tuning:** current `scripts/cluster/*.sh` defaults are tuned for the University of Cambridge **CSD3** environment. On other SLURM systems, update account/partition/QoS/module settings in `#SBATCH` and `module load` lines.
 - **Progress files:** during chunk runs, each task updates `logs/data_generation_progress_task_<TASK_ID>.json` after every completed simulation. Per-run CSV logs: `temp/conditions_run_task_<TASK_ID>.csv`; completion lines: `temp/completed_runs_task_<TASK_ID>.txt`.
 - **Diagnostics:** `python scripts/dev/check_complete_runs.py` aggregates sweep status from config + `data/training/`. `bash scripts/dev/monitor_run.sh` shows live status (run from repo root).
+- **Data consolidation:** After a parallel run, merge per-task outputs for the ML notebook:
+  `python scripts/dev/consolidate_training_data.py`
+  This creates `data/training/training_data_complete_<timestamp>.pkl` which `Main_3_data_exploration_feature_engineering.ipynb` auto-detects.
+  By default, old per-task files are cleaned after successful merge; use `--no-cleanup` to keep them, or `--dry-run` for preview only.
 - **Linux line endings:** if CSD3 reports `/bin/bash^M` or DOS line breaks, run:
   `find scripts -type f -name "*.sh" -exec sed -i 's/\r$//' {} \;`
 

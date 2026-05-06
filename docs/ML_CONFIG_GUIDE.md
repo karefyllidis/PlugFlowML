@@ -38,6 +38,18 @@ python src/ml/data_generation.py configs/ml/ml_data_generation_config.json
 
 **Optional — SLURM chunk runner** (`scripts/cluster/run_main2_slurm_chunk.py`): set `HYDRAI_ML_CONFIG` to a JSON path (absolute or relative to repo root) to override the default `configs/ml/ml_data_generation_config.json`. For a minimal test workload use `configs/ml/ml_data_generation_config.smoke.json`. Each task writes live status to `logs/data_generation_progress_task_<TASK_ID>.json`. See `README.md` (HPC / SLURM).
 
+**Post-run consolidation (parallel runs):**
+
+After SLURM/local parallel generation that writes into `data/training/task_*`, consolidate to one dataset for `Main_3`:
+
+```bash
+python scripts/dev/consolidate_training_data.py
+```
+
+- Default behavior: writes consolidated `training_data_complete_<timestamp>.pkl` + `metadata_<timestamp>.json`, then cleans old per-task files/folders.
+- Keep per-task artifacts: `python scripts/dev/consolidate_training_data.py --no-cleanup`
+- Preview without writing/deleting: `python scripts/dev/consolidate_training_data.py --dry-run`
+
 **Parameters:**
 
 - **`reactants`** (list of strings): List of reactants to generate data for. Available options: `"ethane"`, `"propane"`, `"naphtha"`, `"n-hexane"`. Each reactant will generate up to `max_combinations_per_reactant` simulations. If not specified or empty, uses all available reactants.
