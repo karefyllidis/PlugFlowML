@@ -167,6 +167,7 @@ def main():
     # Per-process single-threaded; parallelism is across SLURM tasks
     n_jobs = 1
 
+    # Cluster chunk worker is data-generation only; EDA/coverage plots are handled in Main_3.
     generator = TrainingDataGenerator(output_dir=str(out_path), disable_plots=True)
     if param_ranges:
         for key, value in param_ranges.items():

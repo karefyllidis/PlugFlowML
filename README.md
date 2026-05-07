@@ -51,7 +51,7 @@ Representative accuracy on a large n-hexane dataset: mean test **R² ~ 0.97–0.
 ## Repository structure
 
     HydrAI/
-    ├── notebooks/            # Main_1 .. Main_4b  ·  PFR → sweep → EDA → train → compare
+    ├── notebooks/            # Main_1 → Main_4  ·  PFR → sweep → EDA → train+eval
     ├── src/                  # cantera/, ml/, utils/
     ├── configs/              # simulation/, ml/, style/
     ├── scripts/              # cluster/, local/, dev/
@@ -72,7 +72,11 @@ pip install -r requirements.txt
 
 1. Install **Cantera** for your interpreter ([guide](https://cantera.org/stable/install/windows.html)).
 2. Place mechanism **YAML** files in `mechanisms/` — paths declared in `configs/simulation/reactant_database.json`.
-3. Run notebooks in order under `notebooks/`, or `python run_pipeline.py` once data exists.
+3. Run notebooks in order under `notebooks/`:
+   - `Main_1` → single PFR run
+   - `Main_2` → training data generation
+   - `Main_3` → EDA and feature engineering
+   - `Main_4_train_and_evaluate_tree_models` → train & evaluate surrogates (inlet→outlet)
 4. Parallel sweeps on one machine: `python scripts/local/run_main2_local_parallel.py --ntasks 4`.
 
 → Full config keys: [docs/ML_CONFIG_GUIDE.md](docs/ML_CONFIG_GUIDE.md) · Detailed layout: [docs/STRUCTURE.md](docs/STRUCTURE.md)
@@ -94,6 +98,14 @@ The scripts under `scripts/cluster/` are currently tuned for the **University of
 - Use: `bash scripts/dev/sbatch_safe.sh scripts/cluster/run_training_mul_GPUs.sh`
 - The wrapper auto-converts DOS line endings to Unix LF before `sbatch`.
 
+**Figure export controls (notebooks):**
+- `Main_1_run_pfr.ipynb`: `IF_SAVE_PLOTS=True` saves quick figures to `outputs/figures/Main_1_run_pfr/`.
+- `Main_3_data_exploration_feature_engineering.ipynb`: `IF_SAVE_EDA_PLOTS=True` saves EDA figures to `outputs/figures/Main_3_data_exploration_feature_engineering/eda/`.
+  - Includes exit-plane distributions and species-lumping visual aids.
+  - Lumping controls:
+    - `IF_SEPARATE_SPECIES_BY_CARBON=True` (C1, C2, C3, ... + inert)
+    - `IF_CATEGORIZE_BY_CHEMISTRY=True` (olefins, aromatics, paraffins, coke precursors, radicals, feedstock, diluent)
+
 ---
 
 ## Roadmap
@@ -101,6 +113,8 @@ The scripts under `scripts/cluster/` are currently tuned for the **University of
 - [x] Multi-feed PFR with detailed chemistry
 - [x] LHS / grid sampling, SLURM-aware parallel data generation
 - [x] Multi-output tree surrogates, hyperparameter tuning, comparison notebook
+- [x] Species lumping for dimensionality reduction (by carbon number & chemistry role)
+- [ ] **Full axial-profile surrogate** — predict state at any z/L, not just exit (infrastructure ready: `TRAIN_FULL_PROFILE` flag in Main_4)
 - [ ] PyTorch / physics-informed neural surrogate
 - [ ] Bayesian / gradient-free design optimisation loop
 

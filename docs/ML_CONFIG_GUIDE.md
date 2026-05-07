@@ -123,16 +123,54 @@ If `sampling_method` is `"random"` or `"latin"`, only `max_combinations_per_reac
 
 ### Notebook run control (`notebooks/Main_2_generate_training_data.ipynb`)
 
-The notebook defines flags that override saving/display behavior (config does not control these):
+`Main_2` is generation-focused. Training-space plotting controls were intentionally removed and moved to `Main_3`.
 
-- **`IF_SHOW_PLOTS`**: If `True`, show training-space plots (1D marginals, 2D coverage) in the notebook; if `False`, figures are closed without display.
-- **`IF_SAVE_PLOTS`**: If `True`, save training-space plots as PNG in `output_dir` (e.g. `training_space_1d_preview.png`, `training_space_2d_from_data.png`).
 - **`IF_SAVE_METADATA`**: If `True`, the generator writes the metadata JSON file; if `False`, metadata is not saved (dataset still returned).
 - **`IF_SAVE_TRAINING_DATA`**: If `True`, partial and final training data (pkl/csv) are written; if `False`, no training files are written (dataset is still built and returned in memory).
 
+### Notebook run control (`notebooks/Main_1_run_pfr.ipynb`)
+
+- **`IF_SAVE_PLOTS`**: If `True`, quick inline figures are saved to `outputs/figures/`:
+  - `quick_profiles_<reactant>.png`
+  - `conversion_products_<reactant>.png`
+
+### Notebook run control (`notebooks/Main_3_data_exploration_feature_engineering.ipynb`)
+
+- **`IF_SAVE_EDA_PLOTS`**: If `True`, EDA figures are saved to `outputs/figures/Main_3_data_exploration_feature_engineering/eda/`.
+- **`IF_SEPARATE_SPECIES_BY_CARBON`**: If `True`, species are grouped by carbon-number lumps (`C1`, `C2`, `C3`, ... and `inert`) for dimensionality reduction.
+- **`IF_CATEGORIZE_BY_CHEMISTRY`**: If `True`, species are grouped by process-role lumps (`olefins`, `aromatics`, `paraffins`, `coke_precursors`, `radicals`, `feedstock`, `diluent`, `other`).
+- **Saved EDA figures** include:
+  - `main3_input_distributions_inlet.png`
+  - `main3_primary_output_distributions_exit.png` (computed at reactor exit: max `z` / `relative_position≈1`)
+  - `main3_top12_species_exit_mean_mass_fraction.png`
+  - `main3_species_lumped_by_carbon_bar_exit.png`
+  - `main3_species_lumped_by_chemistry_bar_exit.png`
+
 ### 2. ML Model Training
 
-**Notebook (tree models):** `notebooks/Main_4_train_tree_models.ipynb` loads the latest `features_targets_*.pkl` from `data/processed/`, trains RF, Gradient Boosting, XGBoost, and AdaBoost (each via `MultiOutputRegressor`), with optional hyperparameter tuning (`RandomizedSearchCV` for all four; N_ITER=100, CV=5). Exports trained models, scalers, and train/test splits as `tree_models_<mode>_<timestamp>.joblib` to `models/`. Config: `configs/ml/ml_training_config.json`.
+**Recommended notebook:** `notebooks/Main_4_train_and_evaluate_tree_models.ipynb` — merged, streamlined workflow for **inlet→outlet** (exit-plane) prediction:
+- Trains RF, Gradient Boosting, XGBoost (optionally AdaBoost)
+- Hyperparameter tuning with cross-validation
+- Test-set evaluation with key metrics (R², MAE, RMSE, MAPE)
+- Overfitting diagnostics (Train R² vs Test R² gap)
+- Actual-vs-predicted scatter plots for state variables
+- Chemistry-grouped species analysis (lumped yields, R² per group, key-group scatter)
+- Exports models to `models/tree_models_exit_<timestamp>.joblib`
+
+**Legacy notebooks** (for advanced use):
+- `Main_4_train_tree_models.ipynb` — supports both exit-only and full-profile modes
+- `Main_4b_tree_models_comparison.ipynb` — detailed per-target metrics and ranking
+
+**Training mode flags (Main_4 legacy):**
+
+| Flag | Description |
+|------|-------------|
+| `TRAIN_EXIT = True` | Train on **exit-plane data only** (one sample per run at max `relative_position`). Fast, good for yield prediction. |
+| `TRAIN_FULL_PROFILE = True` | Train on **all axial positions** (z/L ∈ [0,1]). Surrogate can predict state at any reactor location. Uses `relative_position` as input feature. |
+
+Both can be `True` to train two separate model sets. Current default: exit-only (`TRAIN_EXIT=True`, `TRAIN_FULL_PROFILE=False`).
+
+**Why full-profile matters:** Steam cracking is an axial-evolving reacting flow. Exit-only surrogates predict final yields; full-profile surrogates predict the entire temperature/species evolution along the reactor — essential for coil design, coking analysis, and process optimization.
 
 **Notebook (model comparison):** `notebooks/Main_4b_tree_models_comparison.ipynb` loads exported artifacts from Main_4 and evaluates all models on the held-out test set. Computes 8 error metrics (R², MAE, MedAE, RMSE, NRMSE, MAPE, MaxErr, MBE), ranks models by MAPE, and produces per-sample actual-vs-predicted scatter plots and grouped MAPE/R² box plots across target categories.
 
