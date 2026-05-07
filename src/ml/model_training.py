@@ -104,9 +104,8 @@ class MLModelTrainer:
             'thermal_conductivity_WmK'
         ]
         
-        # Species targets (all Y_ and X_ columns)
-        species_targets = [col for col in self.data.columns 
-                          if col.startswith('Y_') or col.startswith('X_')]
+        # Species targets: mass fractions only (Y_* and Y_lump_* both use Y_ prefix); mole X_* excluded
+        species_targets = [col for col in self.data.columns if col.startswith('Y_')]
         
         self.feature_cols = [col for col in feature_cols if col in self.data.columns]
         self.primary_targets = [col for col in primary_targets if col in self.data.columns]

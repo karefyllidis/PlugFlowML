@@ -138,13 +138,15 @@ If `sampling_method` is `"random"` or `"latin"`, only `max_combinations_per_reac
 
 - **`IF_SAVE_EDA_PLOTS`**: If `True`, EDA figures are saved to `outputs/figures/Main_3_data_exploration_feature_engineering/eda/`.
 - **`IF_SEPARATE_SPECIES_BY_CARBON`**: If `True`, species are grouped by carbon-number lumps (`C1`, `C2`, `C3`, ... and `inert`) for dimensionality reduction.
-- **`IF_CATEGORIZE_BY_CHEMISTRY`**: If `True`, species are grouped by process-role lumps (`olefins`, `aromatics`, `paraffins`, `coke_precursors`, `radicals`, `feedstock`, `diluent`, `other`).
+- **`IF_CATEGORIZE_BY_CHEMISTRY`**: If `True`, species are grouped by process-role lumps (`olefins`, `aromatics`, `paraffins`, `coke_precursors`, `radicals`, `feedstock`, `hydrogen`, `diluent`, `other`).
+- **`EXPORT_SPECIES_AS`**: `individual` (default) keeps every **`Y_*` mass-fraction** column in the exported `df_target` (mole fractions `X_*` are **not** ML targets). Set to `lumped_chemistry` or `lumped_carbon` to replace those `Y_*` columns with summed **`Y_lump_*`** columns for a smaller `features_targets_*.pkl`. Requires the matching flag above.
 - **Saved EDA figures** include:
   - `main3_input_distributions_inlet.png`
   - `main3_primary_output_distributions_exit.png` (computed at reactor exit: max `z` / `relative_position≈1`)
   - `main3_top12_species_exit_mean_mass_fraction.png`
   - `main3_species_lumped_by_carbon_bar_exit.png`
   - `main3_species_lumped_by_chemistry_bar_exit.png`
+- **Methodology model card (species lumping):** [`docs/SPECIES_LUMPING_MODEL_CARD.md`](SPECIES_LUMPING_MODEL_CARD.md) — carbon vs chemistry taxonomy, sum-of-`Y_*` aggregation, export column names, limitations.
 
 ### 2. ML Model Training
 
@@ -156,6 +158,8 @@ If `sampling_method` is `"random"` or `"latin"`, only `max_combinations_per_reac
 - Actual-vs-predicted scatter plots for state variables
 - Chemistry-grouped species analysis (lumped yields, R² per group, key-group scatter)
 - Exports models to `models/tree_models_exit_<timestamp>.joblib`
+
+Loads the latest `data/processed/features_targets_*.pkl`. If Main_3 used **`EXPORT_SPECIES_AS=lumped_chemistry`** (or `lumped_carbon`), targets are already **`Y_lump_*`** mass-fraction lumps; the notebook trains on those (far fewer outputs than hundreds of species).
 
 **Legacy notebooks** (for advanced use):
 - `Main_4_train_tree_models.ipynb` — supports both exit-only and full-profile modes

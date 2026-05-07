@@ -101,10 +101,13 @@ The scripts under `scripts/cluster/` are currently tuned for the **University of
 **Figure export controls (notebooks):**
 - `Main_1_run_pfr.ipynb`: `IF_SAVE_PLOTS=True` saves quick figures to `outputs/figures/Main_1_run_pfr/`.
 - `Main_3_data_exploration_feature_engineering.ipynb`: `IF_SAVE_EDA_PLOTS=True` saves EDA figures to `outputs/figures/Main_3_data_exploration_feature_engineering/eda/`.
-  - Includes exit-plane distributions and species-lumping visual aids.
-  - Lumping controls:
-    - `IF_SEPARATE_SPECIES_BY_CARBON=True` (C1, C2, C3, ... + inert)
-    - `IF_CATEGORIZE_BY_CHEMISTRY=True` (olefins, aromatics, paraffins, coke precursors, radicals, feedstock, diluent)
+  - Includes exit-plane distributions and species-lumping visual aids (bar charts by carbon number and by chemistry role).
+  - **ML targets use mass fractions only** (`Y_*`). Mole fractions (`X_*`) may still appear in raw training pickles from Main_2 but are **not** written into `df_target` or used as surrogate outputs.
+  - Lumping flags (organize species for EDA and optional export):
+    - `IF_SEPARATE_SPECIES_BY_CARBON` — buckets such as `C1`, `C2`, … + `inert`
+    - `IF_CATEGORIZE_BY_CHEMISTRY` — process roles: olefins, aromatics, paraffins, coke precursors, radicals, feedstock, **hydrogen** (H₂), diluent, other
+  - **`EXPORT_SPECIES_AS`** (`individual` \| `lumped_chemistry` \| `lumped_carbon`): when lumped, individual `Y_*` columns in the exported pickle are replaced by summed **`Y_lump_*`** columns (smaller `data/processed/features_targets_*.pkl`; Main_4 trains on those directly). Requires the matching lumping flag above.
+  - Full taxonomy and aggregation rules: [docs/SPECIES_LUMPING_MODEL_CARD.md](docs/SPECIES_LUMPING_MODEL_CARD.md)
 
 ---
 
@@ -113,8 +116,8 @@ The scripts under `scripts/cluster/` are currently tuned for the **University of
 - [x] Multi-feed PFR with detailed chemistry
 - [x] LHS / grid sampling, SLURM-aware parallel data generation
 - [x] Multi-output tree surrogates, hyperparameter tuning, comparison notebook
-- [x] Species lumping for dimensionality reduction (by carbon number & chemistry role)
-- [ ] **Full axial-profile surrogate** — predict state at any z/L, not just exit (infrastructure ready: `TRAIN_FULL_PROFILE` flag in Main_4)
+- [x] Species lumping for dimensionality reduction (by carbon number & chemistry role); optional lumped export for ML
+- [ ] **Full axial-profile surrogate** — predict state at any z/L, not just exit (see legacy `Main_4_train_tree_models.ipynb`: `TRAIN_FULL_PROFILE`; consolidated `Main_4_train_and_evaluate_tree_models` is exit-plane focused)
 - [ ] PyTorch / physics-informed neural surrogate
 - [ ] Bayesian / gradient-free design optimisation loop
 
@@ -129,3 +132,4 @@ The scripts under `scripts/cluster/` are currently tuned for the **University of
 - Repository model card: [MODEL_CARD.md](MODEL_CARD.md)
 - Hugging Face-ready template: [docs/HF_MODEL_CARD_TEMPLATE.md](docs/HF_MODEL_CARD_TEMPLATE.md)
 - Training data generation protocol: [docs/TRAINING_DATA_GENERATION_PROTOCOL_MODEL_CARD.md](docs/TRAINING_DATA_GENERATION_PROTOCOL_MODEL_CARD.md)
+- **Species lumping methodology** (grouping rules, sum-of-`Y_*` aggregation, export modes): [docs/SPECIES_LUMPING_MODEL_CARD.md](docs/SPECIES_LUMPING_MODEL_CARD.md)

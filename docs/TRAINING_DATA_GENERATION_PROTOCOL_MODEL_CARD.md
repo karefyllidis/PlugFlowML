@@ -64,7 +64,7 @@ Consolidation options:
   - State variables (temperature, pressure, velocity, density)
   - Thermodynamic properties
   - Species mass fractions (`Y_*`)
-  - Species mole fractions (`X_*`, when enabled)
+  - Raw exports may still list mole fractions (`X_*`), but **ML targets in Main_3/Main_4 and `model_training.py` use mass fractions only** (`Y_*` / `Y_lump_*`).
 
 Notebook alignment:
 
