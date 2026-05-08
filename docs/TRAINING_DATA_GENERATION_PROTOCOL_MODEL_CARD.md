@@ -120,5 +120,6 @@ Notebook alignment:
 3. Consolidate task outputs into one training dataset
 4. Run `Main_3_data_exploration_feature_engineering.ipynb`
 5. Export validated `df_features` and `df_target`
-6. Train/evaluate surrogates in `Main_4*` notebooks
+6. Train/evaluate baseline exit-plane surrogates in `Main_4_train_and_evaluate_tree_models_IO.ipynb`
+7. Tune one selected tree model and, if needed, full axial/PFR evolution in `Main_5_train_evaluate_tune_tree_model_evolution.ipynb`
 

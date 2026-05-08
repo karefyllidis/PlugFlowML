@@ -153,7 +153,7 @@ All paths assume execution from the repository root unless noted.
 
 All documentation has been updated:
 - `README.md` - Updated structure and features
-- `CHANGELOG.md` - Version 3.0.0 entry
+- `docs/CHANGELOG.md` - Version 3.0.0 entry
 - `STRUCTURE.md` - New directory organization
 - `DIRECTORY_STRUCTURE.md` - Updated paths
 - `docs/ml/` - ML Surrogate Models documentation

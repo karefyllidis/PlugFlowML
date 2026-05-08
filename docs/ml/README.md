@@ -36,17 +36,17 @@ jupyter notebook notebooks/Main_2_generate_training_data.ipynb
 
 ### Step 2: Train ML Models
 
-**Option A – Tree-based models (recommended, Jupyter notebook):**
+**Option A – Baseline tree models (recommended first, Jupyter notebook):**
 ```bash
-jupyter notebook notebooks/Main_4_train_tree_models.ipynb
+jupyter notebook notebooks/Main_4_train_and_evaluate_tree_models_IO.ipynb
 ```
-Trains Random Forest, Gradient Boosting, XGBoost, and AdaBoost via `MultiOutputRegressor` (one base regressor per target). Optional hyperparameter tuning via `RandomizedSearchCV` for all four (RF, GB, XGBoost, AdaBoost) with N_ITER=100 and CV=5. Exports trained models, scalers, and train/test splits as `tree_models_<mode>_<timestamp>.joblib` to `models/`.
+Trains default Random Forest, Gradient Boosting, XGBoost, and AdaBoost via `MultiOutputRegressor` on inlet→outlet / exit-plane data. This notebook is intentionally **not tuned**: it is for fast model-family comparison. It also plots Normalized MAE by chemistry/carbon lump and by exit state/thermo/aero target, and reports ML inference speed with optional Cantera/PFR speedup.
 
-**Step 2b — Model comparison (Jupyter notebook):**
+**Step 2b — One-model tuning and PFR evolution (Jupyter notebook):**
 ```bash
-jupyter notebook notebooks/Main_4b_tree_models_comparison.ipynb
+jupyter notebook notebooks/Main_5_train_evaluate_tune_tree_model_evolution.ipynb
 ```
-Loads exported artifacts from Main_4 and evaluates all models on the held-out test set. Computes 8 error metrics (R², MAE, MedAE, RMSE, NRMSE, MAPE, MaxErr, MBE), ranks models by MAPE, and produces per-sample actual-vs-predicted scatter plots (with R² and MAPE) and grouped MAPE/R² box plots across target categories (state variables, thermodynamic properties, species fractions).
+Tunes one selected tree model (`MODEL_TO_TUNE`) with `RandomizedSearchCV`. It covers both inlet→outlet exit-plane prediction and, when enabled, full axial/PFR evolution using `relative_position` as an input. Full-profile train/test splitting is done by simulation run to avoid leakage between axial points from the same reactor profile. Speed reports compare tuned ML inference against measured Cantera baselines when `CANTERA_EXIT_SECONDS_PER_RUN` / `CANTERA_FULL_PROFILE_SECONDS_PER_RUN` are set.
 
 **Option B – All model types (command-line):**
 ```bash
@@ -58,7 +58,7 @@ python src/ml/model_training.py configs/ml/ml_training_config.json
 - `gradient_boosting` - Gradient Boosting (scikit-learn)
 - `xgboost` - XGBoost
 - `adaboost` - AdaBoost with tree base (scikit-learn)
-- `neural_network` - Placeholder in `model_training.py` — deep models will use **PyTorch** (not implemented yet; use tree models or Main_4)
+- `neural_network` - Placeholder in `model_training.py` — deep models will use **PyTorch** (not implemented yet; use tree notebooks or Main_4)
 
 **Target Types:**
 - `primary` - Core outputs (temperature, pressure, velocity, density)
@@ -108,7 +108,9 @@ The `generate_training_data.py` script:
 
 ### ML Model Training
 
-The `model_training.py` script (and `Main_4_train_tree_models.ipynb` for tree-only):
+The `model_training.py` script and the current tree notebooks:
+- `Main_4_train_and_evaluate_tree_models_IO.ipynb` for default-parameter exit-plane baseline evaluation.
+- `Main_5_train_evaluate_tune_tree_model_evolution.ipynb` for one-model tuning and full PFR evolution.
 
 1. **Data Preparation**:
    - Splits data into train/test sets
@@ -316,7 +318,7 @@ pip install scikit-learn joblib xgboost
 ```
 FileNotFoundError: Model not found: models/xgboost_primary.pkl
 ```
-**Solution**: Train models first (`Main_4_train_tree_models.ipynb` or `python src/ml/model_training.py`). Ensure `model_type` in inference config matches an artifact model key you actually trained (e.g. `xgboost`, `random_forest`, `adaboost`).
+**Solution**: Train models first (`Main_4_train_and_evaluate_tree_models_IO.ipynb`, `Main_5_train_evaluate_tune_tree_model_evolution.ipynb`, or `python src/ml/model_training.py`). Ensure `model_type` in inference config matches an artifact model key you actually trained (e.g. `xgboost`, `random_forest`, `adaboost`).
 
 ### Out of Memory
 **Solution**: Reduce `max_combinations` or use random sampling

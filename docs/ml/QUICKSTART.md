@@ -57,9 +57,14 @@ This notebook is for:
 
 **Option A – Tree models (Jupyter notebook, recommended):**
 ```bash
-jupyter notebook notebooks/Main_4_train_tree_models.ipynb
+jupyter notebook notebooks/Main_4_train_and_evaluate_tree_models_IO.ipynb
 ```
-Trains Random Forest, Gradient Boosting, XGBoost, and AdaBoost. Saves one artifact per type to `models/`.
+Runs the default-parameter inlet→outlet baseline evaluation for Random Forest, Gradient Boosting, XGBoost, and AdaBoost.
+
+For hyperparameter tuning and full axial/PFR evolution with one selected model:
+```bash
+jupyter notebook notebooks/Main_5_train_evaluate_tune_tree_model_evolution.ipynb
+```
 
 **Option B – All model types (command-line):**
 ```bash
@@ -67,8 +72,9 @@ python src/ml/model_training.py configs/ml/ml_training_config.json
 ```
 
 **What this does:**
-- Trains multiple ML algorithms (notebook: RF, GB, XGBoost, AdaBoost; script: also Neural Network, etc.)
-- Evaluates model performance (R², MSE, MAE)
+- Trains multiple ML algorithms (Main_4 notebook: RF, GB, XGBoost, AdaBoost baselines; Main_5 notebook: one tuned tree model; script: RF/GB/XGBoost/AdaBoost)
+- Evaluates model performance (R², MSE, MAE, Normalized MAE diagnostics)
+- Reports ML inference speed; set measured Cantera runtime variables in the notebook to print speedup factors
 - Saves trained models to `models/`
 
 **Expected output (notebook):**
@@ -139,7 +145,7 @@ python src/ml/example_usage.py
 ## Troubleshooting
 
 ### "Model not found" error
-**Solution**: Train models first (Step 3); run `Main_4_train_tree_models.ipynb` or `python src/ml/model_training.py configs/ml/ml_training_config.json`
+**Solution**: Train models first (Step 3); run `Main_4_train_and_evaluate_tree_models_IO.ipynb` for baseline tree models, `Main_5_train_evaluate_tune_tree_model_evolution.ipynb` for tuned tree models, or `python src/ml/model_training.py configs/ml/ml_training_config.json`.
 
 ### "Out of memory" during training
 **Solution**: Reduce `max_combinations_per_reactant` in config file
@@ -174,14 +180,19 @@ python src/ml/data_generation.py configs/ml/ml_data_generation_config.json
 # 2. (Optional) Explore data
 jupyter notebook notebooks/Main_3_data_exploration_feature_engineering.ipynb
 
-# 3. Train models (notebook for tree models, or script for all types)
-jupyter notebook notebooks/Main_4_train_tree_models.ipynb
+# 3. Baseline tree evaluation
+jupyter notebook notebooks/Main_4_train_and_evaluate_tree_models_IO.ipynb
+
+# 4. Optional one-model tuning + full PFR evolution
+jupyter notebook notebooks/Main_5_train_evaluate_tune_tree_model_evolution.ipynb
+
+# Alternative script route:
 # Or: python src/ml/model_training.py configs/ml/ml_training_config.json
 
-# 4. Test predictions
+# 5. Test predictions
 python src/ml/inference.py configs/ml/ml_inference_config.json
 
-# 5. Run examples
+# 6. Run examples
 python src/ml/example_usage.py
 ```
 

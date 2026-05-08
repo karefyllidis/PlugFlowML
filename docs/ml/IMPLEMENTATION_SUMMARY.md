@@ -28,11 +28,13 @@ The ML Surrogate Models module successfully implements machine learning models t
 
 **Output**: Pickle files (`training_data_complete_*.pkl`) with features and targets for ML training; optional metadata JSON (when saving enabled)
 
-### 2. ML Training Framework (`model_training.py` and `Main_4_train_tree_models.ipynb`)
+### 2. ML Training Framework (`model_training.py`, `Main_4`, and `Main_5`)
 
 **Purpose**: Train multiple ML algorithms on generated data
 
-**Tree-based notebook** (`Main_4_train_tree_models.ipynb`): Trains RF, Gradient Boosting, XGBoost, AdaBoost; saves `*_primary.joblib` to `models/`.
+**Baseline tree notebook** (`Main_4_train_and_evaluate_tree_models_IO.ipynb`): trains default RF, Gradient Boosting, XGBoost, and AdaBoost on inlet→outlet / exit-plane data; reports standard metrics plus Normalized MAE diagnostics for chemistry lumps and state/thermo/aero targets.
+
+**Tuning / evolution notebook** (`Main_5_train_evaluate_tune_tree_model_evolution.ipynb`): tunes one selected tree model with `RandomizedSearchCV` for exit-plane prediction and optional full axial/PFR evolution.
 
 **Supported Models** (notebook: tree-only; script: all):
 - **Random Forest** (scikit-learn) - Ensemble of decision trees; fast training and inference

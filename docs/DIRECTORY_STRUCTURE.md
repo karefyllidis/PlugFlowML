@@ -13,18 +13,20 @@
 ```
 HydrAI/
 ├── .gitignore                           # Git ignore file
-├── CHANGELOG.md                         # Version history
-├── DIRECTORY_STRUCTURE.md               # This analysis document
-├── STRUCTURE.md                         # Detailed structure documentation
 ├── LICENSE                              # MIT License
 ├── README.md                            # Main documentation
 ├── requirements.txt                     # Python dependencies
+├── docs/
+│   ├── CHANGELOG.md                     # Version history
+│   ├── DIRECTORY_STRUCTURE.md           # This analysis document
+│   ├── MODEL_CARD.md                    # Repository surrogate model card
+│   └── STRUCTURE.md                     # Detailed structure documentation
 ├── notebooks/
 │   ├── Main_1_run_pfr.ipynb                       # Step 1: PFR simulations (Jupyter notebook)
 │   ├── Main_2_generate_training_data.ipynb       # Step 2: ML training data generation (Jupyter notebook)
 │   ├── Main_3_data_exploration_feature_engineering.ipynb  # Step 3: Data exploration and feature engineering
-│   ├── Main_4_train_tree_models.ipynb
-│   └── Main_4b_tree_models_comparison.ipynb
+│   ├── Main_4_train_and_evaluate_tree_models_IO.ipynb
+│   └── Main_5_train_evaluate_tune_tree_model_evolution.ipynb
 ├── src/                                 # Source code
 │   ├── cantera/                         # Cantera simulation
 │   │   └── pfr_simulator.py            # Main PFR simulation
@@ -107,12 +109,12 @@ See **Version control** in `README.md` and root `.gitignore` for the authoritati
 | **Step 1 Entry** | `notebooks/Main_1_run_pfr.ipynb` | Present | OK |
 | **Step 2 Data Gen** | `notebooks/Main_2_generate_training_data.ipynb` | Present | OK |
 | **Step 3 Exploration** | `notebooks/Main_3_data_exploration_feature_engineering.ipynb` | Present | OK |
-| **Step 4 Tree ML** | `notebooks/Main_4_train_tree_models.ipynb` | Tree models (RF, GB, XGBoost, AdaBoost) | OK |
+| **Step 4 Tree ML** | `notebooks/Main_4_train_and_evaluate_tree_models_IO.ipynb` | Baseline tree evaluation (RF, GB, XGBoost, AdaBoost; exit-plane only, no tuning) | OK |
 | **Database** | `configs/simulation/reactant_database.json` | Present | OK |
 | **Template** | `configs/simulation/config_template.json` | Present | OK |
 | **Dependencies** | `requirements.txt` | Present | OK |
 | **License** | `LICENSE` | Present | OK |
-| **Changelog** | `CHANGELOG.md` | Present | OK |
+| **Changelog** | `docs/CHANGELOG.md` | Present | OK |
 | **Documentation** | `README.md` | Present | OK |
 | **Examples** | `examples/basic_usage.py` | Present | OK |
 | **API Docs** | `docs/API_REFERENCE.md` | Present | OK |
@@ -193,8 +195,8 @@ SIMULATION COMPLETED SUCCESSFULLY!
 | `notebooks/Main_1_run_pfr.ipynb` | Step 1: Main entry point (Jupyter notebook) | Working |
 | `notebooks/Main_2_generate_training_data.ipynb` | Step 2: ML data generation (Jupyter notebook) | Working |
 | `notebooks/Main_3_data_exploration_feature_engineering.ipynb` | Step 3: Data exploration and feature engineering (Jupyter notebook) | Working |
-| `notebooks/Main_4_train_tree_models.ipynb` | Step 4: Tree-based ML training (RF, GB, XGBoost) | OK |
-| `notebooks/Main_4b_tree_models_comparison.ipynb` | Step 5: Model comparison metrics & plots | OK |
+| `notebooks/Main_4_train_and_evaluate_tree_models_IO.ipynb` | Step 4: Baseline tree evaluation (exit-plane, no tuning) | OK |
+| `notebooks/Main_5_train_evaluate_tune_tree_model_evolution.ipynb` | Step 5: One-model tuning and full PFR evolution | OK |
 | `src/cantera/pfr_simulator.py` | Main simulation code | Working |
 | `configs/simulation/reactant_database.json` | Reactant definitions | Complete |
 | `configs/simulation/config_template.json` | Configuration template | Valid |

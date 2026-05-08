@@ -46,7 +46,7 @@ After SLURM/local parallel generation that writes into `data/training/task_*`, c
 python scripts/dev/consolidate_training_data.py
 ```
 
-- Default behavior: writes consolidated `training_data_complete_<timestamp>.pkl` + `metadata_<timestamp>.json`, then cleans old per-task files/folders.
+- Default behavior: writes consolidated `training_data_complete_<timestamp>.pkl` and `metadata_<timestamp>.json`, then cleans old per-task files/folders.
 - Keep per-task artifacts: `python scripts/dev/consolidate_training_data.py --no-cleanup`
 - Preview without writing/deleting: `python scripts/dev/consolidate_training_data.py --dry-run`
 
@@ -150,33 +150,33 @@ If `sampling_method` is `"random"` or `"latin"`, only `max_combinations_per_reac
 
 ### 2. ML Model Training
 
-**Recommended notebook:** `notebooks/Main_4_train_and_evaluate_tree_models.ipynb` — merged, streamlined workflow for **inlet→outlet** (exit-plane) prediction:
-- Trains RF, Gradient Boosting, XGBoost (optionally AdaBoost)
-- Hyperparameter tuning with cross-validation
-- Test-set evaluation with key metrics (R², MAE, RMSE, MAPE)
-- Overfitting diagnostics (Train R² vs Test R² gap)
-- Actual-vs-predicted scatter plots for state variables
-- Chemistry-grouped species analysis (lumped yields, R² per group, key-group scatter)
-- Exports models to `models/tree_models_exit_<timestamp>.joblib`
+**Baseline notebook:** `notebooks/Main_4_train_and_evaluate_tree_models_IO.ipynb` — fast workflow for **inlet→outlet** (exit-plane) baseline comparison:
+- Trains default RF, Gradient Boosting, XGBoost, and optionally AdaBoost
+- Does **not** run hyperparameter tuning
+- Evaluates held-out test metrics (R², MAE, RMSE, MAPE) and Train/Test R² gap
+- Plots actual-vs-predicted state variables using consistent scatter styling
+- Reports species-lump error by chemistry/carbon group using **Normalized MAE (%)**
+- Reports state / thermo / aero target error using **Normalized MAE (%)** for targets such as exit temperature, pressure, velocity, density, Cp/Cv, enthalpy, and thermal conductivity
+- Reports ML inference speed and optional Cantera/PFR speedup when `CANTERA_EXIT_SECONDS_PER_RUN` is set from a measured baseline
+- Exports baseline models to `models/tree_models_exit_<timestamp>.joblib`
 
 Loads the latest `data/processed/features_targets_*.pkl`. If Main_3 used **`EXPORT_SPECIES_AS=lumped_chemistry`** (or `lumped_carbon`), targets are already **`Y_lump_*`** mass-fraction lumps; the notebook trains on those (far fewer outputs than hundreds of species).
 
-**Legacy notebooks** (for advanced use):
-- `Main_4_train_tree_models.ipynb` — supports both exit-only and full-profile modes
-- `Main_4b_tree_models_comparison.ipynb` — detailed per-target metrics and ranking
-
-**Training mode flags (Main_4 legacy):**
-
-| Flag | Description |
-|------|-------------|
-| `TRAIN_EXIT = True` | Train on **exit-plane data only** (one sample per run at max `relative_position`). Fast, good for yield prediction. |
-| `TRAIN_FULL_PROFILE = True` | Train on **all axial positions** (z/L ∈ [0,1]). Surrogate can predict state at any reactor location. Uses `relative_position` as input feature. |
-
-Both can be `True` to train two separate model sets. Current default: exit-only (`TRAIN_EXIT=True`, `TRAIN_FULL_PROFILE=False`).
+**Tuning / evolution notebook:** `notebooks/Main_5_train_evaluate_tune_tree_model_evolution.ipynb`
+- Tunes **one selected tree model** via `MODEL_TO_TUNE` (`random_forest`, `gradient_boosting`, `xgboost`, or `adaboost`)
+- Runs `RandomizedSearchCV` for the exit-plane inlet→outlet model
+- Optionally runs full axial/PFR evolution tuning with `TRAIN_FULL_PROFILE=True`
+- Full-profile tuning uses all axial rows and includes `relative_position` as an input
+- Full-profile train/test data are split by simulation run, not by row, to avoid leakage between axial points from the same PFR profile
+- `FULL_PROFILE_MAX_ROWS` can be set for a quick tuning smoke test on large datasets
+- Reports tuned ML inference speed for exit-plane and full-profile prediction; set `CANTERA_EXIT_SECONDS_PER_RUN` / `CANTERA_FULL_PROFILE_SECONDS_PER_RUN` to print speedup factors against measured Cantera timings
+- Exports tuned exit and full-profile artifacts to `models/tree_model_tuned_exit_full_<timestamp>.joblib`
 
 **Why full-profile matters:** Steam cracking is an axial-evolving reacting flow. Exit-only surrogates predict final yields; full-profile surrogates predict the entire temperature/species evolution along the reactor — essential for coil design, coking analysis, and process optimization.
 
-**Notebook (model comparison):** `notebooks/Main_4b_tree_models_comparison.ipynb` loads exported artifacts from Main_4 and evaluates all models on the held-out test set. Computes 8 error metrics (R², MAE, MedAE, RMSE, NRMSE, MAPE, MaxErr, MBE), ranks models by MAPE, and produces per-sample actual-vs-predicted scatter plots and grouped MAPE/R² box plots across target categories.
+**Legacy notebooks** (for advanced use):
+- `Main_4_train_tree_models.ipynb` — older combined tree training workflow
+- `Main_4b_tree_models_comparison.ipynb` — older detailed per-target metrics and ranking workflow
 
 **Script (tree / boosting models from JSON):** `python src/ml/model_training.py configs/ml/ml_training_config.json`
 
@@ -214,7 +214,9 @@ Both can be `True` to train two separate model sets. Current default: exit-only 
 }
 ```
 
-**Usage (notebook for tree models):** `jupyter notebook notebooks/Main_4_train_tree_models.ipynb`
+**Usage (baseline notebook):** `jupyter notebook notebooks/Main_4_train_and_evaluate_tree_models_IO.ipynb`
+
+**Usage (tuning/evolution notebook):** `jupyter notebook notebooks/Main_5_train_evaluate_tune_tree_model_evolution.ipynb`
 
 **Usage (script for all types):**
 ```bash

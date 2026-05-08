@@ -735,20 +735,19 @@ class TrainingDataGenerator:
                 timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
                 filename_pkl = self.output_dir / f'training_data_complete_{timestamp}.pkl'
                 save_dataframe_pickle(complete_dataset, filename_pkl)
-                
-                print(f"[OK] Complete dataset saved:")
-                print(f"  Pickle: {filename_pkl}")
-                print(f"  Pickle file size: {os.path.getsize(filename_pkl) / 1e6:.2f} MB")
+                print(f"[OK] Complete dataset saved: {filename_pkl}")
+                print(f"  Total rows: {len(complete_dataset):,}")
+                print(f"  Total columns: {len(complete_dataset.columns)}")
+                print(f"  File size: {os.path.getsize(filename_pkl) / 1e6:.2f} MB")
                 if save_complete_csv:
                     filename_csv = self.output_dir / f'training_data_complete_{timestamp}.csv'
                     complete_dataset.to_csv(filename_csv, index=False)
-                    print(f"  CSV: {filename_csv}")
+                    print(f"[OK] CSV also saved: {filename_csv}")
                     print(f"  CSV file size: {os.path.getsize(filename_csv) / 1e6:.2f} MB")
             else:
                 print(f"[OK] Complete dataset in memory only (not saved to disk)")
-            
-            print(f"  Total rows: {len(complete_dataset):,}")
-            print(f"  Total columns: {len(complete_dataset.columns)}")
+                print(f"  Total rows: {len(complete_dataset):,}")
+                print(f"  Total columns: {len(complete_dataset.columns)}")
             
             # Calculate failed simulations (successful_simulations was tracked during execution)
             failed_simulations = total_simulations - successful_simulations

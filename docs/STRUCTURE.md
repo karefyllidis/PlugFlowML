@@ -93,12 +93,13 @@ HydrAI/
 │   ├── Main_1_run_pfr.ipynb                       # Step 1: PFR simulations
 │   ├── Main_2_generate_training_data.ipynb        # Step 2: ML training data generation
 │   ├── Main_3_data_exploration_feature_engineering.ipynb
-│   ├── Main_4_train_tree_models.ipynb             # Step 4: Tree-based ML training
-│   └── Main_4b_tree_models_comparison.ipynb       # Step 5: Model comparison metrics & plots
+│   ├── Main_4_train_and_evaluate_tree_models_IO.ipynb    # Step 4: Baseline tree evaluation (exit-plane)
+│   └── Main_5_train_evaluate_tune_tree_model_evolution.ipynb  # Step 5: One-model tuning + full PFR evolution
 ├── requirements.txt
 ├── README.md
 ├── LICENSE
-└── CHANGELOG.md
+└── docs/
+    └── CHANGELOG.md
 ```
 
 ## Key Changes
@@ -117,7 +118,7 @@ HydrAI/
 
 ### 4. Notebooks
 - **Location**: All interactive entry points are in **`notebooks/`**
-- **Naming**: Notebooks use **`Main_N_`** prefix for pipeline order through **`Main_4b`** (comparison after training).
+- **Naming**: Notebooks use **`Main_N_`** prefix for pipeline order through **`Main_5`** (tuning and full PFR evolution after baseline evaluation).
 
 ### 4b. Scripts & SLURM monitoring
 
@@ -181,7 +182,8 @@ The notebook provides:
 
 **2. Train tree-based ML models (Jupyter Notebook):**
 ```bash
-jupyter notebook notebooks/Main_4_train_tree_models.ipynb
+jupyter notebook notebooks/Main_4_train_and_evaluate_tree_models_IO.ipynb
+jupyter notebook notebooks/Main_5_train_evaluate_tune_tree_model_evolution.ipynb
 ```
 Trains Random Forest, Gradient Boosting, XGBoost, and AdaBoost (one model per primary target). Saves artifacts to `models/` (e.g. `random_forest_primary.joblib`).
 

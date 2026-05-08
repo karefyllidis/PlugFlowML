@@ -119,10 +119,12 @@ where each \(Y_k\) is a species **mass fraction**. This is appropriate because m
 
 ---
 
-## Downstream ML (`Main_4`)
+## Downstream ML (`Main_4` / `Main_5`)
 
-- **`Main_4_train_and_evaluate_tree_models.ipynb`** loads the pickle and detects **`Y_lump_chem_*`** vs **`Y_lump_carbon_*`** vs individual **`Y_*`** to build chemistry-group diagnostics and training targets.
+- **`Main_4_train_and_evaluate_tree_models_IO.ipynb`** loads the pickle and detects **`Y_lump_chem_*`** vs **`Y_lump_carbon_*`** vs individual **`Y_*`** to build baseline chemistry-group diagnostics and training targets.
+- **`Main_5_train_evaluate_tune_tree_model_evolution.ipynb`** uses the same target conventions for one-model hyperparameter tuning, including full axial/PFR evolution when enabled.
 - **Mass fraction only:** species targets are **`Y_*` or `Y_lump_*`**; mole fractions are out of scope for this pathway.
+- **Diagnostics:** chemistry/carbon lump errors are reported with Normalized MAE (%) so groups with different mass-fraction scales can be compared.
 
 ---
 
