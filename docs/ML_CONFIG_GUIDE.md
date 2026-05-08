@@ -164,13 +164,20 @@ Loads the latest `data/processed/features_targets_*.pkl`. If Main_3 used **`EXPO
 
 **Tuning / evolution notebook:** `notebooks/Main_5_train_evaluate_tune_tree_model_evolution.ipynb`
 - Tunes **one selected tree model** via `MODEL_TO_TUNE` (`random_forest`, `gradient_boosting`, `xgboost`, or `adaboost`)
-- Runs `RandomizedSearchCV` for the exit-plane inlet→outlet model
-- Optionally runs full axial/PFR evolution tuning with `TRAIN_FULL_PROFILE=True`
-- Full-profile tuning uses all axial rows and includes `relative_position` as an input
+- Runs `BayesSearchCV` for the exit-plane inlet→outlet model
+- Optionally runs full axial/PFR evolution workflow with `TRAIN_FULL_PROFILE=True`
+- Full-profile model training runs when `TRAIN_FULL_PROFILE=True`:
+  - with `IF_HYPERPARAM_TUNING=True`: `BayesSearchCV` tuning
+  - with `IF_HYPERPARAM_TUNING=False`: default-parameter training (no tuning)
+- Full-profile uses all axial rows and includes `relative_position` as an input
 - Full-profile train/test data are split by simulation run, not by row, to avoid leakage between axial points from the same PFR profile
 - `FULL_PROFILE_MAX_ROWS` can be set for a quick tuning smoke test on large datasets
 - Reports tuned ML inference speed for exit-plane and full-profile prediction; set `CANTERA_EXIT_SECONDS_PER_RUN` / `CANTERA_FULL_PROFILE_SECONDS_PER_RUN` to print speedup factors against measured Cantera timings
 - Exports tuned exit and full-profile artifacts to `models/tree_model_tuned_exit_full_<timestamp>.joblib`
+- Adds axial diagnostics and regime diagnostics:
+  - `full_profile_cantera_vs_ml_axial_evolution.png` (Cantera vs ML axial overlays at selected `x/L`)
+  - `exit_error_vs_conditions_boxplots.png` (error vs inlet-condition bins)
+  - `exit_error_tp_map.png` (temperature-pressure error map)
 
 **Why full-profile matters:** Steam cracking is an axial-evolving reacting flow. Exit-only surrogates predict final yields; full-profile surrogates predict the entire temperature/species evolution along the reactor — essential for coil design, coking analysis, and process optimization.
 

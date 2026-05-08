@@ -6,7 +6,7 @@
 - **Task:** Learn fast surrogate mappings for steam-cracking plug-flow reactor (PFR) simulations generated with Cantera.
 - **Primary workflows:**
   - `notebooks/Main_4_train_and_evaluate_tree_models_IO.ipynb`: default-parameter baseline comparison for inlet-to-outlet / exit-plane prediction.
-  - `notebooks/Main_5_train_evaluate_tune_tree_model_evolution.ipynb`: one selected tree model with hyperparameter tuning for both exit-plane prediction and full axial/PFR evolution.
+  - `notebooks/Main_5_train_evaluate_tune_tree_model_evolution.ipynb`: one selected tree model for exit-plane and full axial/PFR evolution, with optional hyperparameter tuning.
 - **Framework context:** Cantera-based data generation plus scikit-learn/XGBoost surrogate modeling.
 - **Intended usage:** Fast screening, design-space exploration, sensitivity studies, and candidate ranking before expensive detailed-chemistry reruns.
 
@@ -37,10 +37,11 @@
 ### Tuned Exit + Full Evolution (`Main_5`)
 
 - Tunes one selected model via `MODEL_TO_TUNE`.
-- Uses `RandomizedSearchCV` for hyperparameter search.
+- Uses `BayesSearchCV` when tuning is enabled (`IF_HYPERPARAM_TUNING=True`); otherwise trains with default parameters.
 - Supports exit-plane prediction and full axial/PFR evolution.
 - Full-profile mode uses all axial rows and includes `relative_position` as an input.
 - Full-profile train/test splitting is done by simulation run to avoid leakage between axial points from the same reactor profile.
+- Includes explicit Cantera-vs-ML axial overlays and condition-binned error diagnostics to identify operating regimes where the surrogate performs well or struggles.
 
 ## Reported Metrics
 

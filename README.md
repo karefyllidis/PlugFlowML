@@ -77,7 +77,7 @@ pip install -r requirements.txt
    - `Main_2` → training data generation
    - `Main_3` → EDA and feature engineering
    - `Main_4_train_and_evaluate_tree_models_IO` → baseline tree evaluation (inlet→outlet, no tuning)
-   - `Main_5_train_evaluate_tune_tree_model_evolution` → one-model tuning (inlet→outlet + full PFR evolution)
+  - `Main_5_train_evaluate_tune_tree_model_evolution` → one-model exit + full-PFR workflow (with or without tuning)
 4. Parallel sweeps on one machine: `python scripts/local/run_main2_local_parallel.py --ntasks 4`.
 
 → Full config keys: [docs/ML_CONFIG_GUIDE.md](docs/ML_CONFIG_GUIDE.md) · Detailed layout: [docs/STRUCTURE.md](docs/STRUCTURE.md)
@@ -118,7 +118,7 @@ The scripts under `scripts/cluster/` are currently tuned for the **University of
 - [x] LHS / grid sampling, SLURM-aware parallel data generation
 - [x] Multi-output tree surrogates, baseline comparison, and one-model hyperparameter tuning notebook
 - [x] Species lumping for dimensionality reduction (by carbon number & chemistry role); optional lumped export for ML
-- [x] **Full axial-profile tuning workflow** — `Main_5_train_evaluate_tune_tree_model_evolution.ipynb` tunes one selected tree model on full PFR evolution with `relative_position` as an input
+- [x] Full axial-profile workflow — `Main_5_train_evaluate_tune_tree_model_evolution.ipynb` trains one selected tree model on full PFR evolution with `relative_position` as an input (optional hyperparameter tuning)
 - [ ] PyTorch / physics-informed neural surrogate
 - [ ] Bayesian / gradient-free design optimisation loop
 
@@ -133,4 +133,4 @@ The scripts under `scripts/cluster/` are currently tuned for the **University of
 - Repository model card: [docs/MODEL_CARD.md](docs/MODEL_CARD.md)
 - Hugging Face-ready template: [docs/HF_MODEL_CARD_TEMPLATE.md](docs/HF_MODEL_CARD_TEMPLATE.md)
 - Training data generation protocol: [docs/TRAINING_DATA_GENERATION_PROTOCOL_MODEL_CARD.md](docs/TRAINING_DATA_GENERATION_PROTOCOL_MODEL_CARD.md)
-- **Species lumping methodology** (grouping rules, sum-of-`Y_*` aggregation, export modes): [docs/SPECIES_LUMPING_MODEL_CARD.md](docs/SPECIES_LUMPING_MODEL_CARD.md)
+- Species lumping methodology (grouping rules, sum-of-`Y_*` aggregation, export modes): [docs/SPECIES_LUMPING_MODEL_CARD.md](docs/SPECIES_LUMPING_MODEL_CARD.md)
