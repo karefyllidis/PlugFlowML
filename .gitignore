@@ -39,7 +39,7 @@ ct-env/
 # IDE
 .vscode/
 .idea/
-.cursor/
+# .cursor/
 *.swp
 *.swo
 *~
