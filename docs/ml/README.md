@@ -46,7 +46,7 @@ Trains default Random Forest, Gradient Boosting, XGBoost, and AdaBoost via `Mult
 ```bash
 jupyter notebook notebooks/Main_5_train_evaluate_tune_tree_model_evolution.ipynb
 ```
-Tunes one selected tree model (`MODEL_TO_TUNE`) with `RandomizedSearchCV`. It covers both inlet→outlet exit-plane prediction and, when enabled, full axial/PFR evolution using `relative_position` as an input. Full-profile train/test splitting is done by simulation run to avoid leakage between axial points from the same reactor profile. Speed reports compare tuned ML inference against measured Cantera baselines when `CANTERA_EXIT_SECONDS_PER_RUN` / `CANTERA_FULL_PROFILE_SECONDS_PER_RUN` are set.
+Tunes one selected tree model (`MODEL_TO_TUNE`) with `BayesSearchCV` on the exit-plane task when tuning is enabled; the full axial/PFR model reuses those hyperparameters. It covers inlet→outlet exit-plane prediction and, when enabled, full axial evolution using `relative_position` as an input. Full-profile train/test splitting is done by simulation run to avoid leakage between axial points from the same reactor profile. Speed reports compare tuned ML inference against measured Cantera baselines when `CANTERA_EXIT_SECONDS_PER_RUN` / `CANTERA_FULL_PROFILE_SECONDS_PER_RUN` are set.
 
 **Option B – All model types (command-line):**
 ```bash

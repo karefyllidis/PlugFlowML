@@ -94,10 +94,15 @@ outputs/*
 !outputs/.gitkeep
 !outputs/results/
 !outputs/figures/
+!outputs/reports/
 outputs/results/*
 !outputs/results/.gitkeep
 outputs/figures/*
 !outputs/figures/.gitkeep
+outputs/reports/*
+!outputs/reports/.gitkeep
+!outputs/reports/README.md
+!outputs/reports/*.md
 
 # Legacy paths (for backward compatibility)
 results/

@@ -38,6 +38,7 @@
 
 - Tunes one selected model via `MODEL_TO_TUNE`.
 - Uses `BayesSearchCV` when tuning is enabled (`IF_HYPERPARAM_TUNING=True`); otherwise trains with default parameters.
+- Full axial/PFR training reuses the exit-plane hyperparameters (no second tuning run).
 - Supports exit-plane prediction and full axial/PFR evolution.
 - Full-profile mode uses all axial rows and includes `relative_position` as an input.
 - Full-profile train/test splitting is done by simulation run to avoid leakage between axial points from the same reactor profile.

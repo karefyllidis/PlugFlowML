@@ -34,7 +34,7 @@ The ML Surrogate Models module successfully implements machine learning models t
 
 **Baseline tree notebook** (`Main_4_train_and_evaluate_tree_models_IO.ipynb`): trains default RF, Gradient Boosting, XGBoost, and AdaBoost on inlet→outlet / exit-plane data; reports standard metrics plus Normalized MAE diagnostics for chemistry lumps and state/thermo/aero targets.
 
-**Tuning / evolution notebook** (`Main_5_train_evaluate_tune_tree_model_evolution.ipynb`): tunes one selected tree model with `RandomizedSearchCV` for exit-plane prediction and optional full axial/PFR evolution.
+**Tuning / evolution notebook** (`Main_5_train_evaluate_tune_tree_model_evolution.ipynb`): tunes one selected tree model with `BayesSearchCV` (exit-plane only) when `IF_HYPERPARAM_TUNING=True`; optional full axial/PFR evolution training reuses those hyperparameters (no second search).
 
 **Supported Models** (notebook: tree-only; script: all):
 - **Random Forest** (scikit-learn) - Ensemble of decision trees; fast training and inference

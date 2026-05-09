@@ -35,7 +35,7 @@ Representative accuracy on a large n-hexane dataset: mean test **R² ~ 0.97–0.
 | **High-fidelity baseline** | PFR with configurable wall heat flux, Churchill pressure drop, and multi-feed YAML kinetics (35–1951 species). |
 | **Scalable dataset generation** | Latin Hypercube or structured grid sweeps over 6 parameters; parallel on a workstation or SLURM-chunked on HPC. |
 | **Multi-reactant generalisation** | One surrogate trained across chemically distinct feedstocks — not just interpolation within a single feed. |
-| **Production ML pipeline** | RF, Gradient Boosting, XGBoost, AdaBoost; optional `RandomizedSearchCV`; `MLPFRPredictor` for sub-ms batch inference. |
+| **Production ML pipeline** | RF, Gradient Boosting, XGBoost, AdaBoost; optional `BayesSearchCV` tuning in Main_5; `MLPFRPredictor` for sub-ms batch inference. |
 | **Clean, extensible architecture** | JSON configs per concern (simulation / ML / style); Jupyter notebooks as the end-to-end interface; importable `src/` library. |
 
 ---
