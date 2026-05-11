@@ -1,4 +1,4 @@
-"""Run HydrAI training notebooks in order."""
+"""Run HydrAI workflow"""
 import subprocess, sys
 
 subprocess.run([sys.executable, "-m", "nbconvert", "--to", "notebook", "--execute", "notebooks/Main_3_data_exploration_feature_engineering.ipynb"], check=True)

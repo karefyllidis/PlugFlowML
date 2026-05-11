@@ -11,12 +11,16 @@ HydrAI/
 │   ├── cantera/                  # Cantera-based simulation
 │   │   ├── __init__.py
 │   │   └── pfr_simulator.py      # Main PFR simulation code
-│   └── ml/                       # ML Surrogate Models
+│   ├── ml/                       # ML Surrogate Models
+│   │   ├── __init__.py
+│   │   ├── data_generation.py    # Training data generation
+│   │   ├── dataframe_pickle.py   # Portable pickle I/O (StringDtype coercion)
+│   │   ├── model_training.py     # ML model training
+│   │   ├── inference.py           # ML inference
+│   │   └── example_usage.py      # ML usage examples
+│   └── utils/                    # Shared utilities
 │       ├── __init__.py
-│       ├── data_generation.py    # Training data generation
-│       ├── model_training.py     # ML model training
-│       ├── inference.py           # ML inference
-│       └── example_usage.py      # ML usage examples
+│       └── plot_style.py          # Matplotlib style (setup_matplotlib + JSON-driven helpers)
 │
 ├── configs/                      # Configuration files
 │   ├── simulation/               # PFR templates, reactants, heat flux
@@ -32,59 +36,54 @@ HydrAI/
 │       └── ml_inference_config.json
 │
 ├── mechanisms/                    # Chemical kinetic mechanisms (YAMLs git-ignored; add locally)
-│   └── .gitkeep                   # Filenames listed in README “Required External Files”
+│   └── .gitkeep                   # Filenames listed in README "Required External Files"
 │
 ├── data/                         # Data directory
 │   ├── training/                 # Training data (generated)
-│   └── raw/                      # Raw simulation data
+│   └── processed/                # Feature-engineered data (generated)
 │
-├── models/                       # Trained ML models (generated)
-│   ├── random_forest_primary.joblib
-│   ├── gradient_boosting_primary.joblib
-│   ├── xgboost_primary.joblib
-│   ├── adaboost_primary.joblib
-│   └── (optional: neural_network_*.h5, training_summary.json from model_training.py)
+├── models/                       # Trained ML models (generated, git-ignored)
+│   ├── best_tree_model_exit_IO.joblib
+│   └── tuned_RandomForest_exit_and_evolution.joblib
 │
 ├── outputs/                      # Simulation outputs
 │   ├── results/                  # CSV results and summaries
-│   └── figures/                  # Generated plots
+│   ├── figures/                  # Generated plots (per-notebook subdirs)
+│   └── reports/                  # Per-notebook summary reports (.md)
 │
 ├── docs/                         # Documentation
 │   ├── API_REFERENCE.md
+│   ├── CHANGELOG.md
+│   ├── DIRECTORY_STRUCTURE.md
+│   ├── HF_MODEL_CARD_TEMPLATE.md
+│   ├── HPC_GUIDE.md
 │   ├── ML_CONFIG_GUIDE.md       # ML configuration guide
+│   ├── MODEL_CARD.md
+│   ├── SPECIES_LUMPING_MODEL_CARD.md
+│   ├── STRUCTURE.md              # This file
+│   ├── TRAINING_DATA_GENERATION_PROTOCOL_MODEL_CARD.md
 │   ├── UPDATES_v3.0.md          # Version 3.0 update notes
 │   └── ml/                        # ML Surrogate Models documentation
 │       ├── README.md
 │       ├── QUICKSTART.md
 │       └── IMPLEMENTATION_SUMMARY.md
 │
-├── examples/                     # Usage examples
-│   └── basic_usage.py
-│
 ├── scripts/                      # Organized by use case (paths from repo root)
 │   ├── cluster/
 │   │   ├── run_main2_slurm_chunk.py      # Main_2 chunk worker (TASK_ID, NTASKS; optional HYDRAI_ML_CONFIG)
 │   │   ├── run_training_mul_CPUs.sh      # Multi-node CPU SLURM example
-│   │   ├── run_training_smoke_gpu_partition.sh  # Short smoke job (tiny config; edit #SBATCH for site)
-│   │   ├── run_trainning_mul_CPUs.sh     # Legacy typo alias (for compatibility)
 │   │   ├── run_training_mul_GPUs.sh      # Canonical GPU smoke alias
-│   │   └── run_trainning_mul_GPUs.sh     # Legacy typo alias (for compatibility)
+│   │   └── run_training_smoke_gpu_partition.sh  # Short smoke job (tiny config; edit #SBATCH for site)
 │   ├── local/
 │   │   ├── run_main2_local_parallel.py   # Multi-process Main_2 on one machine
 │   │   └── run_main1_local_simulation.sh # Launches Main_1 notebook (bash)
-│   ├── notebook/
-│   │   ├── run_simulation.sh             # Launches Main_1 notebook (bash)
-│   │   └── run_simulation_ipynb.sh
 │   └── dev/
 │       ├── check_complete_runs.py        # Training sweep summary / manifests
+│       ├── clean_completed_runs.py       # Archive completed task artifacts
 │       ├── consolidate_training_data.py  # Merge per-task outputs for ML pipeline
 │       ├── monitor_run.sh                # Live cluster run status
-│       ├── clean_completed_runs.py       # Archive completed task artifacts
+│       ├── sbatch_safe.sh                # CRLF-safe sbatch wrapper
 │       └── show_structure.sh             # Requires `tree`
-│
-├── styles/                       # Figure aesthetics docs + examples (JSON in configs/style/)
-│   ├── README.md                 # Points to configs/style/figure_aesthetics.json
-│   └── example_usage.py          # Optional plot_style demos
 │
 ├── temp/                         # Temporary files (auto-generated, git-ignored)
 │   └── .gitkeep                  # Preserves directory structure
@@ -92,14 +91,17 @@ HydrAI/
 ├── notebooks/
 │   ├── Main_1_run_pfr.ipynb                       # Step 1: PFR simulations
 │   ├── Main_2_generate_training_data.ipynb        # Step 2: ML training data generation
-│   ├── Main_3_data_exploration_feature_engineering.ipynb
+│   ├── Main_3_data_exploration_feature_engineering.ipynb  # Step 3: EDA + feature engineering
 │   ├── Main_4_train_and_evaluate_tree_models_IO.ipynb    # Step 4: Baseline tree evaluation (exit-plane)
 │   └── Main_5_train_evaluate_tune_tree_model_evolution.ipynb  # Step 5: One-model tuning + full PFR evolution
+│
+├── assets/                       # Static assets (images for README etc.)
+├── tests/                        # Test suite
+├── run_pipeline.py               # Run all notebooks in order
+├── run_pipeline.bat              # Windows batch wrapper
 ├── requirements.txt
 ├── README.md
-├── LICENSE
-└── docs/
-    └── CHANGELOG.md
+└── LICENSE
 ```
 
 ## Key Changes

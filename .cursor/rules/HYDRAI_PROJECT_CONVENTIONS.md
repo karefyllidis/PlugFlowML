@@ -14,6 +14,14 @@ This document captures all agreed-upon conventions, architectural decisions, and
 - [8. Documentation Standards](#8-documentation-standards)
 - [9. Code Style](#9-code-style)
 - [10. Data File Management](#10-data-file-management)
+- [11. Best Practices Summary](#11-best-practices-summary)
+- [12. Terminology Reference](#12-terminology-reference)
+- [13. HPC and Parallel Computing](#13-hpc-and-parallel-computing)
+- [14. Data Compatibility and Version Management](#14-data-compatibility-and-version-management)
+- [15. Matplotlib Style Standards](#15-matplotlib-style-standards)
+- [16. Feature Scaling](#16-feature-scaling)
+- [17. Pipeline Simplification](#17-pipeline-simplification)
+- [18. Portfolio and Professional Standards](#18-portfolio-and-professional-standards)
 
 ---
 
@@ -38,6 +46,8 @@ Build fast, accurate ML surrogate models for plug flow reactor (PFR) simulations
 
 **Rationale**: Mass fractions provide sufficient information for predictions and reduce feature dimensionality.
 
+**Note**: The PFR simulator (`src/cantera/pfr_simulator.py`) may compute and plot mole fractions for chemistry validation purposes. This is acceptable — the rule applies to the ML pipeline inputs, targets, and outputs exclusively.
+
 ### 2.2 Species Categorization
 
 Species are lumped into chemistry-based groups to reduce ML input dimensions:
@@ -52,7 +62,7 @@ Species are lumped into chemistry-based groups to reduce ML input dimensions:
 - `acetylenes` - Hydrocarbons with C≡C triple bonds
 - `oxygenates` - O-containing species (CO, CO2, H2O, etc.)
 - `coke_precursors` - Heavy aromatics, PAHs
-- `inert` - Non-carbon species (note: do NOT use "carbon_inert" terminology)
+- `inert` - Non-carbon species (note: do NOT use "carbon_inert" in prose/human communication; however, the data column name `Y_lump_carbon_inert` is a valid pipeline artifact from the carbon-content lumping scheme)
 - `other` - Unclassified species
 
 #### Carbon-Content Groups (Secondary)
@@ -215,7 +225,6 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import seaborn as sns
 
 # Scikit-learn
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
@@ -616,11 +625,15 @@ outputs/
 │   ├── Main_3_data_exploration_feature_engineering/
 │   ├── Main_4_train_and_evaluate_tree_models_IO/
 │   └── Main_5_train_evaluate_tune_tree_model_evolution/
-├── models/
-│   ├── best_tree_model_exit_IO.joblib
-│   └── tuned_RandomForest_exit_and_evolution.joblib
+├── reports/
+│   ├── README.md
+│   └── Main_N_*.md  (per-notebook summary reports)
 └── results/
     └── consolidated_training_data/
+
+models/                                # Root-level directory (git-ignored)
+├── best_tree_model_exit_IO.joblib
+└── tuned_RandomForest_exit_and_evolution.joblib
 ```
 
 ### 10.4 Gitignore
@@ -802,7 +815,7 @@ joblib>=1.3
 
 **RULE**: Use a consistent `setup_matplotlib()` function for all notebooks
 
-**Implementation** (in `src/utils/plotting.py` or notebook setup cell):
+**Implementation** (in `src/utils/plot_style.py` or notebook setup cell):
 
 ```python
 def setup_matplotlib(ax=None):
