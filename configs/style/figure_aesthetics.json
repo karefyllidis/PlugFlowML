@@ -23,7 +23,7 @@
         "size": 12,
         "weight": "normal",
         "title_size": 14,
-        "title_weight": "bold",
+        "title_weight": "normal",
         "label_size": 12,
         "tick_size": 10
     },

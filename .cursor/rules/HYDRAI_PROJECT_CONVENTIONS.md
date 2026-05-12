@@ -382,6 +382,46 @@ ax.plot(..., marker='x', ...)
 
 Do NOT use stars (`*`), triangles (`^`, `v`), diamonds (`D`), crosses (`x`), or any other marker shape.
 
+### 5.9 Text Weight on Figures
+
+**RULE**: Never use **bold** text on any figure element. All text — titles, axis labels, axis names, tick labels, legend entries, annotations, suptitles, colorbar labels — must be rendered with `fontweight='normal'` (the matplotlib default).
+
+**Rationale**:
+- Visual consistency across all plots in the project.
+- Bold titles look heavy/unprofessional next to thin axis labels and ticks.
+- Keeps the focus on the data (lines, markers, colors), not on typographic emphasis.
+- Bold is reserved for prose/markdown, where it carries semantic meaning.
+
+**Apply to**:
+- `ax.set_title(...)`, `fig.suptitle(...)`, `plt.suptitle(...)`
+- `ax.set_xlabel(...)`, `ax.set_ylabel(...)`
+- `ax.text(...)`, `ax.annotate(...)`
+- Colorbar labels (`cbar.set_label(...)`)
+- Legend titles
+- Any custom axis-name labels (e.g. column headers in parallel-coordinates / parallel-sets plots)
+
+**Enforcement**:
+- `setup_matplotlib()` in `src/utils/plot_style.py` locks `axes.titleweight`, `axes.labelweight`, and `figure.titleweight` to `'normal'`.
+- `configs/style/figure_aesthetics.json` `font.title_weight = "normal"`.
+- Do not override these in individual plot helpers.
+
+**Bad**:
+```python
+ax.set_title('Exit conversion', fontweight='bold')                       # forbidden
+fig.suptitle('Training space', fontweight='bold', y=1.02)                # forbidden
+ax.text(i, 1.045, label, fontweight='bold')                              # forbidden
+plt.rcParams['axes.titleweight'] = 'bold'                                # forbidden
+```
+
+**Good**:
+```python
+ax.set_title('Exit conversion')                                          # normal weight (default)
+fig.suptitle('Training space', y=1.02)
+ax.text(i, 1.045, label)
+```
+
+If a title genuinely needs more visual weight, use a larger `fontsize` instead of bold.
+
 ---
 
 ## 6. Unit Conventions
@@ -682,6 +722,7 @@ models/                                # Root-level directory (git-ignored)
 ❌ Don't implement Parquet sidecars (explicitly removed)  
 ❌ Don't forget to update README when notebooks change  
 ❌ Don't use marker shapes other than `'o'` (circle) and `'s'` (square) — stars, triangles, diamonds, crosses are all forbidden  
+❌ Don't use **bold** text on any figure element (titles, labels, ticks, legends, annotations, colorbars) — `fontweight` must always be `'normal'`. Use a larger `fontsize` if more emphasis is needed.  
 
 ---
 
@@ -1045,6 +1086,12 @@ for nb in notebooks:
 
 - **v1.2** (2026-05-08): Marker shape constraint from agent chat [7c5baaf3]
   - Section 5.8: only `'o'` and `'s'` markers are allowed in all plots
+
+- **v1.3** (2026-05-12): No-bold-text-on-figures rule from agent chat [Parallel-axes EDA polish](a08436a7-e157-42ac-a2ad-af3ecc2cf96d)
+  - Added Section 5.9: bold text is forbidden on every figure element (`fontweight='normal'` everywhere).
+  - `setup_matplotlib()` now locks `axes.titleweight`, `axes.labelweight`, `figure.titleweight` to `'normal'`.
+  - `configs/style/figure_aesthetics.json`: `font.title_weight` changed from `"bold"` to `"normal"`.
+  - Stripped `fontweight='bold'` from `src/utils/plot_parallel.py`, `src/cantera/pfr_simulator.py` defaults, and notebooks Main_3 / Main_4 / Main_5.
 
 ---
 

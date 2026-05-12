@@ -20,7 +20,9 @@ HydrAI/
 │   │   └── example_usage.py      # ML usage examples
 │   └── utils/                    # Shared utilities
 │       ├── __init__.py
-│       └── plot_style.py          # Matplotlib style (setup_matplotlib + JSON-driven helpers)
+│       ├── plot_style.py          # Matplotlib style (setup_matplotlib + JSON-driven helpers)
+│       ├── plot_parallel.py       # Parallel coordinates (Inselberg) & parallel sets (Kosara) for multidim EDA
+│       └── run_log.py             # Notebook run-log capture (start_run_log / stop_run_log)
 │
 ├── configs/                      # Configuration files
 │   ├── simulation/               # PFR templates, reactants, heat flux

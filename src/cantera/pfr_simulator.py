@@ -619,7 +619,7 @@ def create_heat_flux_relative_figure(config, hf, aesthetics=None):
     ax.set_title(
         'Heat flux profile vs relative position',
         fontsize=font.get('title_size', 14),
-        fontweight=font.get('title_weight', 'bold'),
+        fontweight=font.get('title_weight', 'normal'),
     )
     axes_cfg = aesthetics.get('axes', {})
     if axes_cfg.get('grid', True):

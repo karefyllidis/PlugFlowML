@@ -176,6 +176,10 @@ def apply_style(aesthetics: Optional[Dict[str, Any]] = None, config_file: Option
     plt.rcParams['font.family'] = font_config.get('family', 'sans-serif')
     plt.rcParams['font.size'] = font_config.get('size', 12)
     plt.rcParams['font.weight'] = font_config.get('weight', 'normal')
+    # Project rule: no bold text on figures (titles, labels, ticks all stay 'normal').
+    plt.rcParams['axes.titleweight'] = 'normal'
+    plt.rcParams['axes.labelweight'] = 'normal'
+    plt.rcParams['figure.titleweight'] = 'normal'
     
     # Apply grid settings
     axes_config = aesthetics.get('axes', {})

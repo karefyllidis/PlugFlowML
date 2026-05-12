@@ -9,6 +9,7 @@ This document provides comprehensive API documentation for all functions, classe
 - [Simulation Functions](#simulation-functions)
 - [Analysis Functions](#analysis-functions)
 - [Utility Functions](#utility-functions)
+- [Plot Utilities (`src/utils/`)](#plot-utilities-srcutils)
 - [Data Structures](#data-structures)
 - [Error Handling](#error-handling)
 
@@ -474,6 +475,209 @@ def dp_churchill(thermo: ct.ThermoPhase, mass_flow_rate: float, area: float,
 ```python
 u, dpdz = dp_churchill(thermo, mass_flow_rate, area, diam, roughness)
 ```
+
+## Plot Utilities (`src/utils/`)
+
+Reusable matplotlib helpers shared across the `Main_*` notebooks. All helpers
+respect the global rcParams set by `setup_matplotlib()` and are designed so that
+the caller owns figure saving (`fig.savefig(...)`) — none of them write to disk.
+
+### `setup_matplotlib(ax=None)` — `src/utils/plot_style.py`
+
+Apply the project's standard matplotlib style globally and, optionally, to one
+or more Axes. Call once per notebook/script at import time with no arguments
+to set rcParams; pass `ax` after `plt.subplots(...)` to apply per-axis
+finishing touches (minor ticks, in-pointing tick direction, hidden top/right
+spines).
+
+**Signature:**
+```python
+def setup_matplotlib(ax: None | Axes | np.ndarray = None) -> None
+```
+
+**Parameters:**
+- `ax` (None | Axes | ndarray of Axes): If `None`, only global rcParams are
+  updated. If one or many Axes, per-axis styling is also applied.
+
+**Example:**
+```python
+from src.utils.plot_style import setup_matplotlib
+setup_matplotlib()                              # global rcParams
+fig, axes = plt.subplots(1, 3)
+setup_matplotlib(axes)                          # per-axis polish
+```
+
+### JSON-driven aesthetics helpers — `src/utils/plot_style.py`
+
+Lower-level helpers that read `configs/style/figure_aesthetics.json`
+(legacy fallbacks: flat `configs/figure_aesthetics.json`,
+`styles/figure_aesthetics.json`). Useful when a notebook or script needs
+profile-specific colors/labels (e.g. temperature vs. pressure curves).
+
+| Function | Purpose |
+|---|---|
+| `load_aesthetics(config_file=None)` | Load and return the aesthetics dictionary. |
+| `apply_style(aesthetics=None, config_file=None)` | Apply global rcParams from the JSON. |
+| `create_figure(aesthetics=None, figsize=None, ...)` | Create a `Figure` with aesthetics-driven defaults. |
+| `setup_axes(ax, aesthetics=None, ...)` | Apply grid/spine settings to an `Axes`. |
+| `setup_legend(ax, aesthetics=None, **kwargs)` | Render a legend with aesthetics defaults; returns the `Legend`. |
+| `get_profile_style(profile_name, ...)` | Return a per-profile style dict (color, linestyle, label, ylabel, title). |
+| `get_color(name, ...)` | Look up a named color from the JSON palette. |
+| `save_figure(fig, filename, ...)` | Save with aesthetics-driven format/DPI/`bbox_inches`. |
+| `plot_profile(x, y, profile_name, ...)` | One-call profile plot using `get_profile_style`. Returns `(fig, ax)`. |
+
+**Example — profile plot from JSON:**
+```python
+from src.utils.plot_style import plot_profile
+fig, ax = plot_profile(z, T, 'temperature', xlabel='$z$ [m]')
+```
+
+### `plot_parallel_coordinates(...)` — `src/utils/plot_parallel.py`
+
+Inselberg-style parallel coordinates plot for continuous multidimensional
+data. Each row becomes a polyline across `len(dims)` parallel vertical axes;
+each axis is independently min-max normalized so all values share a single
+[0, 1] display range. Rendered with a `LineCollection` for speed.
+
+**Signature:**
+```python
+def plot_parallel_coordinates(
+    df: pd.DataFrame,
+    dims: Sequence[str],
+    color_by: Optional[str] = None,
+    *,
+    axis_labels: Optional[Sequence[str]] = None,
+    color_label: Optional[str] = None,
+    title: Optional[str] = None,
+    cmap: str = "magma",
+    alpha: float = 0.35,
+    linewidth: float = 0.8,
+    ax: Optional[plt.Axes] = None,
+    figsize: tuple[float, float] = (12.0, 4.5),
+    sort_by_color: bool = True,
+) -> tuple[plt.Figure, plt.Axes]
+```
+
+**Parameters:**
+- `df` (DataFrame): Source data; must contain every column in `dims` (and `color_by` if given).
+- `dims` (sequence of str): Column names in the order they should appear on the x-axis. At least 2.
+- `color_by` (str, optional): Continuous column whose value colors each polyline via `cmap`. If `None`, lines are drawn in neutral gray and no colorbar is added.
+- `axis_labels` (sequence of str, optional): Display labels for each axis; defaults to `dims`.
+- `color_label` (str, optional): Colorbar label; defaults to `color_by`.
+- `title` (str, optional): Axes title.
+- `cmap` (str): Matplotlib colormap name. Defaults to `"magma"`.
+- `alpha`, `linewidth` (float): Polyline transparency and width. Lower `alpha` for dense datasets.
+- `ax` (Axes, optional): Existing axes to draw into; otherwise a new figure is created.
+- `figsize` ((float, float)): Figure size when `ax` is `None`.
+- `sort_by_color` (bool): If `True` and `color_by` is given, draw rows from low to high color value so high-value lines appear on top.
+
+**Returns:** `(fig, ax)` — caller saves with `fig.savefig(...)`.
+
+**Raises:** `ValueError` if `len(dims) < 2` or if no rows remain after dropping NaNs in `dims + [color_by]`.
+
+**Example:**
+```python
+from src.utils.plot_parallel import plot_parallel_coordinates
+fig, ax = plot_parallel_coordinates(
+    df_design,
+    dims=['initial_temperature_K', 'pressure_bar', 'reactor_length_m',
+          'diameter_mm', 'mass_flow_rate_kgps', 'heat_flux_kWm2'],
+    color_by='nhexane_conversion_pct',
+    color_label='n-hexane conversion (%)',
+    title='Training space: parallel coordinates',
+)
+fig.savefig('outputs/figures/.../parallel_coordinates_design_space.png',
+            dpi=200, bbox_inches='tight')
+```
+
+### `plot_parallel_sets(...)` — `src/utils/plot_parallel.py`
+
+Kosara-style Parallel Sets for binned multidimensional data. Each column in
+`dims` is binned into `n_bins` categories; for every adjacent pair of axes,
+cubic-Bézier ribbons are drawn whose width is proportional to the joint count
+of (left-bin, right-bin) and whose color is the mean of `color_by` over rows
+in that joint bin (or a single `base_color` if `color_by` is `None`).
+
+**Signature:**
+```python
+def plot_parallel_sets(
+    df: pd.DataFrame,
+    dims: Sequence[str],
+    color_by: Optional[str] = None,
+    *,
+    n_bins: int = 5,
+    bin_strategy: str = "equal_width",          # or "quantile"
+    axis_labels: Optional[Sequence[str]] = None,
+    color_label: Optional[str] = None,
+    title: Optional[str] = None,
+    cmap: str = "magma",
+    color_vmin: Optional[float] = None,
+    color_vmax: Optional[float] = None,
+    base_color: str = "#4477AA",
+    ribbon_alpha: float = 0.55,
+    gap_frac: float = 0.015,
+    ax: Optional[plt.Axes] = None,
+    figsize: tuple[float, float] = (13.0, 5.5),
+    bin_label_fontsize: int = 7,
+    show_bin_labels: bool = True,
+) -> tuple[plt.Figure, plt.Axes]
+```
+
+**Parameters:**
+- `df`, `dims`, `color_by`, `axis_labels`, `color_label`, `title`, `cmap`, `ax`, `figsize`: same semantics as `plot_parallel_coordinates`.
+- `n_bins` (int): Number of bins per axis (categories). Note: a constant column collapses to fewer effective bins.
+- `bin_strategy` ({`'equal_width'`, `'quantile'`}): How to bin continuous columns.
+- `color_vmin`, `color_vmax` (float, optional): Manual color-scale bounds; default to the data range of `color_by`.
+- `base_color` (str): Ribbon color when `color_by` is `None`.
+- `ribbon_alpha` (float): Ribbon transparency.
+- `gap_frac` (float): Gap between bin segments on each axis, as a fraction of axis height.
+- `bin_label_fontsize` (int): Font size for per-bin range labels written to the right of each axis.
+- `show_bin_labels` (bool): If `True`, annotate each bin segment with its value range.
+
+**Returns:** `(fig, ax)` — caller saves with `fig.savefig(...)`.
+
+**Raises:** `ValueError` if `len(dims) < 2`, if no rows remain after dropping NaNs, or if `bin_strategy` is unrecognized.
+
+**Example:**
+```python
+from src.utils.plot_parallel import plot_parallel_sets
+fig, ax = plot_parallel_sets(
+    df_design,
+    dims=['initial_temperature_K', 'pressure_bar', 'reactor_length_m',
+          'diameter_mm', 'mass_flow_rate_kgps', 'heat_flux_kWm2'],
+    color_by='nhexane_conversion_pct',
+    n_bins=5, bin_strategy='equal_width',
+    color_label='mean n-hexane conversion (%)',
+    title='Training space: parallel sets (5 equal-width bins/axis)',
+)
+fig.savefig('outputs/figures/.../parallel_sets_design_space.png',
+            dpi=200, bbox_inches='tight')
+```
+
+**Implementation notes:**
+- Ribbons are stacked within each bin in ascending-right-bin order on the left side and ascending-left-bin order on the right side, which keeps the visual stable across reruns.
+- Joint-bin means used for color are computed via `np.add.at`, so the cost is `O(N_rows + n_bins**2 * (n_dims - 1))` — fast even for tens of thousands of rows.
+- Bin range labels use the same compact tick formatter as the parallel-coordinates axes (auto-switches between fixed and scientific notation).
+
+### `start_run_log(...)` / `stop_run_log()` — `src/utils/run_log.py`
+
+Tee `stdout` and `stderr` to a timestamped log file under
+`outputs/reports/<notebook>_run_<timestamp>.txt` while still echoing to the
+notebook display, so long EDA / training runs leave a reproducible terminal
+trace next to the curated `.md` reports. `start_run_log(notebook_name)` is
+called once at the top of every `Main_*` notebook; calling it again in the
+same kernel re-uses the existing log file (no duplicate partial logs).
+`stop_run_log()` is optional — only call it if you want to close the file
+mid-session.
+
+**Signature:**
+```python
+def start_run_log(notebook_name: str,
+                  reports_dir: str | pathlib.Path = 'outputs/reports') -> pathlib.Path
+def stop_run_log() -> None
+```
+
+**Returns:** `start_run_log` returns the `Path` to the active log file.
 
 ## Data Structures
 

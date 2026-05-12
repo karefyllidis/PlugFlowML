@@ -36,7 +36,9 @@ HydrAI/
 │   │   ├── inference.py                # ML inference
 │   │   └── example_usage.py            # ML examples
 │   └── utils/                           # Utilities
-│       └── plot_style.py               # Figure aesthetics
+│       ├── plot_style.py               # Figure aesthetics
+│       ├── plot_parallel.py            # Parallel coordinates / parallel sets EDA helpers
+│       └── run_log.py                  # Notebook run-log capture
 ├── configs/                             # Configuration files
 │   ├── simulation/
 │   │   ├── config_template.json
