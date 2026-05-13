@@ -45,6 +45,25 @@ HydrAI provides a reproducible workflow that pairs detailed simulation with mach
 
 *Typical axial evolution along normalized reactor length (z/L): temperature rise, pressure drop, and reactant depletion — the full-resolution targets HydrAI learns to predict.*
 
+### Surrogate vs surrogate (rough numbers)
+
+Held-out test R² on the same exit-plane split (n-hexane dataset, 36,745 train / 9,187 test runs, 18 targets, uniform-average R² in physical units). All numbers are single-seed and ±0.01–0.02 across reruns — close calls within that band are noise.
+
+| Notebook | Model | Tuned? | Inputs | Test R² (avg) | Train–Test R² gap |
+|---|---|:---:|:---:|:---:|:---:|
+| `Main_4` | Gradient Boosting | – | 8 | **0.603** | 0.09 |
+| `Main_4` | Random Forest     | – | 8 | 0.593 | 0.35 |
+| `Main_4` | XGBoost           | – | 8 | 0.561 | 0.16 |
+| `Main_4` | AdaBoost          | – | 8 | 0.509 | 0.05 |
+| `Main_6` | **PyTorch MLP**   | Optuna TPE (30 trials, 50 epochs / trial) | 6 | **0.615** | **0.03** |
+
+Per-target headline (test R²): `pressure_Pa` ≈ 0.98 (NN, GBR, XGB all tied), `density_kgm3` ≈ 0.78–0.79, `temperature_K` ≈ 0.59–0.60. Species/lumped targets dominate the mid-band (R² ≈ 0.45–0.73) and are what drives the uniform average down.
+
+Takeaways:
+- The tuned `SimpleNN` (Main_6) is **~0.01 R² ahead of the best default tree** and has the **smallest train-test gap** (0.03), so it generalises cleanly even though it sees two fewer inputs.
+- Tree baselines are competitive **without** tuning and train in seconds — a strong tabular default for this dataset.
+- A fair tuned-vs-tuned comparison needs `Main_5` (`BayesSearchCV` on XGBoost) run on the exit-plane task; expect parity with the NN at a fraction of the compute. Tuned XGBoost on the full-profile task (`relative_position` as an input) reaches R² ≈ **0.85**, but that's a different problem.
+
 ### Why It Matters
 
 HydrAI delivers millisecond inference instead of second-to-minute chemistry solves, which substantially reduces iteration time during screening and early design studies. That speedup enables larger parameter sweeps and faster model-selection cycles without discarding a high-fidelity reference workflow. Because the surrogates are trained on detailed PFR simulations, the approach remains grounded in physically informed data. The same framework supports both local experimentation and cluster-scale data generation.
