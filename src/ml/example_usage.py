@@ -8,8 +8,8 @@ using trained tree-based surrogate models.
 
 Prerequisites
 -------------
-Run notebooks/Main_4_train_tree_models.ipynb first with IF_TREE_MODEL_EXPORT=True
-so that ``models/tree_models_<mode>_<timestamp>.joblib`` exists.
+Run notebooks/Main_4_train_and_evaluate_tree_models_IO.ipynb first with IF_MODEL_EXPORT=True
+so that ``models/tree_models_exit.joblib`` exists.
 
 Usage
 -----
@@ -117,7 +117,7 @@ def main():
         print("=" * 60)
     except FileNotFoundError as err:
         print(f"\n[ERROR] {err}")
-        print("  Run notebooks/Main_4_train_tree_models.ipynb first to export the model artifact.")
+        print("  Run notebooks/Main_4_train_and_evaluate_tree_models_IO.ipynb first to export the model artifact.")
         sys.exit(1)
 
 

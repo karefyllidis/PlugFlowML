@@ -66,6 +66,12 @@ For hyperparameter tuning and full axial/PFR evolution with one selected model:
 jupyter notebook notebooks/Main_5_train_evaluate_tune_tree_model_evolution.ipynb
 ```
 
+For the PyTorch MLP exit-plane baseline (multi-output regression on inlet-only features):
+```bash
+jupyter notebook notebooks/Main_6__train_evaluate_SimpleNN_IO.ipynb
+```
+Hyperparameters are read from `configs/ml/ml_training_config.json` → `neural_network.{epochs, batch_size, learning_rate, h1, h2, h3, dropout}`. To run an in-notebook Optuna TPE search, flip `IF_HYPERPARAM_TUNING = True` in Section 2; the search space and trial budget are controlled by `neural_network.tuning.{n_trials, epochs_per_trial, validation_fraction, timeout_seconds}` (`pip install optuna` required).
+
 **Option B – All model types (command-line):**
 ```bash
 python src/ml/model_training.py configs/ml/ml_training_config.json
@@ -78,7 +84,9 @@ python src/ml/model_training.py configs/ml/ml_training_config.json
 - Saves trained models to `models/`
 
 **Expected output (notebook):**
-- `random_forest_primary.joblib`, `gradient_boosting_primary.joblib`, `xgboost_primary.joblib`, `adaboost_primary.joblib` - Tree model artifacts (each includes models, scaler, feature/target lists)
+- Main_4: `tree_models_exit.joblib` (models, scaler, label encoder, feature/target lists, config).
+- Main_5: `tree_model_tuned_exit_full.joblib` (tuned exit model and, when trained, full-profile bundle).
+- Main_6 (PyTorch): `simple_nn_exit_state_dict.pt`, `simple_nn_exit_scalers.joblib`, and `simple_nn_exit_manifest.json` (architecture, training settings, columns, headline metrics; with `IF_HYPERPARAM_TUNING=True` also Optuna PNGs and a compact `tuning` block in the manifest).
 
 ## Step 4: Use ML Models (Instant!)
 
@@ -145,7 +153,7 @@ python src/ml/example_usage.py
 ## Troubleshooting
 
 ### "Model not found" error
-**Solution**: Train models first (Step 3); run `Main_4_train_and_evaluate_tree_models_IO.ipynb` for baseline tree models, `Main_5_train_evaluate_tune_tree_model_evolution.ipynb` for tuned tree models, or `python src/ml/model_training.py configs/ml/ml_training_config.json`.
+**Solution**: Train models first (Step 3); run `Main_4_train_and_evaluate_tree_models_IO.ipynb` for baseline tree models, `Main_5_train_evaluate_tune_tree_model_evolution.ipynb` for tuned tree models, `Main_6__train_evaluate_SimpleNN_IO.ipynb` for the PyTorch MLP baseline, or `python src/ml/model_training.py configs/ml/ml_training_config.json` for the CLI tree trainer.
 
 ### "Out of memory" during training
 **Solution**: Reduce `max_combinations_per_reactant` in config file
@@ -168,8 +176,8 @@ python src/ml/example_usage.py
 
 - **Fast predictions**: **XGBoost** or **Random Forest** (tree surrogates)
 - **Interpretable models**: Use `random_forest`
-- **Large datasets**: XGBoost / gradient boosting; deep **PyTorch** NNs planned
-- **Small datasets**: Random Forest or XGBoost often better
+- **Large datasets**: XGBoost / gradient boosting; the **PyTorch** MLP baseline (`Main_6`) scales linearly and runs on CPU/CUDA/MPS
+- **Small datasets**: Random Forest or XGBoost often better than the NN baseline; raise `dropout` if the NN overfits
 
 ## Full Workflow
 
@@ -186,7 +194,11 @@ jupyter notebook notebooks/Main_4_train_and_evaluate_tree_models_IO.ipynb
 # 4. Optional one-model tuning + full PFR evolution
 jupyter notebook notebooks/Main_5_train_evaluate_tune_tree_model_evolution.ipynb
 
-# Alternative script route:
+# 4b. PyTorch MLP baseline (inlet -> outlet); reads neural_network.* from ml_training_config.json
+#     Flip IF_HYPERPARAM_TUNING=True for an optional Optuna TPE search (neural_network.tuning).
+jupyter notebook notebooks/Main_6__train_evaluate_SimpleNN_IO.ipynb
+
+# Alternative script route (trees only; NN remains placeholder):
 # Or: python src/ml/model_training.py configs/ml/ml_training_config.json
 
 # 5. Test predictions

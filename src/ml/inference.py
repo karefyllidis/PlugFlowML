@@ -2,7 +2,7 @@
 """
 ML Inference — Fast surrogate predictions using trained tree models.
 
-Loads the .joblib artifacts exported by Main_4_train_tree_models and provides
+Loads the .joblib artifacts exported by Main_4 / Main_5 and provides
 single-point and full-profile prediction.  100-1000x faster than Cantera.
 
 Author: Nikolas Karefyllidis, PhD
@@ -21,7 +21,8 @@ class MLPFRPredictor:
     """
     Fast surrogate predictor for steam-cracking PFR simulations.
 
-    Wraps the .joblib artifact produced by Main_4 (tree_models_<mode>_<ts>.joblib).
+    Wraps the .joblib artifact produced by Main_4 / Main_5 (for example
+    ``tree_models_exit.joblib`` or legacy ``tree_models_exit_<timestamp>.joblib``).
     Each artifact contains:
         'models'      : dict {model_key: fitted MultiOutputRegressor}
         'scaler_X'    : fitted StandardScaler for input features
@@ -32,8 +33,9 @@ class MLPFRPredictor:
     Parameters
     ----------
     artifact_path : str or Path
-        Path to a .joblib artifact, OR a directory in which the latest
-        tree_models_<mode>_*.joblib is auto-discovered.
+        Path to a .joblib artifact, OR a directory in which the preferred
+        ``tree_models_<mode>.joblib`` (or legacy ``tree_models_<mode>_<timestamp>.joblib``)
+        is auto-discovered (newest matching file wins).
     model_key : str, optional
         Which model to use ('random_forest', 'gradient_boosting', 'xgboost',
         'adaboost').  Defaults to the first model in the artifact.
@@ -77,13 +79,15 @@ class MLPFRPredictor:
             if not candidates:
                 raise FileNotFoundError(
                     f"No tree_models_*.joblib artifacts found in {artifact_path}. "
-                    "Run Main_4 with IF_TREE_MODEL_EXPORT=True first."
+                    "Run Main_4 with IF_MODEL_EXPORT=True first."
                 )
             if mode is not None:
-                candidates = [
-                    c for c in candidates
-                    if re.search(rf'tree_models_{re.escape(mode)}_\d{{8}}', Path(c).name)
-                ]
+                esc = re.escape(mode)
+                pat = re.compile(
+                    rf"^tree_models_{esc}(?:_\d{{8}}(?:_\d{{6}})?)?\.joblib$",
+                    re.IGNORECASE,
+                )
+                candidates = [c for c in candidates if pat.match(Path(c).name)]
                 if not candidates:
                     raise FileNotFoundError(
                         f"No artifact found for mode='{mode}' in {artifact_path}."

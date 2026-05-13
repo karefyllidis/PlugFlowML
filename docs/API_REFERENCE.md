@@ -661,12 +661,11 @@ fig.savefig('outputs/figures/.../parallel_sets_design_space.png',
 
 ### `start_run_log(...)` / `stop_run_log()` — `src/utils/run_log.py`
 
-Tee `stdout` and `stderr` to a timestamped log file under
-`outputs/reports/<notebook>_run_<timestamp>.txt` while still echoing to the
-notebook display, so long EDA / training runs leave a reproducible terminal
-trace next to the curated `.md` reports. `start_run_log(notebook_name)` is
-called once at the top of every `Main_*` notebook; calling it again in the
-same kernel re-uses the existing log file (no duplicate partial logs).
+Tee `stdout` and `stderr` to `outputs/reports/<safe_notebook_name>.txt` while still
+echoing to the notebook display. The log file is opened in **overwrite** mode each
+time `start_run_log` runs, so the latest full run always replaces the previous file.
+If logging is already active, a second call closes the previous tee and starts a
+fresh file at the same path (for example after re-running the setup cell).
 `stop_run_log()` is optional — only call it if you want to close the file
 mid-session.
 

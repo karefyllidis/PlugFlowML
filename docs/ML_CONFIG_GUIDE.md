@@ -158,7 +158,7 @@ If `sampling_method` is `"random"` or `"latin"`, only `max_combinations_per_reac
 - Reports species-lump error by chemistry/carbon group using **Normalized MAE (%)**
 - Reports state / thermo / aero target error using **Normalized MAE (%)** for targets such as exit temperature, pressure, velocity, density, Cp/Cv, enthalpy, and thermal conductivity
 - Reports ML inference speed and optional Cantera/PFR speedup when `CANTERA_EXIT_SECONDS_PER_RUN` is set from a measured baseline
-- Exports baseline models to `models/tree_models_exit_<timestamp>.joblib`
+- Exports baseline models to `models/tree_models_exit.joblib` (overwritten each run)
 
 Loads the latest `data/processed/features_targets_*.pkl`. If Main_3 used **`EXPORT_SPECIES_AS=lumped_chemistry`** (or `lumped_carbon`), targets are already **`Y_lump_*`** mass-fraction lumps; the notebook trains on those (far fewer outputs than hundreds of species).
 
@@ -171,7 +171,7 @@ Loads the latest `data/processed/features_targets_*.pkl`. If Main_3 used **`EXPO
 - Full-profile train/test data are split by simulation run, not by row, to avoid leakage between axial points from the same PFR profile
 - `FULL_PROFILE_MAX_ROWS` can be set for a quick full-profile training smoke test on large datasets
 - Reports tuned ML inference speed for exit-plane and full-profile prediction; set `CANTERA_EXIT_SECONDS_PER_RUN` / `CANTERA_FULL_PROFILE_SECONDS_PER_RUN` to print speedup factors against measured Cantera timings
-- Exports tuned exit and full-profile artifacts to `models/tree_model_tuned_exit_full_<timestamp>.joblib`
+- Exports tuned exit and full-profile artifacts to `models/tree_model_tuned_exit_full.joblib` (overwritten each run)
 - Adds axial diagnostics and regime diagnostics:
   - `full_profile_cantera_vs_ml_axial_evolution.png` (Cantera vs ML axial overlays at selected `x/L`)
   - `exit_error_vs_conditions_boxplots.png` (error vs inlet-condition bins)
@@ -196,8 +196,19 @@ Loads the latest `data/processed/features_targets_*.pkl`. If Main_3 used **`EXPO
     "test_size": 0.2,
     "random_state": 42,
     "neural_network": {
-        "epochs": 50,
-        "batch_size": 256
+        "epochs": 200,
+        "batch_size": 256,
+        "learning_rate": 0.001,
+        "h1": 128,
+        "h2": 64,
+        "h3": 32,
+        "dropout": 0.1,
+        "tuning": {
+            "n_trials": 30,
+            "epochs_per_trial": 50,
+            "validation_fraction": 0.2,
+            "timeout_seconds": null
+        }
     },
     "random_forest": {
         "n_estimators": 100,
@@ -232,9 +243,28 @@ python src/ml/model_training.py configs/ml/ml_training_config.json
 - `data_file`: Path to training data CSV (supports glob patterns)
 - `output_dir`: Directory to save trained models
 - `target_types`: List of target types (`primary`, `secondary`, `species`, `all`)
-- `models`: List of models to train (`neural_network` is a PyTorch placeholder — omit or list explicitly; `random_forest`, `xgboost`, `gradient_boosting`, `adaboost`; `all` = RF + XGBoost + GB only until NN is implemented)
+- `models`: List of models to train (`neural_network` is a PyTorch placeholder in `src/ml/model_training.py` — the production NN path is the Jupyter notebook `notebooks/Main_6__train_evaluate_SimpleNN_IO.ipynb`. The CLI `all` keyword expands to RF + XGBoost + GB only.)
 - `test_size`: Fraction of data for testing (0.0-1.0)
 - `random_state`: Random seed for reproducibility
+
+**`neural_network` parameters (consumed only by `notebooks/Main_6__train_evaluate_SimpleNN_IO.ipynb`):**
+
+- `epochs` (int, default 200): number of Adam epochs over the training set.
+- `batch_size` (int, default 256): mini-batch size for `DataLoader(shuffle=True)`. Capped at `len(train_ds)` if larger.
+- `learning_rate` (float, default 1e-3): Adam learning rate.
+- `h1`, `h2`, `h3` (int, defaults 128 / 64 / 32): number of units in hidden layers 1–3 of the multi-output `SimpleNN` MLP.
+- `dropout` (float, default 0.1): probability passed to `nn.Dropout` after each hidden ReLU; off automatically under `model.eval()`.
+
+**`neural_network.tuning` parameters (consumed by Main_6 Section 6b only when `IF_HYPERPARAM_TUNING=True`):**
+
+- `n_trials` (int, default 30): number of Optuna TPE trials in the study.
+- `epochs_per_trial` (int, default 50): training epochs per Optuna trial; intentionally smaller than the final-model `epochs` to keep the search cheap. Median pruner stops weak trials early.
+- `validation_fraction` (float, default 0.2): fraction of the **training** split carved out as the Optuna validation fold. The held-out test set is never seen during tuning.
+- `timeout_seconds` (int or `null`, default `null`): wallclock cap for the entire study. `null` means no time limit; the study stops only when `n_trials` is reached.
+
+The tuning search space (`h1 ∈ [32,256] step 32`, `h2 ∈ [16,128] step 16`, `h3 ∈ [8,64] step 8`, `dropout ∈ [0.0,0.3]`, `learning_rate ∈ [1e-4,1e-2]` log, `batch_size ∈ {64,128,256,512}`) is defined in the notebook objective function. The objective maximises validation R² (uniform average across all targets, physical units). The best trial's parameters overwrite the top-level `neural_network.{h1,h2,h3,dropout,learning_rate,batch_size}` values inside the notebook, and the final model is rebuilt before the training loop in Section 8. Requires `pip install optuna`.
+
+Any missing key falls back to the inline notebook defaults shown above. Edit the JSON and re-run Main_6 Section 3 — no kernel restart needed.
 - Model-specific parameters: See individual model sections
 
 ### 3. ML Inference

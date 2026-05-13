@@ -45,13 +45,17 @@ HydrAI/
 │   └── processed/                # Feature-engineered data (generated)
 │
 ├── models/                       # Trained ML models (generated, git-ignored)
-│   ├── best_tree_model_exit_IO.joblib
-│   └── tuned_RandomForest_exit_and_evolution.joblib
+│   ├── tree_models_exit.joblib            # Main_4 baseline bundle (overwritten each run)
+│   ├── tree_model_tuned_exit_full.joblib  # Main_5 tuned exit + optional full-profile bundle
+│   ├── simple_nn_exit_state_dict.pt       # Main_6 PyTorch state_dict
+│   ├── simple_nn_exit_scalers.joblib      # Main_6 X/y scalers + label encoder
+│   └── simple_nn_exit_manifest.json       # Main_6 architecture/training/metrics/tuning manifest
 │
 ├── outputs/                      # Simulation outputs
 │   ├── results/                  # CSV results and summaries
 │   ├── figures/                  # Generated plots (per-notebook subdirs)
-│   └── reports/                  # Per-notebook summary reports (.md)
+│   └── reports/                  # Curated .md summaries + auto-captured <NotebookName>.txt
+│                                  # run logs (overwritten each notebook execution)
 │
 ├── docs/                         # Documentation
 │   ├── API_REFERENCE.md
@@ -95,7 +99,8 @@ HydrAI/
 │   ├── Main_2_generate_training_data.ipynb        # Step 2: ML training data generation
 │   ├── Main_3_data_exploration_feature_engineering.ipynb  # Step 3: EDA + feature engineering
 │   ├── Main_4_train_and_evaluate_tree_models_IO.ipynb    # Step 4: Baseline tree evaluation (exit-plane)
-│   └── Main_5_train_evaluate_tune_tree_model_evolution.ipynb  # Step 5: One-model tuning + full PFR evolution
+│   ├── Main_5_train_evaluate_tune_tree_model_evolution.ipynb  # Step 5: One-model tuning + full PFR evolution
+│   └── Main_6__train_evaluate_SimpleNN_IO.ipynb          # Step 6: PyTorch MLP baseline (inlet→outlet) + optional Optuna TPE
 │
 ├── assets/                       # Static assets (images for README etc.)
 ├── tests/                        # Test suite
@@ -122,7 +127,7 @@ HydrAI/
 
 ### 4. Notebooks
 - **Location**: All interactive entry points are in **`notebooks/`**
-- **Naming**: Notebooks use **`Main_N_`** prefix for pipeline order through **`Main_5`** (tuning and full PFR evolution after baseline evaluation).
+- **Naming**: Notebooks use **`Main_N_`** prefix for pipeline order through **`Main_6`** (PyTorch MLP baseline after the tree workflows).
 
 ### 4b. Scripts & SLURM monitoring
 
@@ -184,12 +189,16 @@ The notebook provides:
 - Comprehensive data visualization
 - Data quality checks
 
-**2. Train tree-based ML models (Jupyter Notebook):**
+**2. Train surrogate models (Jupyter Notebooks):**
 ```bash
 jupyter notebook notebooks/Main_4_train_and_evaluate_tree_models_IO.ipynb
 jupyter notebook notebooks/Main_5_train_evaluate_tune_tree_model_evolution.ipynb
+jupyter notebook notebooks/Main_6__train_evaluate_SimpleNN_IO.ipynb
 ```
-Trains Random Forest, Gradient Boosting, XGBoost, and AdaBoost (one model per primary target). Saves artifacts to `models/` (e.g. `random_forest_primary.joblib`).
+- Main_4 trains baseline trees (RF, Gradient Boosting, XGBoost, AdaBoost) and saves them to `models/tree_models_exit.joblib` (overwritten each run).
+- Main_5 tunes one tree model and, when enabled, also fits the full-profile model; both are bundled into `models/tree_model_tuned_exit_full.joblib`.
+- Main_6 trains a PyTorch MLP (optionally tuned via Optuna) and writes `models/simple_nn_exit_state_dict.pt`, `_scalers.joblib`, and `_manifest.json` (also overwritten each run).
+- Each notebook also tees its terminal output to `outputs/reports/<NotebookName>.txt` via `src.utils.run_log.start_run_log` (stable path, **overwritten on every run**).
 
 **Alternative (all model types including neural network):**
 ```bash

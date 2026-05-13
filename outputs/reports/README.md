@@ -7,10 +7,12 @@ notebooks. Keep generated figures in `outputs/figures/`, trained artifacts in
 ## Two kinds of files
 
 1. **Curated reports (`*.md`)** - hand-written summaries (tracked in git).
-2. **Run logs (`Main_*_run_<timestamp>.txt`)** - raw terminal output captured
-   automatically by each notebook through `src.utils.run_log.start_run_log(...)`.
-   These are not committed (machine-specific, can be large) but live on disk
-   alongside the curated reports for easy reference.
+2. **Run logs (`<NotebookName>.txt`)** - raw terminal output captured automatically
+   by each notebook through `src.utils.run_log.start_run_log(...)`. The file path is
+   stable (for example `Main_6__train_evaluate_SimpleNN_IO.txt`) and is **overwritten**
+   on each run so the folder always reflects the latest execution. These logs are not
+   committed (machine-specific, can be large) but live on disk next to the curated
+   `.md` reports.
 
 ## Recommended report files
 

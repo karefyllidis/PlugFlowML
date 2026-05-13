@@ -72,6 +72,7 @@ pip install -r requirements.txt
    - `Main_3` (EDA + feature engineering)
    - `Main_4_train_and_evaluate_tree_models_IO` (baseline inlet-to-outlet evaluation)
    - `Main_5_train_evaluate_tune_tree_model_evolution` (one-model tuning + full PFR evolution)
+   - `Main_6__train_evaluate_SimpleNN_IO` (PyTorch MLP baseline, inlet-to-outlet only; defaults from `configs/ml/ml_training_config.json` → `neural_network`; flip `IF_HYPERPARAM_TUNING=True` for an in-notebook Optuna TPE search)
 4. Local parallel sweep: `python scripts/local/run_main2_local_parallel.py --ntasks 4`
 
 For cluster execution, use `scripts/cluster/` and follow the post-run monitor/verify/consolidate workflow:
@@ -91,7 +92,7 @@ Advanced references:
 ## Repository Structure
 
     HydrAI/
-    ├── notebooks/            # Main_1 → Main_5  ·  PFR → sweep → EDA → baseline eval → tuned evolution
+    ├── notebooks/            # Main_1 → Main_6  ·  PFR → sweep → EDA → baseline trees → tuned trees + evolution → PyTorch NN baseline
     ├── src/                  # cantera/, ml/, utils/
     ├── configs/              # simulation/, ml/, style/
     ├── scripts/              # cluster/, local/, dev/
@@ -107,7 +108,8 @@ Advanced references:
 - [x] Multi-output tree surrogates, baseline comparison, and one-model hyperparameter tuning notebook
 - [x] Species lumping for dimensionality reduction (by carbon number & chemistry role); optional lumped export for ML
 - [x] Full axial-profile tuning workflow — `Main_5_train_evaluate_tune_tree_model_evolution.ipynb` tunes one selected tree model on full PFR evolution with `relative_position` as an input
-- [ ] PyTorch / physics-informed neural surrogate
+- [x] PyTorch MLP baseline (inlet→outlet) — `Main_6__train_evaluate_SimpleNN_IO.ipynb`; multi-output regression with dropout, train/test convergence plots, parity, residuals, per-target R² bar chart, and optional Optuna TPE hyperparameter search (`IF_HYPERPARAM_TUNING` flag, search space in `neural_network.tuning`)
+- [ ] Physics-informed neural surrogate / full-profile PyTorch training
 - [ ] Bayesian / gradient-free design optimisation loop
 
 ---

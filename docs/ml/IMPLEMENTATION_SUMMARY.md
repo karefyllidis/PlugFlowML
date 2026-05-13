@@ -28,7 +28,7 @@ The ML Surrogate Models module successfully implements machine learning models t
 
 **Output**: Pickle files (`training_data_complete_*.pkl`) with features and targets for ML training; optional metadata JSON (when saving enabled)
 
-### 2. ML Training Framework (`model_training.py`, `Main_4`, and `Main_5`)
+### 2. ML Training Framework (`model_training.py`, `Main_4`, `Main_5`, and `Main_6`)
 
 **Purpose**: Train multiple ML algorithms on generated data
 
@@ -36,12 +36,14 @@ The ML Surrogate Models module successfully implements machine learning models t
 
 **Tuning / evolution notebook** (`Main_5_train_evaluate_tune_tree_model_evolution.ipynb`): tunes one selected tree model with `BayesSearchCV` (exit-plane only) when `IF_HYPERPARAM_TUNING=True`; optional full axial/PFR evolution training reuses those hyperparameters (no second search).
 
-**Supported Models** (notebook: tree-only; script: all):
+**PyTorch MLP notebook** (`Main_6__train_evaluate_SimpleNN_IO.ipynb`): defaults-first multi-output regression on the same exit-plane data, with an optional in-notebook Optuna TPE search. 3-hidden-layer ReLU MLP (`128 → 64 → 32` by default) with `nn.Dropout` between hidden blocks, `nn.MSELoss`, Adam. Reads `test_size`, `random_state`, and `neural_network.{epochs, batch_size, learning_rate, h1, h2, h3, dropout}` from `ml_training_config.json`. Diagnostics: train + test convergence (MSE + R² vs epoch), parity plots, residuals, per-target R² bar chart; optional architecture diagram (matplotlib + TikZ) and `torchinfo` summary. Setting `IF_HYPERPARAM_TUNING=True` (Section 2) activates Section 6b, which carves a validation fold out of the training split (test set held out), runs an Optuna TPE study with a median pruner over `h1, h2, h3, dropout, learning_rate, batch_size` (budget and validation fraction from `neural_network.tuning`), refits the production model on the best hyperparameters, and records `optuna_optimization_history.png`, `optuna_param_importance.png`, plus a `tuning` block in the export manifest.
+
+**Supported Models** (notebooks: trees in Main_4/Main_5, PyTorch MLP in Main_6; CLI script: trees only):
 - **Random Forest** (scikit-learn) - Ensemble of decision trees; fast training and inference
 - **Gradient Boosting** (scikit-learn) - Boosting algorithm
 - **XGBoost** - Gradient boosting; often best accuracy
 - **AdaBoost** (scikit-learn) - Tree-based AdaBoost (notebook)
-- **Neural Networks** (planned: PyTorch in `model_training.py`) — not wired yet; tree models are production-ready
+- **Neural Networks** (PyTorch) — production notebook is `Main_6`; the `neural_network` key in `model_training.py` is still a CLI placeholder.
 
 **Target Types**:
 - `primary`: Core outputs (temperature, pressure, velocity, density)
@@ -96,9 +98,12 @@ data/training/                   # Generated training data (created at runtime)
 └── metadata_*.json
 
 models/                          # Trained models (created at runtime)
-├── tree_models_exit_*.joblib       # Main_4 export (RF / GB / XGBoost / AdaBoost)
-├── tree_models_full_profile_*.joblib
-└── training_summary.json           # (legacy, src/ml/model_training.py)
+├── tree_models_exit.joblib                    # Main_4 export (RF / GB / XGBoost / AdaBoost)
+├── tree_model_tuned_exit_full.joblib            # Main_5 tuned exit + optional full-profile bundle
+├── simple_nn_exit_state_dict.pt                # Main_6 PyTorch state_dict
+├── simple_nn_exit_scalers.joblib               # Main_6 X/y scalers + label encoder
+├── simple_nn_exit_manifest.json                # Main_6 architecture, hyperparams, columns, metrics
+└── training_summary.json                      # (legacy, src/ml/model_training.py)
 
 docs/ml/
 ├── README.md                    # Comprehensive documentation

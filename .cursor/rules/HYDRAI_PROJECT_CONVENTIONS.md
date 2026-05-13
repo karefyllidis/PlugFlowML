@@ -653,9 +653,15 @@ for _, g in df_data[subset_cols].groupby(run_cols):
 - `training_data_task_{task_id}.pkl` (individual task)
 - `training_data_consolidated.pkl` (merged dataset)
 
-**ML Models**:
-- `best_tree_model_exit_IO.joblib` (Main_4 output)
-- `tuned_{model_name}_exit_and_evolution.joblib` (Main_5 output)
+**ML Models** (stable, overwrite-each-run paths — no embedded timestamps):
+- `models/tree_models_exit.joblib` — Main_4 baseline bundle (RF / GB / XGBoost / AdaBoost + scaler, label encoder, splits, config). Payload carries an ISO `run_at` field.
+- `models/tree_model_tuned_exit_full.joblib` — Main_5 bundle: tuned exit-plane model plus, when trained, the full-profile model and scaler.
+- `models/simple_nn_exit_state_dict.pt` + `models/simple_nn_exit_scalers.joblib` + `models/simple_nn_exit_manifest.json` — Main_6 PyTorch artefacts (state dict, X/y scalers + label encoder, JSON manifest with architecture, training settings, metrics, and a compact `tuning` block).
+
+Each run overwrites these files. To compare runs, archive them externally (e.g. `models/archive/<date>_<note>/`) before re-running.
+
+**Notebook run logs** (auto-captured terminal output):
+- `outputs/reports/<NotebookName>.txt` — written by `src.utils.run_log.start_run_log(notebook_name)`. Mode is **overwrite** (`'w'`), so the file always reflects the latest execution. Curated `.md` summaries in the same folder are hand-written and tracked in git; the `.txt` logs are git-ignored.
 
 ### 10.3 Output Organization
 
@@ -664,17 +670,24 @@ outputs/
 ├── figures/
 │   ├── Main_3_data_exploration_feature_engineering/
 │   ├── Main_4_train_and_evaluate_tree_models_IO/
-│   └── Main_5_train_evaluate_tune_tree_model_evolution/
+│   ├── Main_5_train_evaluate_tune_tree_model_evolution/
+│   └── Main_6__train_evaluate_SimpleNN_IO/
 ├── reports/
 │   ├── README.md
-│   └── Main_N_*.md  (per-notebook summary reports)
+│   ├── Main_N_*.md                # curated per-notebook summaries (tracked)
+│   └── <NotebookName>.txt         # auto-captured run logs (overwrite each run, git-ignored)
 └── results/
     └── consolidated_training_data/
 
 models/                                # Root-level directory (git-ignored)
-├── best_tree_model_exit_IO.joblib
-└── tuned_RandomForest_exit_and_evolution.joblib
+├── tree_models_exit.joblib            # Main_4 baseline bundle (stable name)
+├── tree_model_tuned_exit_full.joblib  # Main_5 tuned exit + optional full-profile
+├── simple_nn_exit_state_dict.pt       # Main_6 PyTorch state_dict
+├── simple_nn_exit_scalers.joblib      # Main_6 X/y scalers + label encoder
+└── simple_nn_exit_manifest.json       # Main_6 manifest (architecture, training, metrics, tuning)
 ```
+
+All model exports are **overwritten on every notebook run** so disk doesn't accumulate dated artefacts. Archive a snapshot manually (move to `models/archive/<date>_<note>/`) before re-running if you need to keep an old version.
 
 ### 10.4 Gitignore
 
@@ -841,11 +854,15 @@ def load_dataframe_pickle(path: Path | str) -> pd.DataFrame:
 pandas>=2.2
 numpy>=1.24
 scikit-learn>=1.3
+scikit-optimize>=0.10.2   # BayesSearchCV in Main_5
 xgboost>=2.0
 matplotlib>=3.7
-seaborn>=0.12
-cantera>=3.0
+cantera>=3.1
 joblib>=1.3
+torch>=2.0                # PyTorch baseline in Main_6
+# Optional extras
+# optuna>=3.4             # Main_6 Section 6b (IF_HYPERPARAM_TUNING)
+# torchinfo>=1.8          # Main_6 Section 6c (IF_ARCH_SUMMARY)
 ```
 
 ---
@@ -1092,6 +1109,12 @@ for nb in notebooks:
   - `setup_matplotlib()` now locks `axes.titleweight`, `axes.labelweight`, `figure.titleweight` to `'normal'`.
   - `configs/style/figure_aesthetics.json`: `font.title_weight` changed from `"bold"` to `"normal"`.
   - Stripped `fontweight='bold'` from `src/utils/plot_parallel.py`, `src/cantera/pfr_simulator.py` defaults, and notebooks Main_3 / Main_4 / Main_5.
+
+- **v1.4** (2026-05-13): Stable overwrite-on-run exports for reports and models.
+  - Section 10.2 updated: ML model filenames are now stable (`tree_models_exit.joblib`, `tree_model_tuned_exit_full.joblib`, `simple_nn_exit_*.{pt,joblib,json}`); no embedded timestamps. Each notebook run **overwrites** the previous artefacts; archive manually before re-running if you need history.
+  - Section 10.3 outputs tree updated to show stable model names, the new Main_6 figures directory, and the auto-captured `outputs/reports/<NotebookName>.txt` run logs.
+  - `src.utils.run_log.start_run_log` now opens the per-notebook `.txt` in overwrite mode; calling it again in the same kernel closes the previous tee and starts a fresh file at the same path.
+  - Speed-report printouts in Main_4 / Main_5 shortened from multi-line `===` banners to a single compact line per scope plus an optional Cantera comparison line.
 
 ---
 
