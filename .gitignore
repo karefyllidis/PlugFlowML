@@ -186,3 +186,11 @@ mechanisms/*
 
 # Browser-download leftovers
 *.crdownload
+
+# --- Local scratch (notebook / agent dumps; never commit) ---
+*_cells_dump/
+_m5_cell*.txt
+_main6_cells.txt
+_m7_cells_ascii.txt
+_m6_idx2_out.txt
+_m6_cell5_dump.py

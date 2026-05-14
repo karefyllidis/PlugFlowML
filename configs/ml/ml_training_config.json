@@ -1,5 +1,5 @@
 {
-  "_comment": "ML training defaults. Tree trainers (Main_4 / scripts) and Main_6 PyTorch inlet→outlet NN read test_size, random_state, and neural_network.* from here. See docs/ML_CONFIG_GUIDE.md.",
+  "_comment": "ML training defaults. Tree trainers (Main_4, scripts) read test_size, random_state, and model blocks. Main_6 / Main_7 PyTorch notebooks read neural_network.* from here. See docs/ML_CONFIG_GUIDE.md.",
   "data_file": "data/training/training_data_complete_*.csv",
   "output_dir": "models",
   "target_types": ["primary"],
@@ -7,7 +7,7 @@
   "test_size": 0.2,
   "random_state": 42,
   "neural_network": {
-    "_comment": "Used by notebooks/Main_6__train_evaluate_SimpleNN_IO.ipynb (defaults match notebook fallbacks if a key is omitted). Keys h1–h3 are three hidden-layer widths.",
+    "_comment": "Main_6 (exit-plane) and Main_7 (full-profile) SimpleNN notebooks; omitted keys use notebook fallbacks. h1–h3: hidden layer widths.",
     "epochs": 400,
     "batch_size": 256,
     "learning_rate": 0.001,
@@ -16,7 +16,7 @@
     "h3": 32,
     "dropout": 0.1,
     "tuning": {
-      "_comment": "Consumed by Main_6 Section 6b only when IF_HYPERPARAM_TUNING=True. timeout_seconds=null means no wallclock limit.",
+      "_comment": "Optuna (Section 6b) when IF_HYPERPARAM_TUNING=True. n_trials / epochs_per_trial / validation_fraction / timeout_seconds (null = no cap).",
       "n_trials": 30,
       "epochs_per_trial": 50,
       "validation_fraction": 0.2,

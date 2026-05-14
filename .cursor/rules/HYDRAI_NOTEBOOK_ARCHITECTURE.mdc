@@ -1,10 +1,10 @@
 ---
-description: HydrAI Main_1–Main_6 notebook roles, pipeline order, and section maps
-globs: notebooks/**/*.ipynb,run_pipeline.py,docs/STRUCTURE.md,docs/DIRECTORY_STRUCTURE.md
+description: HydrAI Main_1–Main_7 notebook roles, pipeline order, and section maps
+globs: notebooks/**/*.ipynb,run_pipeline.py,docs/STRUCTURE.md,docs/DIRECTORY_STRUCTURE.md,docs/ML_CONFIG_GUIDE.md
 alwaysApply: false
 ---
 
-# HydrAI notebook architecture (Main_1 → Main_6)
+# HydrAI notebook architecture (Main_1 → Main_7)
 
 Use this when adding cells, renaming sections, or wiring a new notebook into the pipeline. **Detailed prose** lives in each notebook’s first markdown cell and in `docs/STRUCTURE.md` / `docs/DIRECTORY_STRUCTURE.md`.
 
@@ -17,9 +17,10 @@ flowchart LR
   M3 --> M4[Main_4 trees exit]
   M3 --> M5[Main_5 tune + evolution]
   M3 --> M6[Main_6 PyTorch exit]
+  M3 --> M7[Main_7 PyTorch full profile]
 ```
 
-- **Main_4 / Main_5 / Main_6** all expect **`data/processed/features_targets_*.pkl`** from **Main_3** (latest file wins when sorted).
+- **Main_4 / Main_5 / Main_6 / Main_7** all expect **`data/processed/features_targets_*.pkl`** from **Main_3** (latest file wins when sorted).
 - **Cluster path:** Main_2 tasks merge to consolidated training data; Main_3 ingests that path (see `docs/STRUCTURE.md` cluster notes).
 
 ## Summary table
@@ -32,8 +33,9 @@ flowchart LR
 | 4 | `Main_4_train_and_evaluate_tree_models_IO.ipynb` | **Exit-plane** tree baselines (RF, GB, XGB, Ada); no tuning | `configs/ml/ml_training_config.json` (tree blocks + `test_size`); **`neural_network.*` ignored** |
 | 5 | `Main_5_train_evaluate_tune_tree_model_evolution.ipynb` | **One** tuned tree + optional **full axial** profile model | Same JSON + `IF_HYPERPARAM_TUNING`, `TRAIN_FULL_PROFILE`, etc. |
 | 6 | `Main_6__train_evaluate_SimpleNN_IO.ipynb` | **PyTorch** inlet→exit **SimpleNN**; optional **Optuna**; Section 8 LR / early-stop / best-ckpt | Same JSON **`neural_network.*`** + `tuning`; torch |
+| 7 | `Main_7_train_evaluate_SimpleNN_full_profile.ipynb` | **PyTorch** **full axial** **SimpleNN** (`relative_position` in inputs); **run-level** split like Main_5 §8; optional **Optuna**; same §8 training pattern as Main_6 | Same JSON **`neural_network.*`** + `tuning`; torch |
 
-**Stable artefacts (overwrite each run):** see `HYDRAI_PROJECT_CONVENTIONS.md` §10.2 — e.g. `models/tree_models_exit.joblib`, `models/tree_model_tuned_exit_full.joblib`, `models/simple_nn_exit_*`, `outputs/reports/<NotebookName>.txt`.
+**Stable artefacts (overwrite each run):** see `HYDRAI_PROJECT_CONVENTIONS.md` §10.2 — e.g. `models/tree_models_exit.joblib`, `models/tree_model_tuned_exit_full.joblib`, `models/simple_nn_exit_*`, `models/simple_nn_full_profile_*`, `outputs/reports/<NotebookName>.txt`.
 
 ## Section maps (in-notebook headers)
 
@@ -53,13 +55,18 @@ flowchart LR
 1–6 mirror Main_4 (through default training) → **7. Hyperparameter tuning (optional)** → **8. Full axial / PFR evolution training** → **9. Cantera vs ML full axial** → **10** test-set evaluation & comparison → **11** actual vs predicted (state) → **12** species chemistry (lumped) → **13** speed report → **14** export (`tree_model_tuned_exit_full.joblib`). Exit figures often use `exit_` / full-profile figures use `full_` prefixes where applicable.
 
 ### Main_6 — banner sections + Optuna split
-1. Setup & imports → **1b. Device** → 2. Paths & flags (`IF_HYPERPARAM_TUNING`, arch flags) → 3. Load config & data → 4. Features & targets (inlet-only inputs, exit targets) → 5. Split & scaling → **6. PyTorch MLP** → **6b. Optuna tuning (optional)** → **6b-ii. Optuna plots only (JSON snapshot)** → **6c. Architecture viz** (matplotlib / TikZ / torchinfo) → 7. Tensors & loaders → **8. Training loop** (LR on plateau, early stop, best ckpt) → 9. Test evaluation → 10 / 10b / 10c diagnostics → **11. Export** (`simple_nn_exit_*`).
+1. Setup & imports → **1b. Device** → 2. Paths & flags (`IF_HYPERPARAM_TUNING`, arch flags, optional Jupyter **live** §8/§6b plots + throttle) → 3. Load config & data → 4. Features & targets (inlet-only inputs, exit targets; **chemistry_groups** for species) → 5. Split & scaling → **6. PyTorch MLP** → **6b. Optuna tuning (optional)** → **6b-ii. Optuna plots only (JSON snapshot)** → **6c. Architecture viz** (matplotlib / TikZ / torchinfo) → 7. Tensors & loaders → **8. Training loop** (LR on plateau, early stop, best ckpt) → 9. Test evaluation → **10 / 10b** parity & residuals (**3-column** grids, state + species) → **10c** per-target R² bars → **11. Export** (`simple_nn_exit_*` **+** `simple_nn_exit_per_target_metrics.csv`, `simple_nn_exit_group_metrics.csv`; manifest includes **`chemistry_groups`**, **`metrics_by_group`**, **`auxiliary_exports`**).
+
+### Main_7 — Main_6-style spine on full axial rows
+Same banner flow as Main_6, but §4 builds **`feature_cols`** with **`relative_position`** (Main_5-style), **`run_cols`** for run IDs, **run-level** `train_test_split` on unique runs, optional **`FULL_PROFILE_MAX_ROWS`**, then scaling → MLP → Optuna (6b / 6b-ii) → training §8 → **§9** test metrics (when **`IF_MODEL_EXPORT`**, also writes **`simple_nn_full_profile_per_target_metrics.csv`** + **`simple_nn_full_profile_group_metrics.csv`**) plus **§9b axial overlays** (preferred state + all **`species_cols`** in `target_cols`, along `x/L` on test runs) → **§10 / §10b** parity & residuals (**4-column** grids, all state + species; PNGs **`actual_vs_predicted_scatter_by_target.png`**, **`residuals_scatter_by_target.png`**) → **10c** R² bars → **§11** export **`simple_nn_full_profile_*`** (manifest includes **`chemistry_groups`**, **`metrics_by_group`**, **`auxiliary_exports`**; CSVs re-written here if §9 already emitted them).
+
+**Main_6 / Main_7 — Section 2 (not in JSON):** optional Jupyter **live** convergence during §8 (`LIVE_CONVERGENCE_PLOT`, throttled by **`LIVE_TRAIN_PLOT_EVERY`**); optional **live Optuna** figures in §6b (`LIVE_OPTUNA_PLOTS`, **`LIVE_OPTUNA_PLOT_EVERY`**). Disable for headless / `nbconvert`. Main_7 adds **`USE_CUDA_AMP`**, **`USE_TORCH_COMPILE`**, **`OPTUNA_N_JOBS`**. Main_7 opening markdown documents **Overfitting controls used here** (same pattern as Main_6; run-level split).
 
 **Plotting contract:** core figures (through §8–10c) must run whether **`IF_HYPERPARAM_TUNING`** is on or off; **6b-ii** only adds Optuna PNGs when a snapshot exists.
 
 ## Rules for edits
 
-1. **Keep step numbers and banner titles consistent** across Main_4/5/6 where sections are parallel (setup → config → features → split → train → eval → export).
-2. **Do not** make Main_4 depend on `neural_network.*`; reserve that block for **Main_6** only.
-3. **New “Main_7”** (if added): extend this file + `docs/STRUCTURE.md` + `run_pipeline.py` in the same change.
+1. **Keep step numbers and banner titles consistent** across Main_4/5/6/7 where sections are parallel (setup → config → features → split → train → eval → export).
+2. **Do not** make Main_4 depend on `neural_network.*`; reserve that block for **Main_6** and **Main_7** (PyTorch notebooks only).
+3. When adding a new numbered Main notebook: extend this file + `docs/STRUCTURE.md` / `docs/DIRECTORY_STRUCTURE.md` + `run_pipeline.py` (if executed headless) in the same change.
 4. **Run log:** notebooks that call `start_run_log(...)` should keep the notebook filename as the log stem under `outputs/reports/`.

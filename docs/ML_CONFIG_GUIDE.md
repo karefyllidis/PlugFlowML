@@ -173,7 +173,8 @@ Loads the latest `data/processed/features_targets_*.pkl`. If Main_3 used **`EXPO
 - Reports tuned ML inference speed for exit-plane and full-profile prediction; set `CANTERA_EXIT_SECONDS_PER_RUN` / `CANTERA_FULL_PROFILE_SECONDS_PER_RUN` to print speedup factors against measured Cantera timings
 - Exports tuned exit and full-profile artifacts to `models/tree_model_tuned_exit_full.joblib` (overwritten each run)
 - Adds axial diagnostics and regime diagnostics:
-  - `full_profile_cantera_vs_ml_axial_evolution.png` (Cantera vs ML axial overlays at selected `x/L`)
+  - `full_profile_cantera_vs_ml_axial_evolution.png` (Main_5 full-profile trees: Cantera vs ML along `x/L` at selected stations)
+  - `full_profile_cantera_vs_nn_axial_evolution.png` (Main_7 §9b: Cantera / test vs PyTorch NN; preferred state columns plus all `species_cols` present in `target_cols`, same `x/L` grid)
   - `exit_error_vs_conditions_boxplots.png` (error vs inlet-condition bins)
   - `exit_error_tp_map.png` (temperature-pressure error map)
 
@@ -243,11 +244,11 @@ python src/ml/model_training.py configs/ml/ml_training_config.json
 - `data_file`: Path to training data CSV (supports glob patterns)
 - `output_dir`: Directory to save trained models
 - `target_types`: List of target types (`primary`, `secondary`, `species`, `all`)
-- `models`: List of models to train (`neural_network` is a PyTorch placeholder in `src/ml/model_training.py` — the production NN path is the Jupyter notebook `notebooks/Main_6__train_evaluate_SimpleNN_IO.ipynb`. The CLI `all` keyword expands to RF + XGBoost + GB only.)
+- `models`: List of models to train (`neural_network` is a PyTorch placeholder in `src/ml/model_training.py` — production NN training is in `notebooks/Main_6__train_evaluate_SimpleNN_IO.ipynb` (exit-plane) and `notebooks/Main_7_train_evaluate_SimpleNN_full_profile.ipynb` (full axial profile). The CLI `all` keyword expands to RF + XGBoost + GB only.)
 - `test_size`: Fraction of data for testing (0.0-1.0)
 - `random_state`: Random seed for reproducibility
 
-**`neural_network` parameters (consumed only by `notebooks/Main_6__train_evaluate_SimpleNN_IO.ipynb`):**
+**`neural_network` parameters (consumed by `notebooks/Main_6__train_evaluate_SimpleNN_IO.ipynb` and `notebooks/Main_7_train_evaluate_SimpleNN_full_profile.ipynb`):**
 
 - `epochs` (int, default 200): number of Adam epochs over the training set.
 - `batch_size` (int, default 256): mini-batch size for `DataLoader(shuffle=True)`. Capped at `len(train_ds)` if larger.
@@ -255,7 +256,7 @@ python src/ml/model_training.py configs/ml/ml_training_config.json
 - `h1`, `h2`, `h3` (int, defaults 128 / 64 / 32): number of units in hidden layers 1–3 of the multi-output `SimpleNN` MLP.
 - `dropout` (float, default 0.1): probability passed to `nn.Dropout` after each hidden ReLU; off automatically under `model.eval()`.
 
-**`neural_network.tuning` parameters (consumed by Main_6 Section 6b only when `IF_HYPERPARAM_TUNING=True`):**
+**`neural_network.tuning` parameters (consumed by Main_6 / Main_7 Section 6b only when `IF_HYPERPARAM_TUNING=True`):**
 
 - `n_trials` (int, default 30): number of Optuna TPE trials in the study.
 - `epochs_per_trial` (int, default 50): training epochs per Optuna trial; intentionally smaller than the final-model `epochs` to keep the search cheap. Median pruner stops weak trials early.
@@ -264,9 +265,18 @@ python src/ml/model_training.py configs/ml/ml_training_config.json
 
 The tuning search space (`h1 ∈ [32,256] step 32`, `h2 ∈ [16,128] step 16`, `h3 ∈ [8,64] step 8`, `dropout ∈ [0.0,0.3]`, `learning_rate ∈ [1e-4,1e-2]` log, `batch_size ∈ {64,128,256,512}`) is defined in the notebook objective function. The objective maximises validation R² (uniform average across all targets, physical units). The best trial's parameters overwrite the top-level `neural_network.{h1,h2,h3,dropout,learning_rate,batch_size}` values inside the notebook, and the final model is rebuilt before the training loop in Section 8. Requires `pip install optuna`.
 
-**Main_6 production training (Section 8 — not separate JSON keys):** The notebook applies **`ReduceLROnPlateau`** stepped on the same periodic **test** R² checkpoints used for the convergence figure, **early stopping** if test R² fails to improve across several consecutive checkpoints, then **reloads the best test-R² weights** before Section 9 metrics and Section 11 export. The saved `models/simple_nn_exit_manifest.json` records `training.early_stopped`, `training.best_test_r2_checkpoint`, `training.best_test_r2_epoch`, grouped R² in `metrics.{train_r2_state,test_r2_state,train_r2_species,test_r2_species}`, and architecture widths **`h1`–`h3` only** (three hidden layers).
+**Main_6 / Main_7 production training (Section 8 — not separate JSON keys):** Both notebooks apply **`ReduceLROnPlateau`** stepped on the same periodic **test** R² checkpoints used for the convergence figure, **early stopping** if test R² fails to improve across several consecutive checkpoints, then **reload the best test-R² weights** before Section 9 metrics and Section 11 export. Main_6 saves `models/simple_nn_exit_manifest.json`; Main_7 saves `models/simple_nn_full_profile_manifest.json` with the same training keys plus **`workflow`**, **`run_level_split`**, **`feature_cols`** (includes `relative_position`), **`run_cols`**, row/run counts, and (like Main_6) **`chemistry_groups`**, **`metrics_by_group`**, **`auxiliary_exports`** pointing at per-target and group metric CSVs.
 
-Any missing key falls back to the inline notebook defaults shown above. Edit the JSON and re-run Main_6 Section 3 — no kernel restart needed.
+**Main_6 auxiliary exports (not separate JSON keys):** When `IF_MODEL_EXPORT=True`, Main_6 also writes `models/simple_nn_exit_per_target_metrics.csv` and `models/simple_nn_exit_group_metrics.csv`, and the manifest lists their absolute paths under **`auxiliary_exports`** together with **`chemistry_groups`** and **`metrics_by_group`** (uniform-average test R² / MAE / RMSE per chemistry role and for state/thermo).
+
+**Main_7 auxiliary exports:** Same CSV + manifest pattern with stem **`simple_nn_full_profile_*`**. Section **§9** may write the two CSVs when `IF_MODEL_EXPORT`; **§11** overwrites them when exporting the final **`simple_nn_full_profile_manifest.json`**.
+
+**Main_6 / Main_7 notebook-only controls (not in `ml_training_config.json`):**
+
+- **Jupyter live progress (Section 2):** `LIVE_CONVERGENCE_PLOT` refreshes one in-cell convergence figure during §8 (IPython only). **`LIVE_TRAIN_PLOT_EVERY`** throttles redraws (default `2`); train/test metrics and checkpoints are still computed every cycle. Optuna §6b: **`LIVE_OPTUNA_PLOTS`** and **`LIVE_OPTUNA_PLOT_EVERY`** for a live optimisation-history + parallel-coordinates view; a final refresh runs after `study.optimize` so the last state is shown even when throttling skips the last trial. Set the `LIVE_*` flags **`False`** for `nbconvert` / CI or to minimise display overhead. **Main_7** also defines **`USE_CUDA_AMP`**, **`USE_TORCH_COMPILE`**, and **`OPTUNA_N_JOBS`** (keep **`OPTUNA_N_JOBS=1`** on a single GPU when tuning).
+- **Main_7 — row cap, axial parity, overfitting notes:** Section 2 **`FULL_PROFILE_MAX_ROWS`** optionally caps total train+test rows after the run-level split (`None` = all rows). Section **§9b** — **`AXIAL_PROFILE_N_RUNS`**, **`AXIAL_PROFILE_RUNS_RANDOM`**, overlays **state + species/lumps** along **`x/L`**. Section **§10** — **`PARITY_HEXBIN_MIN_POINTS`** selects **hexbin** (shared log colorbar) vs **scatter** when `n_test` is small. The notebook overview mirrors Main_6’s **Overfitting controls used here** section (adapted for run-level split + full-profile rows).
+
+Any missing key falls back to the inline notebook defaults shown above. Edit the JSON and re-run Section 3 in Main_6 or Main_7 — no kernel restart needed.
 
 ### 3. ML Inference
 

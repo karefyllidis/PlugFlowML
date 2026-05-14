@@ -27,7 +27,8 @@ HydrAI/
 │   ├── Main_3_data_exploration_feature_engineering.ipynb  # Step 3: Data exploration and feature engineering
 │   ├── Main_4_train_and_evaluate_tree_models_IO.ipynb
 │   ├── Main_5_train_evaluate_tune_tree_model_evolution.ipynb
-│   └── Main_6__train_evaluate_SimpleNN_IO.ipynb
+│   ├── Main_6__train_evaluate_SimpleNN_IO.ipynb
+│   └── Main_7_train_evaluate_SimpleNN_full_profile.ipynb
 ├── src/                                 # Source code
 │   ├── cantera/                         # Cantera simulation
 │   │   └── pfr_simulator.py            # Main PFR simulation
@@ -60,9 +61,16 @@ HydrAI/
 ├── models/                              # Trained ML models (generated; overwrite on each run)
 │   ├── tree_models_exit.joblib            # Main_4 baseline tree bundle
 │   ├── tree_model_tuned_exit_full.joblib  # Main_5 tuned exit + optional full-profile
-│   ├── simple_nn_exit_state_dict.pt       # Main_6 PyTorch state_dict
+│   ├── simple_nn_exit_state_dict.pt       # Main_6 PyTorch state_dict (exit-plane)
 │   ├── simple_nn_exit_scalers.joblib      # Main_6 X/y scalers + label encoder
-│   └── simple_nn_exit_manifest.json       # Main_6 manifest (h1–h3, training incl. best-ckpt, metrics, tuning)
+│   ├── simple_nn_exit_manifest.json       # Main_6 manifest (h1–h3, training incl. best-ckpt, metrics, tuning, chemistry_groups)
+│   ├── simple_nn_exit_per_target_metrics.csv   # Main_6 per-target test metrics
+│   ├── simple_nn_exit_group_metrics.csv        # Main_6 metrics by state vs chemistry group
+│   ├── simple_nn_full_profile_state_dict.pt   # Main_7 full-profile PyTorch state_dict
+│   ├── simple_nn_full_profile_scalers.joblib  # Main_7 X/y scalers + label encoder
+│   ├── simple_nn_full_profile_manifest.json   # Main_7 manifest (feature_cols incl. relative_position; run_level_split)
+│   ├── simple_nn_full_profile_per_target_metrics.csv
+│   └── simple_nn_full_profile_group_metrics.csv
 ├── outputs/                              # Simulation outputs
 │   ├── results/                         # CSV and summary files
 │   ├── figures/                         # Generated plots (per-notebook subdirs)
@@ -96,7 +104,10 @@ HydrAI/
     │   └── run_simulation_ipynb.sh
     └── dev/
         ├── check_complete_runs.py
-        └── show_structure.sh
+        ├── clean_completed_runs.py
+        ├── consolidate_training_data.py
+        ├── monitor_run.sh
+        └── sbatch_safe.sh
 ```
 
 ### Generated / runtime files (not all tracked in git)
@@ -121,7 +132,8 @@ See **Version control** in `README.md` and root `.gitignore` for the authoritati
 | **Step 3 Exploration** | `notebooks/Main_3_data_exploration_feature_engineering.ipynb` | Present | OK |
 | **Step 4 Tree ML** | `notebooks/Main_4_train_and_evaluate_tree_models_IO.ipynb` | Baseline tree evaluation (RF, GB, XGBoost, AdaBoost; exit-plane only, no tuning) | OK |
 | **Step 5 Tuning + PFR Evolution** | `notebooks/Main_5_train_evaluate_tune_tree_model_evolution.ipynb` | One-tree-model `BayesSearchCV` tuning on exit plane; reuses params for full PFR evolution | OK |
-| **Step 6 PyTorch NN** | `notebooks/Main_6__train_evaluate_SimpleNN_IO.ipynb` | PyTorch `SimpleNN` (3 hidden layers); reads `neural_network.*`; optional Optuna (Section 6b); Section 8 LR-on-plateau (test R²), early stopping, best-checkpoint restore | OK |
+| **Step 6 PyTorch NN** | `notebooks/Main_6__train_evaluate_SimpleNN_IO.ipynb` | PyTorch `SimpleNN` (3 hidden layers); reads `neural_network.*`; optional Optuna (Section 6b); Section 8 LR-on-plateau (test R²), early stopping, best-checkpoint restore; optional Jupyter live §8/§6b plots (`LIVE_*`, throttled) | OK |
+| **Step 7 PyTorch full profile** | `notebooks/Main_7_train_evaluate_SimpleNN_full_profile.ipynb` | Same `SimpleNN` + `neural_network.*` as Main_6; full axial rows with `relative_position` in `feature_cols`; run-level split; optional `FULL_PROFILE_MAX_ROWS`; opening **Overfitting controls used here** (Main_6-style; run-level); same live-plot flags + `USE_CUDA_AMP` / `USE_TORCH_COMPILE` / `OPTUNA_N_JOBS`; §9 metric CSVs when `IF_MODEL_EXPORT`; §9b axial overlays (state + species along `x/L`, fixed or random test runs per `AXIAL_PROFILE_RUNS_RANDOM`); §10 4-column parity (shared hexbin colorbar or scatter fallback); exports `simple_nn_full_profile_*` + `outputs/figures/.../full_profile_cantera_vs_nn_axial_evolution.png`, `actual_vs_predicted_scatter_by_target.png`, `residuals_scatter_by_target.png`, etc. | OK |
 | **Database** | `configs/simulation/reactant_database.json` | Present | OK |
 | **Template** | `configs/simulation/config_template.json` | Present | OK |
 | **Dependencies** | `requirements.txt` | Present | OK |
@@ -210,6 +222,7 @@ SIMULATION COMPLETED SUCCESSFULLY!
 | `notebooks/Main_4_train_and_evaluate_tree_models_IO.ipynb` | Step 4: Baseline tree evaluation (exit-plane, no tuning) | OK |
 | `notebooks/Main_5_train_evaluate_tune_tree_model_evolution.ipynb` | Step 5: One-model tuning and full PFR evolution | OK |
 | `notebooks/Main_6__train_evaluate_SimpleNN_IO.ipynb` | Step 6: PyTorch MLP (`SimpleNN`, `h1`–`h3`) with optional Optuna (6b) and production training (8): LR schedule on test R², early stopping, best-checkpoint restore | OK |
+| `notebooks/Main_7_train_evaluate_SimpleNN_full_profile.ipynb` | Step 7: full-profile `SimpleNN`; run-level split; optional Optuna; §9b axial (state+species); §10 parity/residuals; optional row cap for smoke runs; exports `simple_nn_full_profile_*` + figures under `outputs/figures/Main_7_train_evaluate_SimpleNN_full_profile/` | OK |
 | `src/cantera/pfr_simulator.py` | Main simulation code | Working |
 | `configs/simulation/reactant_database.json` | Reactant definitions | Complete |
 | `configs/simulation/config_template.json` | Configuration template | Valid |

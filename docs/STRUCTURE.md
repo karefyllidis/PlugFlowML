@@ -47,9 +47,16 @@ HydrAI/
 ├── models/                       # Trained ML models (generated, git-ignored)
 │   ├── tree_models_exit.joblib            # Main_4 baseline bundle (overwritten each run)
 │   ├── tree_model_tuned_exit_full.joblib  # Main_5 tuned exit + optional full-profile bundle
-│   ├── simple_nn_exit_state_dict.pt       # Main_6 PyTorch state_dict
+│   ├── simple_nn_exit_state_dict.pt       # Main_6 PyTorch state_dict (exit-plane)
 │   ├── simple_nn_exit_scalers.joblib      # Main_6 X/y scalers + label encoder
-│   └── simple_nn_exit_manifest.json       # Main_6 manifest (h1–h3, training incl. best-ckpt / early-stop, metrics, tuning)
+│   ├── simple_nn_exit_manifest.json       # Main_6 manifest (h1–h3, training, grouped metrics, chemistry_groups, metrics_by_group, tuning)
+│   ├── simple_nn_exit_per_target_metrics.csv   # Main_6 per-target test metrics (CSV)
+│   ├── simple_nn_exit_group_metrics.csv        # Main_6 uniform-average metrics by state vs chemistry group (CSV)
+│   ├── simple_nn_full_profile_state_dict.pt   # Main_7 full-profile PyTorch state_dict
+│   ├── simple_nn_full_profile_scalers.joblib  # Main_7 X/y scalers + label encoder
+│   ├── simple_nn_full_profile_manifest.json   # Main_7 manifest (includes feature_cols, run_level_split, groups)
+│   ├── simple_nn_full_profile_per_target_metrics.csv
+│   └── simple_nn_full_profile_group_metrics.csv
 │
 ├── outputs/                      # Simulation outputs
 │   ├── results/                  # CSV results and summaries
@@ -88,8 +95,7 @@ HydrAI/
 │       ├── clean_completed_runs.py       # Archive completed task artifacts
 │       ├── consolidate_training_data.py  # Merge per-task outputs for ML pipeline
 │       ├── monitor_run.sh                # Live cluster run status
-│       ├── sbatch_safe.sh                # CRLF-safe sbatch wrapper
-│       └── show_structure.sh             # Requires `tree`
+│       └── sbatch_safe.sh                # CRLF-safe sbatch wrapper
 │
 ├── temp/                         # Temporary files (auto-generated, git-ignored)
 │   └── .gitkeep                  # Preserves directory structure
@@ -100,7 +106,8 @@ HydrAI/
 │   ├── Main_3_data_exploration_feature_engineering.ipynb  # Step 3: EDA + feature engineering
 │   ├── Main_4_train_and_evaluate_tree_models_IO.ipynb    # Step 4: Baseline tree evaluation (exit-plane)
 │   ├── Main_5_train_evaluate_tune_tree_model_evolution.ipynb  # Step 5: One-model tuning + full PFR evolution
-│   └── Main_6__train_evaluate_SimpleNN_IO.ipynb          # Step 6: PyTorch MLP (3 hidden layers) + optional Optuna; LR plateau, early stop, best-ckpt restore
+│   ├── Main_6__train_evaluate_SimpleNN_IO.ipynb          # Step 6: PyTorch MLP (3 hidden layers) + optional Optuna; §8 LR plateau / early stop / best ckpt; 3-col parity+residuals (all targets); exit exports
+│   └── Main_7_train_evaluate_SimpleNN_full_profile.ipynb # Step 7: full axial rows + relative_position; run-level split; §9b axial (state+species, fixed/random runs); 4-col parity+shared hexbin colorbar; full_profile exports
 │
 ├── assets/                       # Static assets (images for README etc.)
 ├── tests/                        # Test suite
@@ -127,7 +134,7 @@ HydrAI/
 
 ### 4. Notebooks
 - **Location**: All interactive entry points are in **`notebooks/`**
-- **Naming**: Notebooks use **`Main_N_`** prefix for pipeline order through **`Main_6`** (PyTorch MLP baseline after the tree workflows).
+- **Naming**: Notebooks use **`Main_N_`** prefix for pipeline order through **`Main_7`** (exit-plane PyTorch in Main_6; full-profile PyTorch in Main_7).
 
 ### 4b. Scripts & SLURM monitoring
 
@@ -194,10 +201,12 @@ The notebook provides:
 jupyter notebook notebooks/Main_4_train_and_evaluate_tree_models_IO.ipynb
 jupyter notebook notebooks/Main_5_train_evaluate_tune_tree_model_evolution.ipynb
 jupyter notebook notebooks/Main_6__train_evaluate_SimpleNN_IO.ipynb
+jupyter notebook notebooks/Main_7_train_evaluate_SimpleNN_full_profile.ipynb
 ```
 - Main_4 trains baseline trees (RF, Gradient Boosting, XGBoost, AdaBoost) and saves them to `models/tree_models_exit.joblib` (overwritten each run).
 - Main_5 tunes one tree model and, when enabled, also fits the full-profile model; both are bundled into `models/tree_model_tuned_exit_full.joblib`.
-- Main_6 trains a PyTorch `SimpleNN` (optional Optuna on `h1`–`h3`), applies **ReduceLROnPlateau** / **early stopping** / **best test-R² checkpoint restore** in Section 8, and writes `models/simple_nn_exit_state_dict.pt`, `_scalers.joblib`, and `_manifest.json` (overwritten each run).
+- Main_6 trains a PyTorch `SimpleNN` (optional Optuna on `h1`–`h3`), applies **ReduceLROnPlateau** / **early stopping** / **best test-R² checkpoint restore** in Section 8, and writes `models/simple_nn_exit_state_dict.pt`, `_scalers.joblib`, `_manifest.json`, plus **`simple_nn_exit_per_target_metrics.csv`** and **`simple_nn_exit_group_metrics.csv`** when `IF_MODEL_EXPORT` (overwritten each run). Parity and residual figure grids use **three columns** and cover **all state + species** targets. Section 2 can enable **Jupyter-only** live convergence (§8) and live Optuna views (§6b), throttled by `LIVE_*_PLOT_EVERY`; turn off for headless runs.
+- Main_7 trains the same `SimpleNN` class on **all axial rows** with **`relative_position`** in the input vector, uses a **run-level** train/test split (Main_5 §8 pattern), optional Optuna, the same Section 8 training controls as Main_6, optional **`FULL_PROFILE_MAX_ROWS`** subsampling for dev/smoke runs, and exports **`models/simple_nn_full_profile_*`** including the same **CSV + manifest** pattern as Main_6. The opening markdown summarises **overfitting mitigation**. §9b writes **`full_profile_cantera_vs_nn_axial_evolution.png`** (state + species vs `x/L` on selected test runs). §10 parity uses **four columns** and a **shared log color scale** for hexbin when the test row count is large enough; otherwise a scatter fallback (see notebook `PARITY_HEXBIN_MIN_POINTS`).
 - Each notebook also tees its terminal output to `outputs/reports/<NotebookName>.txt` via `src.utils.run_log.start_run_log` (stable path, **overwritten on every run**).
 
 **Alternative (all model types including neural network):**

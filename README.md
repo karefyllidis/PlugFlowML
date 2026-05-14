@@ -95,7 +95,8 @@ pip install -r requirements.txt
    - `Main_3` (EDA + feature engineering)
    - `Main_4_train_and_evaluate_tree_models_IO` (baseline inlet-to-outlet evaluation)
    - `Main_5_train_evaluate_tune_tree_model_evolution` (one-model tuning + full PFR evolution)
-   - `Main_6__train_evaluate_SimpleNN_IO` (PyTorch MLP baseline, inlet-to-outlet only; defaults from `configs/ml/ml_training_config.json` → `neural_network`; optional Optuna in Section 6b; Section 8 uses LR-on-plateau on test R² checkpoints, early stopping, and best-checkpoint restore before export)
+   - `Main_6__train_evaluate_SimpleNN_IO` (PyTorch MLP baseline, inlet→outlet only; `configs/ml/ml_training_config.json` → `neural_network`; optional Optuna §6b; §8 `ReduceLROnPlateau` on test R² checkpoints, early stopping, best-checkpoint restore; **3-column** parity + residual grids for **all state + species**; exports `simple_nn_exit_*` **including** per-target and group metric CSVs when `IF_MODEL_EXPORT`; Section 2 optional **Jupyter live** convergence + Optuna dashboard with **`LIVE_*_PLOT_EVERY`** throttling — turn off for `nbconvert`)
+   - `Main_7_train_evaluate_SimpleNN_full_profile` (PyTorch **full axial** `SimpleNN` with `relative_position` in `feature_cols`; same `neural_network` keys and §8 pattern as Main_6; **run-level** train/test split; opening **Overfitting controls used here** (same outline as Main_6); optional `FULL_PROFILE_MAX_ROWS` for smoke runs; same live-plot flags as Main_6 plus **`USE_CUDA_AMP`**, **`USE_TORCH_COMPILE`**, **`OPTUNA_N_JOBS`**; §9 metrics + §9b **axial overlays** along `x/L` (state + species; **fixed vs random** test runs); §10 **4-column** parity (**shared hexbin** or scatter); exports `simple_nn_full_profile_*` + CSVs + manifest `auxiliary_exports`; figures under `outputs/figures/Main_7_train_evaluate_SimpleNN_full_profile/`)
 4. Local parallel sweep: `python scripts/local/run_main2_local_parallel.py --ntasks 4`
 
 For cluster execution, use `scripts/cluster/` and follow the post-run monitor/verify/consolidate workflow:
@@ -115,7 +116,7 @@ Advanced references:
 ## Repository Structure
 
     HydrAI/
-    ├── notebooks/            # Main_1 → Main_6  ·  PFR → sweep → EDA → baseline trees → tuned trees + evolution → PyTorch NN baseline
+    ├── notebooks/            # Main_1 → Main_7  ·  PFR → sweep → EDA → baseline trees → tuned trees + evolution → PyTorch exit NN → PyTorch full-profile NN
     ├── src/                  # cantera/, ml/, utils/
     ├── configs/              # simulation/, ml/, style/
     ├── scripts/              # cluster/, local/, dev/
@@ -132,7 +133,8 @@ Advanced references:
 - [x] Species lumping for dimensionality reduction (by carbon number & chemistry role); optional lumped export for ML
 - [x] Full axial-profile tuning workflow — `Main_5_train_evaluate_tune_tree_model_evolution.ipynb` tunes one selected tree model on full PFR evolution with `relative_position` as an input
 - [x] PyTorch MLP baseline (inlet→outlet) — `Main_6__train_evaluate_SimpleNN_IO.ipynb`; 3-hidden-layer `SimpleNN`, dropout, optional Optuna TPE (`IF_HYPERPARAM_TUNING`, `neural_network.tuning`), then production training with **LR on stalled test R²**, **early stopping**, **best-checkpoint restore**, train/test convergence, parity, residuals, and a per-target R² bar chart (hatch by state/thermo vs species; reference vlines such as R² = 0 labelled **naive baseline**)
-- [ ] Physics-informed neural surrogate / full-profile PyTorch training
+- [x] PyTorch full axial profile — `Main_7_train_evaluate_SimpleNN_full_profile.ipynb` (same `SimpleNN` + `neural_network.*` as Main_6; run-level split; optional Optuna; axial overlay figures; exports `simple_nn_full_profile_*`)
+- [ ] Physics-informed neural surrogate
 - [ ] Bayesian / gradient-free design optimisation loop
 
 ---

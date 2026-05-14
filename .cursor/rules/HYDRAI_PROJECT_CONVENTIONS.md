@@ -259,9 +259,9 @@ CANTERA_EXIT_SECONDS_PER_RUN = None  # Set to measured value if known
 CANTERA_FULL_PROFILE_SECONDS_PER_RUN = None
 ```
 
-### 4.4 Main_1 through Main_6 architecture map
+### 4.4 Main_1 through Main_7 architecture map
 
-**Reference**: `.cursor/rules/HYDRAI_NOTEBOOK_ARCHITECTURE.mdc` — pipeline order (Mermaid), per-notebook roles, config ownership (`neural_network.*` → **Main_6** only), and **section-by-section maps** for each `Main_*.ipynb`. Update that file whenever you add a new pipeline step or rename major notebook sections.
+**Reference**: `.cursor/rules/HYDRAI_NOTEBOOK_ARCHITECTURE.mdc` — pipeline order (Mermaid), per-notebook roles, config ownership (`neural_network.*` → **Main_6** and **Main_7** PyTorch notebooks only; ignored by Main_4), and **section-by-section maps** for each `Main_*.ipynb`. Update that file whenever you add a new pipeline step or rename major notebook sections.
 
 ---
 
@@ -299,6 +299,7 @@ fig.savefig(FIG_DIR / 'actual_vs_predicted_state_scatter.png', dpi=120, bbox_inc
 - Main_4 figures: No prefix (all are exit-plane)
 - Main_5 exit figures: `exit_` prefix (e.g., `exit_chemistry_group_nmae.png`)
 - Main_5 full-profile figures: `full_` prefix (e.g., `full_state_evolution.png`)
+- Main_6 (PyTorch exit): parity/residual grids under `outputs/figures/Main_6__train_evaluate_SimpleNN_IO/` use `actual_vs_predicted_scatter_by_target.png` and `residuals_scatter_by_target.png` (3-column layout, all state + species targets); convergence and Optuna filenames unchanged.
 
 ### 5.3 Chemistry Group Plots
 
@@ -724,7 +725,8 @@ for _, g in df_data[subset_cols].groupby(run_cols):
 **ML Models** (stable, overwrite-each-run paths — no embedded timestamps):
 - `models/tree_models_exit.joblib` — Main_4 baseline bundle (RF / GB / XGBoost / AdaBoost + scaler, label encoder, splits, config). Payload carries an ISO `run_at` field.
 - `models/tree_model_tuned_exit_full.joblib` — Main_5 bundle: tuned exit-plane model plus, when trained, the full-profile model and scaler.
-- `models/simple_nn_exit_state_dict.pt` + `models/simple_nn_exit_scalers.joblib` + `models/simple_nn_exit_manifest.json` — Main_6 PyTorch artefacts (state dict, X/y scalers + label encoder, JSON manifest with **3-hidden-layer** architecture `h1`–`h3`, training settings including **`early_stopped`**, **`best_test_r2_checkpoint`**, **`best_test_r2_epoch`**, headline + **state/thermo vs species** `metrics`, and a compact `tuning` block when Optuna ran).
+- `models/simple_nn_exit_state_dict.pt` + `models/simple_nn_exit_scalers.joblib` + `models/simple_nn_exit_manifest.json` — Main_6 PyTorch artefacts (state dict, X/y scalers + label encoder, JSON manifest with **3-hidden-layer** architecture `h1`–`h3`, training settings including **`early_stopped`**, **`best_test_r2_checkpoint`**, **`best_test_r2_epoch`**, headline + **state/thermo vs species** `metrics`, **`chemistry_groups`**, **`metrics_by_group`**, **`auxiliary_exports`**, and a compact `tuning` block when Optuna ran). Companion CSVs: **`simple_nn_exit_per_target_metrics.csv`**, **`simple_nn_exit_group_metrics.csv`**.
+- `models/simple_nn_full_profile_state_dict.pt` + `models/simple_nn_full_profile_scalers.joblib` + `models/simple_nn_full_profile_manifest.json` — Main_7 full-profile PyTorch artefacts (same class and training keys as Main_6; manifest adds **`workflow`**, **`run_level_split`**, **`feature_cols`** including **`relative_position`**, **`run_cols`**, row/run counts, **`chemistry_groups`**, **`metrics_by_group`**, **`auxiliary_exports`**). Companion CSVs: **`simple_nn_full_profile_per_target_metrics.csv`**, **`simple_nn_full_profile_group_metrics.csv`**.
 
 Each run overwrites these files. To compare runs, archive them externally (e.g. `models/archive/<date>_<note>/`) before re-running.
 
@@ -739,7 +741,8 @@ outputs/
 │   ├── Main_3_data_exploration_feature_engineering/
 │   ├── Main_4_train_and_evaluate_tree_models_IO/
 │   ├── Main_5_train_evaluate_tune_tree_model_evolution/
-│   └── Main_6__train_evaluate_SimpleNN_IO/
+│   ├── Main_6__train_evaluate_SimpleNN_IO/
+│   └── Main_7_train_evaluate_SimpleNN_full_profile/
 ├── reports/
 │   ├── README.md
 │   ├── Main_N_*.md                # curated per-notebook summaries (tracked)
@@ -752,7 +755,12 @@ models/                                # Root-level directory (git-ignored)
 ├── tree_model_tuned_exit_full.joblib  # Main_5 tuned exit + optional full-profile
 ├── simple_nn_exit_state_dict.pt       # Main_6 PyTorch state_dict
 ├── simple_nn_exit_scalers.joblib      # Main_6 X/y scalers + label encoder
-└── simple_nn_exit_manifest.json       # Main_6 manifest (architecture, training, metrics, tuning)
+├── simple_nn_exit_manifest.json       # Main_6 manifest (architecture, training, metrics, tuning)
+├── simple_nn_full_profile_state_dict.pt   # Main_7 full-profile state_dict
+├── simple_nn_full_profile_scalers.joblib  # Main_7 X/y scalers + label encoder
+├── simple_nn_full_profile_manifest.json   # Main_7 manifest (full_profile workflow, feature_cols, groups)
+├── simple_nn_full_profile_per_target_metrics.csv
+└── simple_nn_full_profile_group_metrics.csv
 ```
 
 All model exports are **overwritten on every notebook run** so disk doesn't accumulate dated artefacts. Archive a snapshot manually (move to `models/archive/<date>_<note>/`) before re-running if you need to keep an old version.
@@ -1179,7 +1187,7 @@ for nb in notebooks:
   - Stripped `fontweight='bold'` from `src/utils/plot_parallel.py`, `src/cantera/pfr_simulator.py` defaults, and notebooks Main_3 / Main_4 / Main_5.
 
 - **v1.4** (2026-05-13): Stable overwrite-on-run exports for reports and models.
-  - Section 10.2 updated: ML model filenames are stable (`tree_models_exit.joblib`, `tree_model_tuned_exit_full.joblib`, `simple_nn_exit_*.{pt,joblib,json}`); no embedded timestamps; each notebook run overwrites prior artefacts unless archived.
+  - Section 10.2 updated: ML model filenames are stable (`tree_models_exit.joblib`, `tree_model_tuned_exit_full.joblib`, `simple_nn_exit_*.{pt,joblib,json}`, `simple_nn_full_profile_*.{pt,joblib,json}`); no embedded timestamps; each notebook run overwrites prior artefacts unless archived.
   - Section 10.3 outputs tree updated for stable model names, Main_6 figures directory, and `outputs/reports/<NotebookName>.txt` run logs.
   - `src.utils.run_log.start_run_log` overwrites the per-notebook `.txt`; speed-report banners shortened in Main_4 / Main_5.
 
