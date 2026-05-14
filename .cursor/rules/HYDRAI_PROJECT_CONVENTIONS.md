@@ -7,7 +7,7 @@ This document captures all agreed-upon conventions, architectural decisions, and
 - [1. General Principles](#1-general-principles)
 - [2. Species Data Handling](#2-species-data-handling)
 - [3. ML Pipeline Architecture](#3-ml-pipeline-architecture)
-- [4. Notebook Organization](#4-notebook-organization)
+- [4. Notebook Organization](#4-notebook-organization) (includes §4.4 architecture map)
 - [5. Plotting Standards](#5-plotting-standards) (includes §5.10 cross-notebook color vocabulary)
 - [6. Unit Conventions](#6-unit-conventions)
 - [7. Performance Metrics](#7-performance-metrics)
@@ -258,6 +258,10 @@ EXPORT_SPECIES_AS = 'lumped_chemistry'  # 'individual', 'lumped_carbon', 'lumped
 CANTERA_EXIT_SECONDS_PER_RUN = None  # Set to measured value if known
 CANTERA_FULL_PROFILE_SECONDS_PER_RUN = None
 ```
+
+### 4.4 Main_1 through Main_6 architecture map
+
+**Reference**: `.cursor/rules/HYDRAI_NOTEBOOK_ARCHITECTURE.mdc` — pipeline order (Mermaid), per-notebook roles, config ownership (`neural_network.*` → **Main_6** only), and **section-by-section maps** for each `Main_*.ipynb`. Update that file whenever you add a new pipeline step or rename major notebook sections.
 
 ---
 
@@ -1188,6 +1192,9 @@ for nb in notebooks:
 
 - **v1.7** (2026-05-14): Palette extension ladder.
   - **§5.10** + **`HYDRAI_NOTEBOOK_PLOT_COLORS.mdc`**: how to add more discrete colours, bar hatches, continuous colormaps, and high-cardinality categories while staying on-style; cross-linked between the two files.
+
+- **v1.8** (2026-05-14): Notebook architecture map.
+  - **§4.4** + **`.cursor/rules/HYDRAI_NOTEBOOK_ARCHITECTURE.mdc`**: Main_1–Main_6 pipeline, artefacts, and in-notebook section maps for agents and contributors.
 
 ---
 

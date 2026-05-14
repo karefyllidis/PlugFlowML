@@ -4,6 +4,7 @@ This directory contains Cursor AI agent rules for the HydrAI project. These rule
 
 ## Files
 
+- **`HYDRAI_NOTEBOOK_ARCHITECTURE.mdc`**: Cursor rule — **Main_1–Main_6** pipeline order, data prerequisites, config ownership, **section maps**, stable artefact names; keep in sync when adding or renaming pipeline notebooks.
 - **`HYDRAI_NOTEBOOK_PLOT_COLORS.mdc`**: Cursor rule — preferred **`k`/`b`/`r`/`m`/`lime`**, **white bars + hatch**; **extension ladder** (extra series, colormaps, many categories); legacy catalogue.
 - **`HYDRAI_PROJECT_CONVENTIONS.md`**: Comprehensive project standards covering:
   - Species data handling (mass fractions, chemistry-based lumping)
