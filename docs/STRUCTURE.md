@@ -49,7 +49,7 @@ HydrAI/
 │   ├── tree_model_tuned_exit_full.joblib  # Main_5 tuned exit + optional full-profile bundle
 │   ├── simple_nn_exit_state_dict.pt       # Main_6 PyTorch state_dict
 │   ├── simple_nn_exit_scalers.joblib      # Main_6 X/y scalers + label encoder
-│   └── simple_nn_exit_manifest.json       # Main_6 architecture/training/metrics/tuning manifest
+│   └── simple_nn_exit_manifest.json       # Main_6 manifest (h1–h3, training incl. best-ckpt / early-stop, metrics, tuning)
 │
 ├── outputs/                      # Simulation outputs
 │   ├── results/                  # CSV results and summaries
@@ -100,7 +100,7 @@ HydrAI/
 │   ├── Main_3_data_exploration_feature_engineering.ipynb  # Step 3: EDA + feature engineering
 │   ├── Main_4_train_and_evaluate_tree_models_IO.ipynb    # Step 4: Baseline tree evaluation (exit-plane)
 │   ├── Main_5_train_evaluate_tune_tree_model_evolution.ipynb  # Step 5: One-model tuning + full PFR evolution
-│   └── Main_6__train_evaluate_SimpleNN_IO.ipynb          # Step 6: PyTorch MLP baseline (inlet→outlet) + optional Optuna TPE
+│   └── Main_6__train_evaluate_SimpleNN_IO.ipynb          # Step 6: PyTorch MLP (3 hidden layers) + optional Optuna; LR plateau, early stop, best-ckpt restore
 │
 ├── assets/                       # Static assets (images for README etc.)
 ├── tests/                        # Test suite
@@ -197,7 +197,7 @@ jupyter notebook notebooks/Main_6__train_evaluate_SimpleNN_IO.ipynb
 ```
 - Main_4 trains baseline trees (RF, Gradient Boosting, XGBoost, AdaBoost) and saves them to `models/tree_models_exit.joblib` (overwritten each run).
 - Main_5 tunes one tree model and, when enabled, also fits the full-profile model; both are bundled into `models/tree_model_tuned_exit_full.joblib`.
-- Main_6 trains a PyTorch MLP (optionally tuned via Optuna) and writes `models/simple_nn_exit_state_dict.pt`, `_scalers.joblib`, and `_manifest.json` (also overwritten each run).
+- Main_6 trains a PyTorch `SimpleNN` (optional Optuna on `h1`–`h3`), applies **ReduceLROnPlateau** / **early stopping** / **best test-R² checkpoint restore** in Section 8, and writes `models/simple_nn_exit_state_dict.pt`, `_scalers.joblib`, and `_manifest.json` (overwritten each run).
 - Each notebook also tees its terminal output to `outputs/reports/<NotebookName>.txt` via `src.utils.run_log.start_run_log` (stable path, **overwritten on every run**).
 
 **Alternative (all model types including neural network):**

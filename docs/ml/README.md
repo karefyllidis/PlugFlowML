@@ -54,7 +54,7 @@ jupyter notebook notebooks/Main_6__train_evaluate_SimpleNN_IO.ipynb
 ```
 Defaults-only PyTorch counterpart of Main_4 on the same exit-plane data. Inputs are restricted to inlet / run-design columns (no axial coordinates); architecture is a 3-hidden-layer ReLU MLP (defaults `128 → 64 → 32`) with `nn.Dropout` between hidden blocks, `nn.MSELoss`, Adam. Reads `test_size`, `random_state`, and `neural_network.{epochs, batch_size, learning_rate, h1, h2, h3, dropout}` from `configs/ml/ml_training_config.json` (Section 3 of the notebook). Plots train + test convergence (MSE and R² vs epoch), polished parity scatter with ±5% band and density colouring, residuals vs actual with ±2σ band, and a per-target R² bar chart. Optional architecture diagram (matplotlib + standalone TikZ source) and `torchinfo` summary are gated by flags. Exports fixed paths under `models/`: `simple_nn_exit_state_dict.pt`, `simple_nn_exit_scalers.joblib`, and `simple_nn_exit_manifest.json` (each run overwrites the previous files).
 
-*Optional Optuna tuning (Section 6b):* set `IF_HYPERPARAM_TUNING=True` in Section 2 to run an in-notebook TPE search over `h1, h2, h3, dropout, learning_rate, batch_size` on a validation fold carved from the training split (test set held out). The best trial overwrites the notebook's hyperparameters and rebuilds the model before the main training loop. Search budget and validation fraction are configured under `neural_network.tuning` in the config. Requires `pip install optuna`. Adds `optuna_optimization_history.png`, `optuna_param_importance.png`, and a `tuning` block in the exported manifest.
+*Optional Optuna tuning (Section 6b):* set `IF_HYPERPARAM_TUNING=True` in Section 2 to run an in-notebook TPE search over `h1, h2, h3, dropout, learning_rate, batch_size` on a validation fold carved from the training split (test set held out). The best trial overwrites the notebook's hyperparameters and rebuilds the model before the main training loop. Search budget and validation fraction are configured under `neural_network.tuning` in the config. Requires `pip install optuna`. Section 6b-ii (after tuning) writes `optuna_optimization_history.png`, `optuna_parallel_coordinate.png`, `optuna_param_importance.png`, and a `tuning` block in the exported manifest.
 
 **Option B – All model types (command-line):**
 ```bash
@@ -119,7 +119,7 @@ The `generate_training_data.py` script:
 The `model_training.py` script and the current notebooks:
 - `Main_4_train_and_evaluate_tree_models_IO.ipynb` for default-parameter exit-plane tree-model baseline evaluation.
 - `Main_5_train_evaluate_tune_tree_model_evolution.ipynb` for one-tree-model tuning and full PFR evolution.
-- `Main_6__train_evaluate_SimpleNN_IO.ipynb` for the PyTorch MLP exit-plane baseline (configurable via `neural_network.*` in `ml_training_config.json`; flip `IF_HYPERPARAM_TUNING=True` for an optional in-notebook Optuna TPE search controlled by `neural_network.tuning`).
+- `Main_6__train_evaluate_SimpleNN_IO.ipynb` for the PyTorch MLP exit-plane baseline (configurable via `neural_network.*` in `ml_training_config.json`; optional Optuna TPE in Section 6b via `IF_HYPERPARAM_TUNING=True` and `neural_network.tuning`; Section 8 applies LR reduction on stalled test R², early stopping, and restores the best test-R² checkpoint before evaluation/export).
 
 1. **Data Preparation**:
    - Splits data into train/test sets
@@ -127,14 +127,14 @@ The `model_training.py` script and the current notebooks:
    - Handles categorical variables (reactant type)
 
 2. **Model Training**:
-   - Trains multiple algorithms
-   - Uses early stopping for neural networks
-   - Evaluates on test set
+   - `model_training.py` trains tree / boosting models from JSON (no PyTorch path in the CLI).
+   - `Main_6__train_evaluate_SimpleNN_IO.ipynb` trains the PyTorch `SimpleNN` baseline with optional Optuna tuning; the main loop uses **`ReduceLROnPlateau`** on test R² checkpoints, **early stopping** when test R² stalls, then **restores the best test-R² checkpoint** before evaluation and export.
+   - Notebooks evaluate on a held-out test split after training.
 
 3. **Model Saving**:
    - Saves trained models
    - Saves scalers for preprocessing
-   - Saves training metadata and metrics
+   - Saves training metadata and metrics (Main_6 also writes `simple_nn_exit_manifest.json` with architecture, grouped R², tuning block when used, and training-run fields such as `early_stopped` / best-checkpoint test R²)
 
 ### ML Inference
 

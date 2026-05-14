@@ -2,7 +2,7 @@
 
 Steam cracking simulations are accurate but slow: one detailed chemistry solve can take seconds to minutes, which makes rapid reactor screening difficult. HydrAI addresses this with a physics-grounded machine-learning surrogate trained on high-fidelity plug-flow reactor data. The result is millisecond-scale inference for design iteration while keeping chemistry-aware behavior anchored to simulation data.
 
-**Measured on held-out test data from a large n-hexane dataset, mean test R² is ~0.97-0.99 across thermodynamic state variables and species concentrations.**
+**On simple single-target or narrow-target surrogates, mean test R² can reach ~0.97–0.99 on selected state/thermo scalars; the multi-output exit-plane models in this repo also include chemistry-lump species, which lowers the uniform eighteen-target average (see Results below).**
 
 [![Python](https://img.shields.io/badge/Python-3.8%2B-blue?logo=python&logoColor=white)](https://www.python.org/)
 [![Cantera](https://img.shields.io/badge/Cantera-3.2.0%2B-green)](https://cantera.org/)
@@ -38,7 +38,7 @@ HydrAI provides a reproducible workflow that pairs detailed simulation with mach
 ## Results
 
 - Inference latency shifts from **seconds-minutes** for full chemistry solves to **milliseconds** for surrogate predictions.
-- Representative held-out accuracy on a large n-hexane dataset is mean test **R² ~ 0.97-0.99** across thermodynamic state variables and species concentrations.
+- Representative held-out accuracy depends on **which outputs you score together**: several **state/thermo** targets (the nine `primary_targets` columns in the training notebooks, including velocity and transport-related quantities) reach **very high R²** on a held-out split, while **lumped species** (`Y_lump_chem_*`) are harder; the **uniform mean over all eighteen exit targets** is typically **~0.5–0.65** for the default tree and tuned PyTorch baselines in the table below.
 - One surrogate can be trained across chemically distinct feedstocks rather than only interpolating within a single feed.
 
 ![Representative axial evolution](assets/axial_evolution.png)
@@ -59,10 +59,14 @@ Held-out test R² on the same exit-plane split (n-hexane dataset, 36,745 train /
 
 Per-target headline (test R²): `pressure_Pa` ≈ 0.98 (NN, GBR, XGB all tied), `density_kgm3` ≈ 0.78–0.79, `temperature_K` ≈ 0.59–0.60. Species/lumped targets dominate the mid-band (R² ≈ 0.45–0.73) and are what drives the uniform average down.
 
+**State/thermo vs species (exit-plane):** The eighteen outputs are **nine** **state/thermo** columns from `primary_targets` in the training notebooks (temperature, pressure, velocity, density, mixture weight, `cp`/`cv`, enthalpy, thermal conductivity) and **nine** `Y_lump_chem_*` mass fractions. Uniform-average R² is almost always **higher on the nine state/thermo columns** than on the nine species lumps; the headline eighteen-target mean sits between the two. After you run `Main_6__train_evaluate_SimpleNN_IO.ipynb`, the export manifest `models/simple_nn_exit_manifest.json` includes `metrics.test_r2_state` and `metrics.test_r2_species` (plus train-side counterparts) so you can quote the split for your exact run. `Main_4_train_and_evaluate_tree_models_IO.ipynb` prints a full per-target test R² pivot for each tree family.
+
+**Does full axial / PFR-evolution training improve the exit-plane numbers?** In `Main_5_train_evaluate_tune_tree_model_evolution.ipynb`, **`TRAIN_FULL_PROFILE`** trains a **second** model on **all axial rows** with `relative_position` as an extra input and a **run-level train/test split** (no leakage along the same reactor profile). That step **does not retrain or retune the exit-only model**; it is a **different prediction task** (entire profile vs outlet row). It can deliver **strong profile-level accuracy** (the notebook reports about **R² ≈ 0.85** uniform average for tuned XGBoost on that task in the reference configuration), but you should **not** compare that scalar directly to exit-plane **~0.6** averages: different rows, different inputs, and different effective difficulty. To improve **exit** accuracy specifically, focus on tuning/features/data for the exit task; use full-profile training when you need **axial trajectories**, not as an automatic boost to exit metrics.
+
 Takeaways:
 - The tuned `SimpleNN` (Main_6) is **~0.01 R² ahead of the best default tree** and has the **smallest train-test gap** (0.03), so it generalises cleanly even though it sees two fewer inputs.
 - Tree baselines are competitive **without** tuning and train in seconds — a strong tabular default for this dataset.
-- A fair tuned-vs-tuned comparison needs `Main_5` (`BayesSearchCV` on XGBoost) run on the exit-plane task; expect parity with the NN at a fraction of the compute. Tuned XGBoost on the full-profile task (`relative_position` as an input) reaches R² ≈ **0.85**, but that's a different problem.
+- A fair tuned-vs-tuned comparison needs `Main_5` (`BayesSearchCV` on XGBoost) run on the exit-plane task; expect parity with the NN at a fraction of the compute. Tuned XGBoost on the full-profile task (`relative_position` as an input) reaches R² ≈ **0.85**, but that is a **different objective** than the exit-plane eighteen-target average in the table above.
 
 ### Why It Matters
 
@@ -91,7 +95,7 @@ pip install -r requirements.txt
    - `Main_3` (EDA + feature engineering)
    - `Main_4_train_and_evaluate_tree_models_IO` (baseline inlet-to-outlet evaluation)
    - `Main_5_train_evaluate_tune_tree_model_evolution` (one-model tuning + full PFR evolution)
-   - `Main_6__train_evaluate_SimpleNN_IO` (PyTorch MLP baseline, inlet-to-outlet only; defaults from `configs/ml/ml_training_config.json` → `neural_network`; flip `IF_HYPERPARAM_TUNING=True` for an in-notebook Optuna TPE search)
+   - `Main_6__train_evaluate_SimpleNN_IO` (PyTorch MLP baseline, inlet-to-outlet only; defaults from `configs/ml/ml_training_config.json` → `neural_network`; optional Optuna in Section 6b; Section 8 uses LR-on-plateau on test R² checkpoints, early stopping, and best-checkpoint restore before export)
 4. Local parallel sweep: `python scripts/local/run_main2_local_parallel.py --ntasks 4`
 
 For cluster execution, use `scripts/cluster/` and follow the post-run monitor/verify/consolidate workflow:
@@ -127,7 +131,7 @@ Advanced references:
 - [x] Multi-output tree surrogates, baseline comparison, and one-model hyperparameter tuning notebook
 - [x] Species lumping for dimensionality reduction (by carbon number & chemistry role); optional lumped export for ML
 - [x] Full axial-profile tuning workflow — `Main_5_train_evaluate_tune_tree_model_evolution.ipynb` tunes one selected tree model on full PFR evolution with `relative_position` as an input
-- [x] PyTorch MLP baseline (inlet→outlet) — `Main_6__train_evaluate_SimpleNN_IO.ipynb`; multi-output regression with dropout, train/test convergence plots, parity, residuals, per-target R² bar chart, and optional Optuna TPE hyperparameter search (`IF_HYPERPARAM_TUNING` flag, search space in `neural_network.tuning`)
+- [x] PyTorch MLP baseline (inlet→outlet) — `Main_6__train_evaluate_SimpleNN_IO.ipynb`; 3-hidden-layer `SimpleNN`, dropout, optional Optuna TPE (`IF_HYPERPARAM_TUNING`, `neural_network.tuning`), then production training with **LR on stalled test R²**, **early stopping**, **best-checkpoint restore**, train/test convergence, parity, residuals, and a per-target R² bar chart (hatch by state/thermo vs species; reference vlines such as R² = 0 labelled **naive baseline**)
 - [ ] Physics-informed neural surrogate / full-profile PyTorch training
 - [ ] Bayesian / gradient-free design optimisation loop
 

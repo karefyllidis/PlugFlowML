@@ -1,0 +1,52 @@
+---
+description: HydrAI plot colours — preferred k/b/r/m/lime palette + white bar hatches
+globs: notebooks/**/*.ipynb,src/utils/plot_*.py,src/utils/plot_style.py
+alwaysApply: false
+---
+
+# HydrAI notebook plot colours
+
+When adding or changing figures in `notebooks/` or `src/utils/plot_*.py`, **prefer the owner palette below**, then align with the legacy catalog where older notebooks still differ.
+
+## Preferred palette (new figures)
+
+- **Line / marker / scatter accents** (matplotlib letter codes): **`k`** (black), **`b`** (blue), **`r`** (red), **`m`** (magenta). Use **`lime`** for a bright guide or threshold line when you need a fifth accent (e.g. strong performance cutoff).
+- **Bar charts**: **`facecolor='white'`** as the default fill. Use **hatch `'///'`** for textured / second series or family distinction; use hatch **`''`** (empty) for a plain white series so the two read side‑by‑side. Keep a **visible `edgecolor`** (e.g. `'0.35'` grey or **`#1f77b4`** tab blue) so white bars and hatch read on light axes (`facecolor='0.94'` on the axis is fine).
+- **Train vs test on the same axes**: keep **`b`** = train, **`r`** = test (already Main_6).
+
+## Extending the palette (more series or colours — stay on-style)
+
+When **`k`, `b`, `r`, `m`, `lime`** are not enough, add in this order so new work still “reads” as HydrAI:
+
+1. **Extra line / scatter series**: **`c`** (cyan), then **`tab:` colours or JSON hexes** — prefer `configs/style/figure_aesthetics.json` keys in order **`secondary`** `#ff7f0e`, **`tertiary`** `#2ca02c`, **`quinary`** `#9467bd` before inventing new hexes. Use **`y` / `gold`** only sparingly (weak contrast on white).
+2. **Supporting geometry** (bands, secondary outlines, de-emphasised curves): **greyscale strings** `0.15` … `0.85` — keep saturated **`k/b/r/m`** for semantics the reader must track.
+3. **More bar categories (still white-first)**: keep **`facecolor='white'`**; distinguish with **different `hatch`** (`''`, `'///'`, `'...'`, `'xxx'`, `'||'`, `'--'`) and, if needed, **`edgecolor`** (`0.35`, `#1f77b4`, thin **`k`**). Prefer hatch over coloured fills. Slightly lift axis **`ax.set_facecolor('0.94')`** if white-on-white is an issue.
+4. **Continuous fields** (heatmaps, surfaces, colour-by): reuse project maps — **`Blues`** + log norm for density; **`magma`** / **`inferno`** for generic magnitude; **`coolwarm`** (or `RdBu_r`) for diverging signed error. **One colormap per shared scale**; always a **labelled colorbar**. Do not use **`jet`** / rainbow for scientific quantities.
+5. **Many discrete classes** (>6): prefer **small multiples** or **hatch variants** over rainbow bars; if fill colour is unavoidable, use **`tab20`** or **`Set2`** with a legend and neutral figure/axis faces.
+6. **After the pattern stabilises**: add one row to this file (and a line in `HYDRAI_PROJECT_CONVENTIONS.md` §5.10) so the next plot reuses it.
+
+## Canonical configuration
+
+- **Main_1 PFR profiles**: colours only from `configs/style/figure_aesthetics.json` via `get_profile_style` / `apply_style` — do not override profile line colours in the notebook.
+- **Global matplotlib**: `setup_matplotlib()` (`src/utils/plot_style.py`) for black text, grey grid, white figure face.
+
+## Legacy / existing notebook roles (do not churn without reason)
+
+| Role | Typical choice | Notes |
+|------|----------------|--------|
+| Parity cloud | `c='b'` | Matches preferred **b** |
+| y = x | `'r-'` | Matches preferred **r** |
+| NMAE guides 5 / 10 / 20 % | `g`, `b`, `r` dashed | **g** acceptable; could move to **m**/**k** if redesigning for stricter k/b/r/m/lime set |
+| Main_4/5 group bars | `gray` / `slateblue` | Legacy; new bar work → **white + hatch** pattern above |
+| Optuna importance | white + `#1f77b4` + `///` | Already matches **white + texture** |
+| Per-target R² (Main_6) | white + edge + `''` / `'///'` | Already matches preferred bar style |
+| Parallel coords objective | `coolwarm` | Continuous colormap; optional to keep |
+| Main_3 EDA | steelblue / coral / darkorange | EDA-only accents |
+
+## Do / don’t
+
+- **Do** use **k, b, r, m, lime** and **white bars + `///`** before introducing unrelated named colours on new plots.
+- **Do** keep train=blue, test=red when both curves share an axis.
+- **Don’t** add marker shapes outside §5.8 of `HYDRAI_PROJECT_CONVENTIONS.md`.
+
+Full prose and paths: **`HYDRAI_PROJECT_CONVENTIONS.md` §5.10**.

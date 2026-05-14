@@ -4,6 +4,7 @@ This directory contains Cursor AI agent rules for the HydrAI project. These rule
 
 ## Files
 
+- **`HYDRAI_NOTEBOOK_PLOT_COLORS.mdc`**: Cursor rule — preferred **`k`/`b`/`r`/`m`/`lime`**, **white bars + hatch**; **extension ladder** (extra series, colormaps, many categories); legacy catalogue.
 - **`HYDRAI_PROJECT_CONVENTIONS.md`**: Comprehensive project standards covering:
   - Species data handling (mass fractions, chemistry-based lumping)
   - ML pipeline architecture (Main_3, Main_4, Main_5 workflows)
@@ -49,4 +50,4 @@ For detailed project documentation, see:
 ---
 
 **Created**: 2026-05-08  
-**Last Updated**: 2026-05-08
+**Last Updated**: 2026-05-14

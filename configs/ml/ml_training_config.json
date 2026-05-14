@@ -7,8 +7,8 @@
   "test_size": 0.2,
   "random_state": 42,
   "neural_network": {
-    "_comment": "Used by notebooks/Main_6__train_evaluate_SimpleNN_IO.ipynb (defaults match notebook fallbacks if a key is omitted).",
-    "epochs": 200,
+    "_comment": "Used by notebooks/Main_6__train_evaluate_SimpleNN_IO.ipynb (defaults match notebook fallbacks if a key is omitted). Keys h1–h3 are three hidden-layer widths.",
+    "epochs": 400,
     "batch_size": 256,
     "learning_rate": 0.001,
     "h1": 128,

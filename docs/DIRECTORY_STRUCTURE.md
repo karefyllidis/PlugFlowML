@@ -62,7 +62,7 @@ HydrAI/
 │   ├── tree_model_tuned_exit_full.joblib  # Main_5 tuned exit + optional full-profile
 │   ├── simple_nn_exit_state_dict.pt       # Main_6 PyTorch state_dict
 │   ├── simple_nn_exit_scalers.joblib      # Main_6 X/y scalers + label encoder
-│   └── simple_nn_exit_manifest.json       # Main_6 manifest (arch, training, metrics, tuning)
+│   └── simple_nn_exit_manifest.json       # Main_6 manifest (h1–h3, training incl. best-ckpt, metrics, tuning)
 ├── outputs/                              # Simulation outputs
 │   ├── results/                         # CSV and summary files
 │   ├── figures/                         # Generated plots (per-notebook subdirs)
@@ -121,7 +121,7 @@ See **Version control** in `README.md` and root `.gitignore` for the authoritati
 | **Step 3 Exploration** | `notebooks/Main_3_data_exploration_feature_engineering.ipynb` | Present | OK |
 | **Step 4 Tree ML** | `notebooks/Main_4_train_and_evaluate_tree_models_IO.ipynb` | Baseline tree evaluation (RF, GB, XGBoost, AdaBoost; exit-plane only, no tuning) | OK |
 | **Step 5 Tuning + PFR Evolution** | `notebooks/Main_5_train_evaluate_tune_tree_model_evolution.ipynb` | One-tree-model `BayesSearchCV` tuning on exit plane; reuses params for full PFR evolution | OK |
-| **Step 6 PyTorch NN** | `notebooks/Main_6__train_evaluate_SimpleNN_IO.ipynb` | PyTorch MLP baseline (inlet→outlet); reads `neural_network.*` from `ml_training_config.json`; optional Optuna TPE search via `IF_HYPERPARAM_TUNING` flag (`neural_network.tuning` config block) | OK |
+| **Step 6 PyTorch NN** | `notebooks/Main_6__train_evaluate_SimpleNN_IO.ipynb` | PyTorch `SimpleNN` (3 hidden layers); reads `neural_network.*`; optional Optuna (Section 6b); Section 8 LR-on-plateau (test R²), early stopping, best-checkpoint restore | OK |
 | **Database** | `configs/simulation/reactant_database.json` | Present | OK |
 | **Template** | `configs/simulation/config_template.json` | Present | OK |
 | **Dependencies** | `requirements.txt` | Present | OK |
@@ -209,7 +209,7 @@ SIMULATION COMPLETED SUCCESSFULLY!
 | `notebooks/Main_3_data_exploration_feature_engineering.ipynb` | Step 3: Data exploration and feature engineering (Jupyter notebook) | Working |
 | `notebooks/Main_4_train_and_evaluate_tree_models_IO.ipynb` | Step 4: Baseline tree evaluation (exit-plane, no tuning) | OK |
 | `notebooks/Main_5_train_evaluate_tune_tree_model_evolution.ipynb` | Step 5: One-model tuning and full PFR evolution | OK |
-| `notebooks/Main_6__train_evaluate_SimpleNN_IO.ipynb` | Step 6: PyTorch MLP baseline (inlet→outlet) with optional Optuna hyperparameter tuning (Section 6b) | OK |
+| `notebooks/Main_6__train_evaluate_SimpleNN_IO.ipynb` | Step 6: PyTorch MLP (`SimpleNN`, `h1`–`h3`) with optional Optuna (6b) and production training (8): LR schedule on test R², early stopping, best-checkpoint restore | OK |
 | `src/cantera/pfr_simulator.py` | Main simulation code | Working |
 | `configs/simulation/reactant_database.json` | Reactant definitions | Complete |
 | `configs/simulation/config_template.json` | Configuration template | Valid |

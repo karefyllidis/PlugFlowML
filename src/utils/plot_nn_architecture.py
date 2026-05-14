@@ -24,6 +24,7 @@ Author: Nikolas Karefyllidis, PhD
 
 from __future__ import annotations
 
+from decimal import Decimal, ROUND_HALF_UP
 from pathlib import Path
 from typing import Iterable, Optional, Sequence, Union
 
@@ -32,6 +33,13 @@ import matplotlib.pyplot as plt
 
 
 __all__ = ["draw_mlp_architecture", "write_tikz_mlp"]
+
+
+def _fmt_dropout_p(dropout_p: float) -> str:
+    """Format dropout probability for figure labels (exactly 4 fractional digits, half-up)."""
+    x = float(dropout_p)
+    d = Decimal(str(x)).quantize(Decimal("0.0001"), rounding=ROUND_HALF_UP)
+    return format(d, "f")
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -85,7 +93,8 @@ def draw_mlp_architecture(
     connection_color, connection_alpha
         Style of the inter-neuron lines.
     title
-        Custom title; default is ``f"SimpleNN architecture  (dropout p = {dropout_p})"``.
+        Custom title; default shows dropout with **four** decimal places
+        (``f"SimpleNN architecture  (dropout p = {_fmt_dropout_p(dropout_p)})"``).
 
     Returns
     -------
@@ -168,9 +177,10 @@ def draw_mlp_architecture(
     # Operation labels below the gap between columns (italic). Long ops are
     # wrapped at " + Dropout" so each label fits within one inter-column gap.
     y_op = -(y_span_max + neuron_dy * 1.6)
+    dp_lbl = _fmt_dropout_p(dropout_p)
     for i, op in enumerate(layer_ops):
         x_mid = (layer_xy[i][0] + layer_xy[i + 1][0]) / 2.0
-        text  = op if "Dropout" not in op else f"{op} (p = {dropout_p})"
+        text  = op if "Dropout" not in op else f"{op} (p = {dp_lbl})"
         text  = text.replace(" + Dropout", "\n+ Dropout")
         ax.text(x_mid, y_op, text, ha="center", va="top",
                 fontsize=9, color="0.25", style="italic",
@@ -182,7 +192,7 @@ def draw_mlp_architecture(
     ax.set_aspect("equal")
     ax.axis("off")
     ax.set_title(
-        title or f"SimpleNN architecture  (dropout p = {dropout_p})",
+        title or f"SimpleNN architecture  (dropout p = {dp_lbl})",
         fontsize=12, pad=10,
     )
 
@@ -240,6 +250,7 @@ def write_tikz_mlp(
 
     lines = []
     last_id = None
+    dp_lbl = _fmt_dropout_p(dropout_p)
     for i, (size, name) in enumerate(zip(layer_sizes, layer_names)):
         nid  = f"L{i}"
         kind = "io" if (i == 0 or i == len(layer_sizes) - 1) else "hl"
@@ -255,7 +266,7 @@ def write_tikz_mlp(
             op_label = (
                 layer_ops[i - 1]
                 .replace("+", r"$+$")
-                .replace("Dropout", f"Dropout (p={dropout_p})")
+                .replace("Dropout", f"Dropout (p={dp_lbl})")
             )
             lines.append(
                 fr"\node[op, above=2mm of ${last_id}.north east!0.5!{nid}.north west$] "

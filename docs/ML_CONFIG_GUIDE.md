@@ -264,8 +264,9 @@ python src/ml/model_training.py configs/ml/ml_training_config.json
 
 The tuning search space (`h1 ∈ [32,256] step 32`, `h2 ∈ [16,128] step 16`, `h3 ∈ [8,64] step 8`, `dropout ∈ [0.0,0.3]`, `learning_rate ∈ [1e-4,1e-2]` log, `batch_size ∈ {64,128,256,512}`) is defined in the notebook objective function. The objective maximises validation R² (uniform average across all targets, physical units). The best trial's parameters overwrite the top-level `neural_network.{h1,h2,h3,dropout,learning_rate,batch_size}` values inside the notebook, and the final model is rebuilt before the training loop in Section 8. Requires `pip install optuna`.
 
+**Main_6 production training (Section 8 — not separate JSON keys):** The notebook applies **`ReduceLROnPlateau`** stepped on the same periodic **test** R² checkpoints used for the convergence figure, **early stopping** if test R² fails to improve across several consecutive checkpoints, then **reloads the best test-R² weights** before Section 9 metrics and Section 11 export. The saved `models/simple_nn_exit_manifest.json` records `training.early_stopped`, `training.best_test_r2_checkpoint`, `training.best_test_r2_epoch`, grouped R² in `metrics.{train_r2_state,test_r2_state,train_r2_species,test_r2_species}`, and architecture widths **`h1`–`h3` only** (three hidden layers).
+
 Any missing key falls back to the inline notebook defaults shown above. Edit the JSON and re-run Main_6 Section 3 — no kernel restart needed.
-- Model-specific parameters: See individual model sections
 
 ### 3. ML Inference
 

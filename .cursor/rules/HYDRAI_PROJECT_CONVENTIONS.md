@@ -8,7 +8,7 @@ This document captures all agreed-upon conventions, architectural decisions, and
 - [2. Species Data Handling](#2-species-data-handling)
 - [3. ML Pipeline Architecture](#3-ml-pipeline-architecture)
 - [4. Notebook Organization](#4-notebook-organization)
-- [5. Plotting Standards](#5-plotting-standards)
+- [5. Plotting Standards](#5-plotting-standards) (includes §5.10 cross-notebook color vocabulary)
 - [6. Unit Conventions](#6-unit-conventions)
 - [7. Performance Metrics](#7-performance-metrics)
 - [8. Documentation Standards](#8-documentation-standards)
@@ -302,12 +302,13 @@ fig.savefig(FIG_DIR / 'actual_vs_predicted_state_scatter.png', dpi=120, bbox_inc
 
 **Y-axis label**: `'Normalized MAE (%)  [MAE / mean(y_true) × 100]'`
 
-**Horizontal reference lines**:
+**Horizontal reference lines** (match **Main_4 / Main_5** exit charts — thresholds at **5 %, 10 %, 20 %** NMAE):
 ```python
-ax.axhline(y=1.0, color='green', linestyle='--', lw=1.5, alpha=0.7, label='1% NMAE (excellent)')
-ax.axhline(y=5.0, color='orange', linestyle='--', lw=1.5, alpha=0.7, label='5% NMAE (good)')
-ax.axhline(y=10.0, color='red', linestyle='--', lw=1.5, alpha=0.7, label='10% NMAE (acceptable)')
+ax.axhline(5, color='g', linestyle='--', alpha=1, label='NMAE <= 5%: excellent')
+ax.axhline(10, color='b', linestyle='--', alpha=1, label='NMAE <= 10%: good')
+ax.axhline(20, color='r', linestyle='--', alpha=1, label='NMAE > 20%: weak')
 ```
+See §5.10 for the full cross-notebook color catalog.
 
 ### 5.4 State/Thermo/Aero Target Plots
 
@@ -421,6 +422,69 @@ ax.text(i, 1.045, label)
 ```
 
 If a title genuinely needs more visual weight, use a larger `fontsize` instead of bold.
+
+### 5.10 Cross-notebook color vocabulary (catalog + rules)
+
+**Purpose**: Document colours used across `notebooks/Main_*.ipynb` and the **preferred palette for new work**. Agent summary: `.cursor/rules/HYDRAI_NOTEBOOK_PLOT_COLORS.mdc`.
+
+#### Preferred palette (project default for new figures)
+
+- **Primary line / marker / scatter codes**: **`k`**, **`b`**, **`r`**, **`m`** (matplotlib single-letter: black, blue, red, magenta). Use **`lime`** when a bright threshold or guide line is needed (e.g. strong R² cutoff).
+- **Bar charts**: **`facecolor='white'`** by default; add **texture with `hatch='///'`** (and `hatch=''` on a companion series) to distinguish groups or series; keep a clear **`edgecolor`** so bars read on light axes. This matches Main_6 per-target R² and Optuna importance styling and should be extended to new bar figures rather than ad hoc fills unless semantics require otherwise.
+
+#### Single source for PFR line colors
+
+- **Main_1**: axial profile line colors, widths, and alphas come from `configs/style/figure_aesthetics.json` via `apply_style` / `get_profile_style` / `get_profile_style(..., 'products')` — do not duplicate hexes in the notebook for those curves.
+
+#### Tree evaluation notebooks (Main_4, Main_5)
+
+| Element | Colors |
+|---------|--------|
+| Parity scatter cloud | `c='b'`, `edgecolors='none'`, `alpha≈0.25`, `s≈10` |
+| y = x reference | `'r-'`, `lw` 1.5–2 |
+| Lumped composition bars | actual `color='b'`, predicted `color='red'` |
+| NMAE by chemistry group bars | `color='gray'`, `edgecolor='white'`, `linewidth≈0.5` |
+| State / thermo NMAE bars | `color='slateblue'`, `edgecolor='white'` |
+| NMAE horizontal guides (5 % / 10 % / 20 %) | `color='g'`, `'b'`, `'r'`, dashed, `alpha=1` (labels: excellent / good / weak) |
+
+#### Main_5 axial evolution (extra)
+
+- Cantera / reference trajectory: `'b-'`, `lw≈2`
+- Vertical station markers: `color='k'`, dashed, `alpha≈0.5`
+
+#### Main_3 (EDA)
+
+- Design-space bars: `steelblue` or `darkorange` with `edgecolor='white'`
+- Histograms: `coral` fill, white edges
+- Small pairwise scatter: `c='b'`
+- Parallel sets / ribbons (via `src/utils/plot_parallel.py`): continuous outcome defaults to **`magma`**; quantile strata default to **`turbo`** (distinct from continuous maps).
+
+#### Main_6 (PyTorch)
+
+- Call **`setup_matplotlib()`** once in the setup cell; keep black axis text unless a deliberate exception is needed.
+- Train vs test curves: **blue** train, **red** test (MSE and R² panels).
+- Parity: **`Blues`** hexbin with `LogNorm` where density is shown; fallback scatter `c='b'`; ±5 % band `color='0.85'`.
+- Residuals: zero line `r`; band `0.85`; scatter `b`.
+- Per-target test R²: **white** bar faces, **dark grey** edges (`0.35`), hatch distinguishes families; vertical guides use **lime / blue / red / black** dashed lines at R² = 0.9 / 0.6 / 0.5 / 0 with neutral legend wording.
+- Optuna: optimisation history trials `b`, cumulative best `r`; parameter-importance bars **white** face, **`#1f77b4` edges** and **`///` hatch**; parallel coordinates coloured by objective with **`coolwarm`**, best trial polyline **`0.15`**.
+
+#### Shared library defaults (`src/utils`)
+
+- `plot_parallel.py`: continuous lines default **`magma`**; strata sampling default **`viridis`**; ribbon base **`#4477AA`** when not colouring by a metric.
+- `plot_nn_architecture.py`: connection lines default **`b`** (tab blue); neuron edges **black**; annotation greys **`0.25`–`0.4`**.
+
+#### Rules for new work
+
+1. **Prefer the owner palette** in §5.10 (**`k` / `b` / `r` / `m` / `lime`** for accents; **white bars + `///` hatch** where bars are used) before introducing other named colours on new plots. Legacy Main_4/Main_5 greys and `slateblue` remain until those cells are deliberately refreshed.
+2. **Prefer configuration over literals** for PFR profiles (Main_1) and anywhere `figure_aesthetics.json` already defines a role.
+3. **Keep train=blue, test=red** when both appear on the same axes (matches Main_6 and common ML convention in this repo).
+4. **Use `#1f77b4`** (JSON `colors.primary`) when you need an explicit “tab blue” that must match Optuna / diagram styling.
+5. **Do not** introduce new marker shapes outside §5.8.
+6. Before choosing a new colormap for an existing figure *type*, check this catalog; align with **`magma` / `turbo` / `Blues`+log / `coolwarm`** as appropriate for continuous fields.
+
+#### Extending the palette (more plots / more colours)
+
+If **`k` / `b` / `r` / `m` / `lime`** are exhausted for discrete series: add **`c`**, then hexes from **`figure_aesthetics.json`** in order **`secondary` → `tertiary` → `quinary`** (`#ff7f0e`, `#2ca02c`, `#9467bd`) before ad hoc colours. Use **greyscale `0.15`–`0.85`** for non-semantic support (bands, faint lines). For **extra bar series**, keep **white** faces and vary **`hatch`** (`''`, `'///'`, `'...'`, `'xxx'`, `'||'`, `'--'`) and **`edgecolor`** before coloured fills. For **continuous** data reuse **`Blues`+log**, **`magma`/`inferno`**, or **`coolwarm`**; one scale per axis group; **no `jet`**. For **many classes**, prefer facets or hatch over rainbow fills; if colour is required use **`tab20`** / **`Set2`** + legend. When a new pattern is used twice or more, **record it** in `HYDRAI_NOTEBOOK_PLOT_COLORS.mdc` and here. Full ladder: **`.cursor/rules/HYDRAI_NOTEBOOK_PLOT_COLORS.mdc` → “Extending the palette”**.
 
 ---
 
@@ -656,7 +720,7 @@ for _, g in df_data[subset_cols].groupby(run_cols):
 **ML Models** (stable, overwrite-each-run paths — no embedded timestamps):
 - `models/tree_models_exit.joblib` — Main_4 baseline bundle (RF / GB / XGBoost / AdaBoost + scaler, label encoder, splits, config). Payload carries an ISO `run_at` field.
 - `models/tree_model_tuned_exit_full.joblib` — Main_5 bundle: tuned exit-plane model plus, when trained, the full-profile model and scaler.
-- `models/simple_nn_exit_state_dict.pt` + `models/simple_nn_exit_scalers.joblib` + `models/simple_nn_exit_manifest.json` — Main_6 PyTorch artefacts (state dict, X/y scalers + label encoder, JSON manifest with architecture, training settings, metrics, and a compact `tuning` block).
+- `models/simple_nn_exit_state_dict.pt` + `models/simple_nn_exit_scalers.joblib` + `models/simple_nn_exit_manifest.json` — Main_6 PyTorch artefacts (state dict, X/y scalers + label encoder, JSON manifest with **3-hidden-layer** architecture `h1`–`h3`, training settings including **`early_stopped`**, **`best_test_r2_checkpoint`**, **`best_test_r2_epoch`**, headline + **state/thermo vs species** `metrics`, and a compact `tuning` block when Optuna ran).
 
 Each run overwrites these files. To compare runs, archive them externally (e.g. `models/archive/<date>_<note>/`) before re-running.
 
@@ -1111,10 +1175,19 @@ for nb in notebooks:
   - Stripped `fontweight='bold'` from `src/utils/plot_parallel.py`, `src/cantera/pfr_simulator.py` defaults, and notebooks Main_3 / Main_4 / Main_5.
 
 - **v1.4** (2026-05-13): Stable overwrite-on-run exports for reports and models.
-  - Section 10.2 updated: ML model filenames are now stable (`tree_models_exit.joblib`, `tree_model_tuned_exit_full.joblib`, `simple_nn_exit_*.{pt,joblib,json}`); no embedded timestamps. Each notebook run **overwrites** the previous artefacts; archive manually before re-running if you need history.
-  - Section 10.3 outputs tree updated to show stable model names, the new Main_6 figures directory, and the auto-captured `outputs/reports/<NotebookName>.txt` run logs.
-  - `src.utils.run_log.start_run_log` now opens the per-notebook `.txt` in overwrite mode; calling it again in the same kernel closes the previous tee and starts a fresh file at the same path.
-  - Speed-report printouts in Main_4 / Main_5 shortened from multi-line `===` banners to a single compact line per scope plus an optional Cantera comparison line.
+  - Section 10.2 updated: ML model filenames are stable (`tree_models_exit.joblib`, `tree_model_tuned_exit_full.joblib`, `simple_nn_exit_*.{pt,joblib,json}`); no embedded timestamps; each notebook run overwrites prior artefacts unless archived.
+  - Section 10.3 outputs tree updated for stable model names, Main_6 figures directory, and `outputs/reports/<NotebookName>.txt` run logs.
+  - `src.utils.run_log.start_run_log` overwrites the per-notebook `.txt`; speed-report banners shortened in Main_4 / Main_5.
+
+- **v1.5** (2026-05-14): Cross-notebook plot colour catalog.
+  - New **§5.10** documents colours used in Main_1–Main_6 and shared `src/utils/plot_*.py` helpers; new Cursor rule **`.cursor/rules/HYDRAI_NOTEBOOK_PLOT_COLORS.mdc`** (globs: notebooks + plot helpers).
+  - **§5.3** NMAE reference-line snippet aligned with **Main_4 / Main_5** (green / blue / red dashed at 5 %, 10 %, 20 %).
+
+- **v1.6** (2026-05-14): Preferred plot palette.
+  - **§5.10** + **`HYDRAI_NOTEBOOK_PLOT_COLORS.mdc`**: owner-preferred accents **`k`, `b`, `r`, `m`, `lime`**; bar charts default to **white** fill with **`///` hatch** (and `''` hatch on a companion series) plus visible edges; new bar work should follow this before ad hoc colours.
+
+- **v1.7** (2026-05-14): Palette extension ladder.
+  - **§5.10** + **`HYDRAI_NOTEBOOK_PLOT_COLORS.mdc`**: how to add more discrete colours, bar hatches, continuous colormaps, and high-cardinality categories while staying on-style; cross-linked between the two files.
 
 ---
 
