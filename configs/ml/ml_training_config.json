@@ -17,8 +17,8 @@
     "dropout": 0.1,
     "tuning": {
       "_comment": "Optuna (Section 6b) when IF_HYPERPARAM_TUNING=True. n_trials / epochs_per_trial / validation_fraction / timeout_seconds (null = no cap).",
-      "n_trials": 30,
-      "epochs_per_trial": 50,
+      "n_trials": 15,
+      "epochs_per_trial": 25,
       "validation_fraction": 0.2,
       "timeout_seconds": null
     }

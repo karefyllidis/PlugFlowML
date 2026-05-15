@@ -732,6 +732,7 @@ Each run overwrites these files. To compare runs, archive them externally (e.g. 
 
 **Notebook run logs** (auto-captured terminal output):
 - `outputs/reports/<NotebookName>.txt` — written by `src.utils.run_log.start_run_log(notebook_name)`. Mode is **overwrite** (`'w'`), so the file always reflects the latest execution. Curated `.md` summaries in the same folder are hand-written and tracked in git; the `.txt` logs are git-ignored.
+- `data/logs/<stem>_training_progress.csv` and `data/logs/<stem>_optuna_tuning_plot_data.json` — Main_6 / Main_7 §8 / §6b progress for `scripts/monitor/monitor_nn_training_progress.py` (see `data/logs/README.md`). Not under `outputs/reports/` or `outputs/figures/`.
 
 ### 10.3 Output Organization
 

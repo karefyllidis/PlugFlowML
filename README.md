@@ -95,8 +95,8 @@ pip install -r requirements.txt
    - `Main_3` (EDA + feature engineering)
    - `Main_4_train_and_evaluate_tree_models_IO` (baseline inlet-to-outlet evaluation)
    - `Main_5_train_evaluate_tune_tree_model_evolution` (one-model tuning + full PFR evolution)
-   - `Main_6__train_evaluate_SimpleNN_IO` (PyTorch MLP baseline, inlet→outlet only; `configs/ml/ml_training_config.json` → `neural_network`; optional Optuna §6b on a **validation** fold (test held out); §8 `ReduceLROnPlateau` on **test** R² checkpoints, early stopping, best-checkpoint restore; **3-column** parity + residual grids for **all state + species**; exports `simple_nn_exit_*` **including** per-target and group metric CSVs when `IF_MODEL_EXPORT`; §8 writes `outputs/reports/…_training_progress.csv`; §6b updates `optuna_tuning_plot_data.json` — live plots: `scripts/monitor/monitor_nn_training_progress.py` with `MAIN_6=True`, `OPTUNA=True` during §6b / `OPTUNA=False` during §8, `FOLLOW=True`)
-   - `Main_7_train_evaluate_SimpleNN_full_profile` (PyTorch **full axial** `SimpleNN` with `relative_position` in `feature_cols`; same `neural_network` keys and §8 pattern as Main_6; **run-level** train/test split (§4); Optuna §6b uses **validation rows** carved from train data only — **test runs never seen in tuning**; §8 train vs **test-run** R² is the main overfitting check; optional `FULL_PROFILE_MAX_ROWS` for smoke runs; same progress CSV / monitor as Main_6 (`MAIN_7=True`; switch `OPTUNA` when moving from §6b to §8); plus **`USE_CUDA_AMP`**, **`USE_TORCH_COMPILE`**, **`OPTUNA_N_JOBS`**; §9 metrics + §9b **axial overlays** along `x/L` (state + species; **fixed vs random** test runs); §10 **4-column** parity (**shared hexbin** or scatter); exports `simple_nn_full_profile_*` + CSVs + manifest `auxiliary_exports`; figures under `outputs/figures/Main_7_train_evaluate_SimpleNN_full_profile/`. Details: [docs/ML_CONFIG_GUIDE.md](docs/ML_CONFIG_GUIDE.md) § *Main_7 — data splits and overfitting*.)
+   - `Main_6__train_evaluate_SimpleNN_IO` (PyTorch MLP baseline, inlet→outlet only; `configs/ml/ml_training_config.json` → `neural_network`; optional Optuna §6b on a **validation** fold (test held out); §8 `ReduceLROnPlateau` on **test** R² checkpoints, early stopping, best-checkpoint restore; **3-column** parity + residual grids for **all state + species**; exports `simple_nn_exit_*` **including** per-target and group metric CSVs when `IF_MODEL_EXPORT`; §8 writes `data/logs/…_training_progress.csv`; §6b updates `data/logs/…_optuna_tuning_plot_data.json` — live plots: `scripts/monitor/monitor_nn_training_progress.py` with `MAIN_6=True`, optional `LIVE=True`)
+   - `Main_7_train_evaluate_SimpleNN_full_profile` (PyTorch **full axial** `SimpleNN` with `relative_position` in `feature_cols`; same `neural_network` keys and §8 pattern as Main_6; **run-level** train/test split (§4); Optuna §6b uses **validation rows** carved from train data only — **test runs never seen in tuning**; §8 train vs **test-run** R² is the main overfitting check; optional `FULL_PROFILE_MAX_ROWS` for smoke runs; same `data/logs/` + monitor as Main_6 (`MAIN_7=True`; monitor auto-picks Optuna JSON vs training CSV); plus **`USE_CUDA_AMP`**, **`USE_TORCH_COMPILE`**, **`OPTUNA_N_JOBS`**; §9 metrics + §9b **axial overlays** along `x/L` (state + species; **fixed vs random** test runs); §10 **4-column** parity (**shared hexbin** or scatter); exports `simple_nn_full_profile_*` + CSVs + manifest `auxiliary_exports`; figures under `outputs/figures/Main_7_train_evaluate_SimpleNN_full_profile/`. Details: [docs/ML_CONFIG_GUIDE.md](docs/ML_CONFIG_GUIDE.md) § *Main_7 — data splits and overfitting*.)
 4. Local parallel sweep: `python scripts/local/run_main2_local_parallel.py --ntasks 4`
 
 For cluster execution, use `scripts/cluster/` and follow the post-run monitor/verify/consolidate workflow:
@@ -112,6 +112,7 @@ Advanced references:
 - Figure export flags and species-lumping controls: [docs/SPECIES_LUMPING_MODEL_CARD.md](docs/SPECIES_LUMPING_MODEL_CARD.md)
 - Full ML config keys: [docs/ML_CONFIG_GUIDE.md](docs/ML_CONFIG_GUIDE.md)
 - Repository layout details: [docs/STRUCTURE.md](docs/STRUCTURE.md)
+- Main_6 / Main_7 live training logs: [data/logs/README.md](data/logs/README.md)
 
 ## Repository Structure
 
@@ -120,7 +121,7 @@ Advanced references:
     ├── src/                  # cantera/, ml/, utils/
     ├── configs/              # simulation/, ml/, style/
     ├── scripts/              # cluster/, local/, monitor/, dev/
-    ├── data/                 # training/, processed/ (generated; git-ignored)
+    ├── data/                 # training/, processed/, logs/ (generated; git-ignored)
     ├── models/               # trained artifacts (generated; git-ignored)
     ├── mechanisms/           # local YAML kinetic files (git-ignored)
     └── docs/                 # guides, API reference, structure trees

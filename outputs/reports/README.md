@@ -2,9 +2,10 @@
 
 Use this folder for concise run summaries and important findings from the `Main_*`
 notebooks. Keep generated figures in `outputs/figures/`, trained artifacts in
-`models/`, and human-readable conclusions here.
+`models/`, **Main_6 / Main_7 live-training CSV and Optuna JSON** in
+[`data/logs/`](../../data/logs/README.md), and human-readable conclusions here.
 
-## Two kinds of files
+## Kinds of files here
 
 1. **Curated reports (`*.md`)** - hand-written summaries (tracked in git).
 2. **Run logs (`<NotebookName>.txt`)** - raw terminal output captured automatically
@@ -21,6 +22,9 @@ notebooks. Keep generated figures in `outputs/figures/`, trained artifacts in
 - `Main_3_data_exploration_feature_engineering.md` - target definitions, species lumping choices, and feature/target statistics.
 - `Main_4_train_and_evaluate_tree_models_IO.md` - baseline model comparison and exit-plane conclusions.
 - `Main_5_train_evaluate_tune_tree_model_evolution.md` - tuned model, axial/full-profile findings, speedup, and export notes.
+- `Main_6__train_evaluate_SimpleNN_IO.md` / `Main_7_train_evaluate_SimpleNN_full_profile.md` - PyTorch NN training, Optuna, and export notes (optional).
+
+**Not in this folder:** `*_training_progress.csv` and `*_optuna_tuning_plot_data.json` (see `data/logs/`).
 
 ## Report Template
 

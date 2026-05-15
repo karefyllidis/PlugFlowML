@@ -42,7 +42,8 @@ HydrAI/
 │
 ├── data/                         # Data directory
 │   ├── training/                 # Training data (generated)
-│   └── processed/                # Feature-engineered data (generated)
+│   ├── processed/                # Feature-engineered data (generated)
+│   └── logs/                     # Main_6/7 training progress CSV + Optuna JSON (monitor)
 │
 ├── models/                       # Trained ML models (generated, git-ignored)
 │   ├── tree_models_exit.joblib            # Main_4 baseline bundle (overwritten each run)
@@ -97,6 +98,8 @@ HydrAI/
 │       ├── check_complete_runs.py        # Training sweep summary / manifests
 │       ├── clean_completed_runs.py       # Archive completed task artifacts
 │       ├── consolidate_training_data.py  # Merge per-task outputs for ML pipeline
+│       ├── smoke_main7_cpu_scaling.py    # Main_7 CPU / Optuna thread smoke test
+│       ├── smoke_monitor_log_compat.py   # data/logs + monitor parser check
 │       └── sbatch_safe.sh                # CRLF-safe sbatch wrapper
 │
 ├── temp/                         # Temporary files (auto-generated, git-ignored)
@@ -144,7 +147,7 @@ HydrAI/
 - **Cluster tuning:** current `scripts/cluster/*.sh` defaults are tuned for the University of Cambridge **CSD3** environment. On other SLURM systems, update account/partition/QoS/module settings in `#SBATCH` and `module load` lines.
 - **Progress files:** during chunk runs, each task updates `logs/data_generation_progress_task_<TASK_ID>.json` after every completed simulation. Per-run CSV logs: `temp/conditions_run_task_<TASK_ID>.csv`; completion lines: `temp/completed_runs_task_<TASK_ID>.txt`.
 - **Diagnostics:** `python scripts/dev/check_complete_runs.py` aggregates sweep status from config + `data/training/`. `bash scripts/monitor/monitor_cluster_jobs.sh` shows live status (run from repo root).
-- **NN training progress:** edit flags in `scripts/monitor/monitor_nn_training_progress.py` (`MAIN_6` or `MAIN_7`, `OPTUNA` for §6b vs §8, `FOLLOW`), then `python scripts/monitor/monitor_nn_training_progress.py` from the repo root while Main_6 / Main_7 runs.
+- **NN training progress:** `python scripts/monitor/monitor_nn_training_progress.py` from the repo root while Main_6 / Main_7 runs (`MAIN_6` or `MAIN_7`, optional `LIVE=True`; auto-picks newest file in `data/logs/`).
 - **Data consolidation:** After a parallel run, merge per-task outputs for the ML notebook:
   `python scripts/dev/consolidate_training_data.py`
   This creates `data/training/training_data_complete_<timestamp>.pkl` which `Main_3_data_exploration_feature_engineering.ipynb` auto-detects.
@@ -165,7 +168,7 @@ HydrAI/
 - **New**: `models/` directory for trained ML models
 
 ### 8. Version control (`.gitignore`)
-- **Generated / large**: `data/training/`, `data/processed/`, `data/figures/`, `outputs/results/`, `outputs/figures/`, `models/`, `logs/`, `temp/`, common ML binaries (`*.pkl`, `*.joblib`, `*.pt`, `*.pth`, …), run metadata (`metadata_*.json`), and training CSVs matching `training_data_*.csv`.
+- **Generated / large**: `data/training/`, `data/processed/`, `data/logs/` (NN progress CSV + Optuna JSON), `data/figures/`, `outputs/results/`, `outputs/figures/`, `models/`, `logs/` (SLURM), `temp/`, common ML binaries (`*.pkl`, `*.joblib`, `*.pt`, `*.pth`, …), run metadata (`metadata_*.json`), and training CSVs matching `training_data_*.csv`.
 - **Mechanisms**: `mechanisms/*.yaml` are excluded by default so clones stay small; only `mechanisms/.gitkeep` is tracked. Add YAMLs locally per `README.md`.
 - **Local-only**: `.cursor/`, `.vscode/`, `.env`, `.env.local` (see root `.gitignore`).
 - Summary table for contributors: **Version control** section in `README.md`.
@@ -208,7 +211,7 @@ jupyter notebook notebooks/Main_7_train_evaluate_SimpleNN_full_profile.ipynb
 ```
 - Main_4 trains baseline trees (RF, Gradient Boosting, XGBoost, AdaBoost) and saves them to `models/tree_models_exit.joblib` (overwritten each run).
 - Main_5 tunes one tree model and, when enabled, also fits the full-profile model; both are bundled into `models/tree_model_tuned_exit_full.joblib`.
-- Main_6 trains a PyTorch `SimpleNN` (optional Optuna §6b on a validation fold; test held out), applies **ReduceLROnPlateau** / **early stopping** / **best test-R² checkpoint restore** in Section 8, and writes `models/simple_nn_exit_state_dict.pt`, `_scalers.joblib`, `_manifest.json`, plus **`simple_nn_exit_per_target_metrics.csv`** and **`simple_nn_exit_group_metrics.csv`** when `IF_MODEL_EXPORT` (overwritten each run). Parity and residual figure grids use **three columns** and cover **all state + species** targets. §8 appends a **training progress CSV** under `outputs/reports/`; §6b updates `optuna_tuning_plot_data.json` incrementally. External live plots: `scripts/monitor/monitor_nn_training_progress.py` (`OPTUNA=True` during §6b, `OPTUNA=False` during §8).
+- Main_6 trains a PyTorch `SimpleNN` (optional Optuna §6b on a validation fold; test held out), applies **ReduceLROnPlateau** / **early stopping** / **best test-R² checkpoint restore** in Section 8, and writes `models/simple_nn_exit_state_dict.pt`, `_scalers.joblib`, `_manifest.json`, plus **`simple_nn_exit_per_target_metrics.csv`** and **`simple_nn_exit_group_metrics.csv`** when `IF_MODEL_EXPORT` (overwritten each run). Parity and residual figure grids use **three columns** and cover **all state + species** targets. §8 appends a **training progress CSV** under `data/logs/`; §6b updates `data/logs/…_optuna_tuning_plot_data.json` incrementally. External live plots: `scripts/monitor/monitor_nn_training_progress.py` (auto-picks Optuna JSON vs training CSV in `data/logs/`).
 - Main_7 trains the same `SimpleNN` on **all axial rows** with **`relative_position`**, **run-level** train/test split (§4), Optuna §6b on **validation rows from train data only**, and the same §8 controls on **held-out test runs**. Overfitting during tuning = validation R² across trials; during production training = **train vs test R²** (and gap) at §8 checkpoints. Optional **`FULL_PROFILE_MAX_ROWS`** for smoke runs; exports **`models/simple_nn_full_profile_*`** + CSVs. §9b: **`full_profile_cantera_vs_nn_axial_evolution.png`**. §10: **four columns**, shared hexbin colorbar or scatter (`PARITY_HEXBIN_MIN_POINTS`). Monitor: same script with `MAIN_7=True`; see `docs/ML_CONFIG_GUIDE.md`.
 - Each notebook also tees its terminal output to `outputs/reports/<NotebookName>.txt` via `src.utils.run_log.start_run_log` (stable path, **overwritten on every run**).
 

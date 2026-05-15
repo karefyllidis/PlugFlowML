@@ -57,7 +57,8 @@ HydrAI/
 │   └── .gitkeep                         # Add *.yaml locally per README "Required External Files"
 ├── data/                                # Data directory
 │   ├── training/                        # Training data (generated)
-│   └── raw/                             # Raw simulation data
+│   ├── processed/                       # Feature/target pickles (Main_3)
+│   └── logs/                            # Main_6/7 training progress CSV + Optuna JSON (monitor)
 ├── models/                              # Trained ML models (generated; overwrite on each run)
 │   ├── tree_models_exit.joblib            # Main_4 baseline tree bundle
 │   ├── tree_model_tuned_exit_full.joblib  # Main_5 tuned exit + optional full-profile
@@ -106,11 +107,13 @@ HydrAI/
         ├── check_complete_runs.py
         ├── clean_completed_runs.py
         ├── consolidate_training_data.py
+        ├── smoke_main7_cpu_scaling.py      # CPU thread / Optuna scaling smoke test
+        ├── smoke_monitor_log_compat.py     # data/logs path + monitor parser check
         └── sbatch_safe.sh
 ```
 
 ### Generated / runtime files (not all tracked in git)
-- **`outputs/figures/`**, **`outputs/results/`**, **`data/training/*.pkl`**, **`data/processed/*.pkl`**, **`data/figures/`** (optional EDA exports), **`models/*.joblib`** and other ML binaries (`*.pt`, `*.pth`, …)
+- **`outputs/figures/`**, **`outputs/results/`**, **`data/training/*.pkl`**, **`data/processed/*.pkl`**, **`data/logs/`** (Main_6/7 training progress CSV + Optuna JSON for the external monitor), **`data/figures/`** (optional EDA exports), **`models/*.joblib`** and other ML binaries (`*.pt`, `*.pth`, …)
 - **`logs/`** (including **`logs/data_generation_progress_task_*.json`** — per-task Main_2 progress when using `run_main2_slurm_chunk.py`)
 - **`temp/`** — conditions CSV and heat-flux JSON snippets during data generation
 - **`.cursor/`**, `.env` — local IDE / environment (ignored)
@@ -131,8 +134,8 @@ See **Version control** in `README.md` and root `.gitignore` for the authoritati
 | **Step 3 Exploration** | `notebooks/Main_3_data_exploration_feature_engineering.ipynb` | Present | OK |
 | **Step 4 Tree ML** | `notebooks/Main_4_train_and_evaluate_tree_models_IO.ipynb` | Baseline tree evaluation (RF, GB, XGBoost, AdaBoost; exit-plane only, no tuning) | OK |
 | **Step 5 Tuning + PFR Evolution** | `notebooks/Main_5_train_evaluate_tune_tree_model_evolution.ipynb` | One-tree-model `BayesSearchCV` tuning on exit plane; reuses params for full PFR evolution | OK |
-| **Step 6 PyTorch NN** | `notebooks/Main_6__train_evaluate_SimpleNN_IO.ipynb` | PyTorch `SimpleNN` (3 hidden layers); reads `neural_network.*`; optional Optuna §6b (val fold, test held out); §8 LR-on-plateau (test R²), early stopping, best-checkpoint restore; progress CSV + Optuna JSON; monitor `scripts/monitor/monitor_nn_training_progress.py` (`MAIN_6`, `OPTUNA` §6b vs §8) | OK |
-| **Step 7 PyTorch full profile** | `notebooks/Main_7_train_evaluate_SimpleNN_full_profile.ipynb` | Same `SimpleNN` + `neural_network.*` as Main_6; full axial rows with `relative_position`; **run-level** test holdout (§4); Optuna §6b on **val rows from train** (test blind); §8 train/test R² overfitting diagnostic; optional `FULL_PROFILE_MAX_ROWS`; monitor `scripts/monitor/monitor_nn_training_progress.py` (`MAIN_7`, `OPTUNA` §6b vs §8); `USE_CUDA_AMP` / `USE_TORCH_COMPILE` / `OPTUNA_N_JOBS`; §9b axial overlays; §10 4-column parity; exports `simple_nn_full_profile_*` + figure PNGs. See `docs/ML_CONFIG_GUIDE.md` (Main_7 splits). | OK |
+| **Step 6 PyTorch NN** | `notebooks/Main_6__train_evaluate_SimpleNN_IO.ipynb` | PyTorch `SimpleNN` (3 hidden layers); reads `neural_network.*`; optional Optuna §6b (val fold, test held out); §8 LR-on-plateau (test R²), early stopping, best-checkpoint restore; progress CSV + Optuna JSON; monitor `scripts/monitor/monitor_nn_training_progress.py` (`MAIN_6`, optional `LIVE`) | OK |
+| **Step 7 PyTorch full profile** | `notebooks/Main_7_train_evaluate_SimpleNN_full_profile.ipynb` | Same `SimpleNN` + `neural_network.*` as Main_6; full axial rows with `relative_position`; **run-level** test holdout (§4); Optuna §6b on **val rows from train** (test blind); §8 train/test R² overfitting diagnostic; optional `FULL_PROFILE_MAX_ROWS`; monitor `scripts/monitor/monitor_nn_training_progress.py` (`MAIN_7`, optional `LIVE`); `USE_CUDA_AMP` / `USE_TORCH_COMPILE` / `OPTUNA_N_JOBS`; §9b axial overlays; §10 4-column parity; exports `simple_nn_full_profile_*` + figure PNGs. See `docs/ML_CONFIG_GUIDE.md` (Main_7 splits). | OK |
 | **Database** | `configs/simulation/reactant_database.json` | Present | OK |
 | **Template** | `configs/simulation/config_template.json` | Present | OK |
 | **Dependencies** | `requirements.txt` | Present | OK |

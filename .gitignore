@@ -120,16 +120,17 @@ summary_*.dat
 data/training/*
 data/processed/*
 !data/processed/.gitkeep
-data/raw/*
-!data/raw/.gitkeep
+data/logs/*
+!data/logs/.gitkeep
+!data/logs/README.md
 !data/training/.gitkeep
 # Optional EDA / notebook exports under data/ (e.g. Main_3 figures next to processed/)
 data/figures/
 models/*
 !models/.gitkeep
 
-# Run logs (SLURM chunk progress, local diagnostics)
-logs/
+# Run logs (SLURM chunk progress, local diagnostics) — root only, not data/logs/
+/logs/
 
 
 # ML model and data files
