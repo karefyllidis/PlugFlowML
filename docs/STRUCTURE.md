@@ -90,11 +90,13 @@ HydrAI/
 │   ├── local/
 │   │   ├── run_main2_local_parallel.py   # Multi-process Main_2 on one machine
 │   │   └── run_main1_local_simulation.sh # Launches Main_1 notebook (bash)
+│   ├── monitor/
+│   │   ├── monitor_cluster_jobs.sh             # Live SLURM data-generation status
+│   │   └── monitor_nn_training_progress.py   # Main_6 / Main_7 training & Optuna plots
 │   └── dev/
 │       ├── check_complete_runs.py        # Training sweep summary / manifests
 │       ├── clean_completed_runs.py       # Archive completed task artifacts
 │       ├── consolidate_training_data.py  # Merge per-task outputs for ML pipeline
-│       ├── monitor_run.sh                # Live cluster run status
 │       └── sbatch_safe.sh                # CRLF-safe sbatch wrapper
 │
 ├── temp/                         # Temporary files (auto-generated, git-ignored)
@@ -141,7 +143,8 @@ HydrAI/
 - **Cluster:** submit `scripts/cluster/*.sh` from the repo root; each task runs `run_main2_slurm_chunk.py`. Override the JSON config with `export HYDRAI_ML_CONFIG=...` (absolute path or relative to repo root).
 - **Cluster tuning:** current `scripts/cluster/*.sh` defaults are tuned for the University of Cambridge **CSD3** environment. On other SLURM systems, update account/partition/QoS/module settings in `#SBATCH` and `module load` lines.
 - **Progress files:** during chunk runs, each task updates `logs/data_generation_progress_task_<TASK_ID>.json` after every completed simulation. Per-run CSV logs: `temp/conditions_run_task_<TASK_ID>.csv`; completion lines: `temp/completed_runs_task_<TASK_ID>.txt`.
-- **Diagnostics:** `python scripts/dev/check_complete_runs.py` aggregates sweep status from config + `data/training/`. `bash scripts/dev/monitor_run.sh` shows live status (run from repo root).
+- **Diagnostics:** `python scripts/dev/check_complete_runs.py` aggregates sweep status from config + `data/training/`. `bash scripts/monitor/monitor_cluster_jobs.sh` shows live status (run from repo root).
+- **NN training progress:** edit flags in `scripts/monitor/monitor_nn_training_progress.py` (`MAIN_6` or `MAIN_7`, `OPTUNA` for §6b vs §8, `FOLLOW`), then `python scripts/monitor/monitor_nn_training_progress.py` from the repo root while Main_6 / Main_7 runs.
 - **Data consolidation:** After a parallel run, merge per-task outputs for the ML notebook:
   `python scripts/dev/consolidate_training_data.py`
   This creates `data/training/training_data_complete_<timestamp>.pkl` which `Main_3_data_exploration_feature_engineering.ipynb` auto-detects.
@@ -205,8 +208,8 @@ jupyter notebook notebooks/Main_7_train_evaluate_SimpleNN_full_profile.ipynb
 ```
 - Main_4 trains baseline trees (RF, Gradient Boosting, XGBoost, AdaBoost) and saves them to `models/tree_models_exit.joblib` (overwritten each run).
 - Main_5 tunes one tree model and, when enabled, also fits the full-profile model; both are bundled into `models/tree_model_tuned_exit_full.joblib`.
-- Main_6 trains a PyTorch `SimpleNN` (optional Optuna on `h1`–`h3`), applies **ReduceLROnPlateau** / **early stopping** / **best test-R² checkpoint restore** in Section 8, and writes `models/simple_nn_exit_state_dict.pt`, `_scalers.joblib`, `_manifest.json`, plus **`simple_nn_exit_per_target_metrics.csv`** and **`simple_nn_exit_group_metrics.csv`** when `IF_MODEL_EXPORT` (overwritten each run). Parity and residual figure grids use **three columns** and cover **all state + species** targets. Section 2 can enable **Jupyter-only** live convergence (§8) and live Optuna views (§6b), throttled by `LIVE_*_PLOT_EVERY`; turn off for headless runs.
-- Main_7 trains the same `SimpleNN` class on **all axial rows** with **`relative_position`** in the input vector, uses a **run-level** train/test split (Main_5 §8 pattern), optional Optuna, the same Section 8 training controls as Main_6, optional **`FULL_PROFILE_MAX_ROWS`** subsampling for dev/smoke runs, and exports **`models/simple_nn_full_profile_*`** including the same **CSV + manifest** pattern as Main_6. The opening markdown summarises **overfitting mitigation**. §9b writes **`full_profile_cantera_vs_nn_axial_evolution.png`** (state + species vs `x/L` on selected test runs). §10 parity uses **four columns** and a **shared log color scale** for hexbin when the test row count is large enough; otherwise a scatter fallback (see notebook `PARITY_HEXBIN_MIN_POINTS`).
+- Main_6 trains a PyTorch `SimpleNN` (optional Optuna §6b on a validation fold; test held out), applies **ReduceLROnPlateau** / **early stopping** / **best test-R² checkpoint restore** in Section 8, and writes `models/simple_nn_exit_state_dict.pt`, `_scalers.joblib`, `_manifest.json`, plus **`simple_nn_exit_per_target_metrics.csv`** and **`simple_nn_exit_group_metrics.csv`** when `IF_MODEL_EXPORT` (overwritten each run). Parity and residual figure grids use **three columns** and cover **all state + species** targets. §8 appends a **training progress CSV** under `outputs/reports/`; §6b updates `optuna_tuning_plot_data.json` incrementally. External live plots: `scripts/monitor/monitor_nn_training_progress.py` (`OPTUNA=True` during §6b, `OPTUNA=False` during §8).
+- Main_7 trains the same `SimpleNN` on **all axial rows** with **`relative_position`**, **run-level** train/test split (§4), Optuna §6b on **validation rows from train data only**, and the same §8 controls on **held-out test runs**. Overfitting during tuning = validation R² across trials; during production training = **train vs test R²** (and gap) at §8 checkpoints. Optional **`FULL_PROFILE_MAX_ROWS`** for smoke runs; exports **`models/simple_nn_full_profile_*`** + CSVs. §9b: **`full_profile_cantera_vs_nn_axial_evolution.png`**. §10: **four columns**, shared hexbin colorbar or scatter (`PARITY_HEXBIN_MIN_POINTS`). Monitor: same script with `MAIN_7=True`; see `docs/ML_CONFIG_GUIDE.md`.
 - Each notebook also tees its terminal output to `outputs/reports/<NotebookName>.txt` via `src.utils.run_log.start_run_log` (stable path, **overwritten on every run**).
 
 **Alternative (all model types including neural network):**

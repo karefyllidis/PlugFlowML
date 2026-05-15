@@ -78,7 +78,7 @@ Notebook alignment:
 - Drop NaNs during notebook load stage before EDA/feature export
 - Track `total_simulations`, `successful_simulations`, `failed_simulations` in metadata
 - Monitor runs via:
-  - `bash scripts/dev/monitor_run.sh`
+  - `bash scripts/monitor/monitor_cluster_jobs.sh`
   - `python scripts/dev/check_complete_runs.py`
 - For empty task chunks, generation logic skips gracefully (no false failure signal)
 

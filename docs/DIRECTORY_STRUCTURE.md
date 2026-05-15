@@ -99,14 +99,13 @@ HydrAI/
     ├── local/
     │   ├── run_main2_local_parallel.py
     │   └── run_main1_local_simulation.sh
-    ├── notebook/
-    │   ├── run_simulation.sh
-    │   └── run_simulation_ipynb.sh
+    ├── monitor/
+    │   ├── monitor_cluster_jobs.sh
+    │   └── monitor_nn_training_progress.py
     └── dev/
         ├── check_complete_runs.py
         ├── clean_completed_runs.py
         ├── consolidate_training_data.py
-        ├── monitor_run.sh
         └── sbatch_safe.sh
 ```
 
@@ -132,8 +131,8 @@ See **Version control** in `README.md` and root `.gitignore` for the authoritati
 | **Step 3 Exploration** | `notebooks/Main_3_data_exploration_feature_engineering.ipynb` | Present | OK |
 | **Step 4 Tree ML** | `notebooks/Main_4_train_and_evaluate_tree_models_IO.ipynb` | Baseline tree evaluation (RF, GB, XGBoost, AdaBoost; exit-plane only, no tuning) | OK |
 | **Step 5 Tuning + PFR Evolution** | `notebooks/Main_5_train_evaluate_tune_tree_model_evolution.ipynb` | One-tree-model `BayesSearchCV` tuning on exit plane; reuses params for full PFR evolution | OK |
-| **Step 6 PyTorch NN** | `notebooks/Main_6__train_evaluate_SimpleNN_IO.ipynb` | PyTorch `SimpleNN` (3 hidden layers); reads `neural_network.*`; optional Optuna (Section 6b); Section 8 LR-on-plateau (test R²), early stopping, best-checkpoint restore; optional Jupyter live §8/§6b plots (`LIVE_*`, throttled) | OK |
-| **Step 7 PyTorch full profile** | `notebooks/Main_7_train_evaluate_SimpleNN_full_profile.ipynb` | Same `SimpleNN` + `neural_network.*` as Main_6; full axial rows with `relative_position` in `feature_cols`; run-level split; optional `FULL_PROFILE_MAX_ROWS`; opening **Overfitting controls used here** (Main_6-style; run-level); same live-plot flags + `USE_CUDA_AMP` / `USE_TORCH_COMPILE` / `OPTUNA_N_JOBS`; §9 metric CSVs when `IF_MODEL_EXPORT`; §9b axial overlays (state + species along `x/L`, fixed or random test runs per `AXIAL_PROFILE_RUNS_RANDOM`); §10 4-column parity (shared hexbin colorbar or scatter fallback); exports `simple_nn_full_profile_*` + `outputs/figures/.../full_profile_cantera_vs_nn_axial_evolution.png`, `actual_vs_predicted_scatter_by_target.png`, `residuals_scatter_by_target.png`, etc. | OK |
+| **Step 6 PyTorch NN** | `notebooks/Main_6__train_evaluate_SimpleNN_IO.ipynb` | PyTorch `SimpleNN` (3 hidden layers); reads `neural_network.*`; optional Optuna §6b (val fold, test held out); §8 LR-on-plateau (test R²), early stopping, best-checkpoint restore; progress CSV + Optuna JSON; monitor `scripts/monitor/monitor_nn_training_progress.py` (`MAIN_6`, `OPTUNA` §6b vs §8) | OK |
+| **Step 7 PyTorch full profile** | `notebooks/Main_7_train_evaluate_SimpleNN_full_profile.ipynb` | Same `SimpleNN` + `neural_network.*` as Main_6; full axial rows with `relative_position`; **run-level** test holdout (§4); Optuna §6b on **val rows from train** (test blind); §8 train/test R² overfitting diagnostic; optional `FULL_PROFILE_MAX_ROWS`; monitor `scripts/monitor/monitor_nn_training_progress.py` (`MAIN_7`, `OPTUNA` §6b vs §8); `USE_CUDA_AMP` / `USE_TORCH_COMPILE` / `OPTUNA_N_JOBS`; §9b axial overlays; §10 4-column parity; exports `simple_nn_full_profile_*` + figure PNGs. See `docs/ML_CONFIG_GUIDE.md` (Main_7 splits). | OK |
 | **Database** | `configs/simulation/reactant_database.json` | Present | OK |
 | **Template** | `configs/simulation/config_template.json` | Present | OK |
 | **Dependencies** | `requirements.txt` | Present | OK |

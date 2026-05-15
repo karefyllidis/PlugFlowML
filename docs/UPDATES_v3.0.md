@@ -83,7 +83,7 @@ Version 3.0.0 represents a major restructuring and enhancement of the HydrAI pro
 - **`scripts/cluster/`** — `run_main2_slurm_chunk.py` (set `TASK_ID`, `NTASKS`, optional `HYDRAI_ML_CONFIG`); `run_training_mul_CPUs.sh`; `run_training_smoke_gpu_partition.sh` (+ typo duplicates for legacy `sbatch` names).
 - **`scripts/local/`** — `run_main2_local_parallel.py` (multi-process Main_2 on one host); `run_main1_local_simulation.sh` (open Main_1 in Jupyter).
 - **`scripts/notebook/`** — `run_simulation.sh` / `run_simulation_ipynb.sh` (same as above).
-- **`scripts/dev/`** — `check_complete_runs.py`, `consolidate_training_data.py`, `monitor_run.sh`, `sbatch_safe.sh`, `clean_completed_runs.py` (optional task archive).
+- **`scripts/dev/`** — `check_complete_runs.py`, `consolidate_training_data.py`, `monitor_cluster_jobs.sh` (under `scripts/monitor/`), `sbatch_safe.sh`, `clean_completed_runs.py` (optional task archive).
 - **Progress / logs** — each SLURM chunk task writes `logs/data_generation_progress_task_<ID>.json`; optional temp CSVs under `temp/`.
 - **Configs** — default `configs/ml/ml_data_generation_config.json`; `configs/ml/ml_data_generation_config.smoke.json` for short cluster tests.
 

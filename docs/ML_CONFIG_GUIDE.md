@@ -273,8 +273,25 @@ The tuning search space (`h1 ∈ [32,256] step 32`, `h2 ∈ [16,128] step 16`, `
 
 **Main_6 / Main_7 notebook-only controls (not in `ml_training_config.json`):**
 
-- **Jupyter live progress (Section 2):** `LIVE_CONVERGENCE_PLOT` refreshes one in-cell convergence figure during §8 (IPython only). **`LIVE_TRAIN_PLOT_EVERY`** throttles redraws (default `2`); train/test metrics and checkpoints are still computed every cycle. Optuna §6b: **`LIVE_OPTUNA_PLOTS`** and **`LIVE_OPTUNA_PLOT_EVERY`** for a live optimisation-history + parallel-coordinates view; a final refresh runs after `study.optimize` so the last state is shown even when throttling skips the last trial. Set the `LIVE_*` flags **`False`** for `nbconvert` / CI or to minimise display overhead. **Main_7** also defines **`USE_CUDA_AMP`**, **`USE_TORCH_COMPILE`**, and **`OPTUNA_N_JOBS`** (keep **`OPTUNA_N_JOBS=1`** on a single GPU when tuning).
-- **Main_7 — row cap, axial parity, overfitting notes:** Section 2 **`FULL_PROFILE_MAX_ROWS`** optionally caps total train+test rows after the run-level split (`None` = all rows). Section **§9b** — **`AXIAL_PROFILE_N_RUNS`**, **`AXIAL_PROFILE_RUNS_RANDOM`**, overlays **state + species/lumps** along **`x/L`**. Section **§10** — **`PARITY_HEXBIN_MIN_POINTS`** selects **hexbin** (shared log colorbar) vs **scatter** when `n_test` is small. The notebook overview mirrors Main_6’s **Overfitting controls used here** section (adapted for run-level split + full-profile rows).
+- **External training progress (Section 2, Main_6 / Main_7):** `WRITE_TRAINING_PROGRESS_LOG` (default `True`) appends `outputs/reports/<notebook_stem>_training_progress.csv` during §8 (per-epoch train MSE; checkpoint rows include test MSE/R² and LR). Optuna §6b rewrites `FIG_DIR/optuna_tuning_plot_data.json` after each completed trial; the final snapshot includes fANOVA importances when available. §8b / §6b-ii notebook cells still export static PNGs; Optuna PNGs from §6b-ii JSON. **Main_7** also defines **`USE_CUDA_AMP`**, **`USE_TORCH_COMPILE`**, and **`OPTUNA_N_JOBS`** (keep **`OPTUNA_N_JOBS=1`** on a single GPU when tuning).
+
+- **External monitor** — `scripts/monitor/monitor_nn_training_progress.py` (no CLI; edit flags at top of file, then run from repo root):
+
+  | Flag | Meaning |
+  |------|---------|
+  | `MAIN_6` / `MAIN_7` | Exactly one `True` — selects notebook stem, CSV path, and Optuna JSON path. |
+  | `OPTUNA` | `True` during §6b (reads `FIG_DIR/optuna_tuning_plot_data.json`: trial history + parallel coordinates). `False` during §8 (reads training progress CSV: MSE + **train/test R² + train−test gap**). |
+  | `FOLLOW` | `True` — refresh while the log grows; after `_STALE_POLLS` idle polls, show final plot and exit. `False` — one-shot plot of current log. |
+
+  Log paths (Main_7): CSV `outputs/reports/Main_7_train_evaluate_SimpleNN_full_profile_training_progress.csv`; Optuna JSON `outputs/figures/Main_7_train_evaluate_SimpleNN_full_profile/optuna_tuning_plot_data.json`. Main_6 uses the `Main_6__train_evaluate_SimpleNN_IO` stem under the same `outputs/reports/` and `outputs/figures/` layout.
+
+- **Main_7 — data splits and overfitting (read with monitor flags):**
+  - **§4 test runs** (~`test_size` of simulation runs): held out for §8 checkpoints, LR scheduler, early stopping, and best-weight restore. Never used in Optuna.
+  - **§6b validation rows** (`validation_fraction` of **train** rows, row-level shuffle): Optuna objective = **validation R²** only. Test runs stay blind. Many trials can overfit this val fold (hyperparameter selection bias); §8 test R² is the honest generalization check.
+  - **§8 overfitting diagnostic:** growing **train R² − test R²** gap at checkpoints → raise `dropout` or shrink `h1`–`h3` in config (see notebook **Overfitting controls used here**).
+  - **Workflow:** run monitor with `OPTUNA=True` while §6b runs; switch to `OPTUNA=False` when §8 starts.
+
+- **Main_7 — row cap, axial parity:** Section 2 **`FULL_PROFILE_MAX_ROWS`** optionally caps total train+test rows after the run-level split (`None` = all rows). Section **§9b** — **`AXIAL_PROFILE_N_RUNS`**, **`AXIAL_PROFILE_RUNS_RANDOM`**, overlays **state + species/lumps** along **`x/L`**. Section **§10** — **`PARITY_HEXBIN_MIN_POINTS`** selects **hexbin** (shared log colorbar) vs **scatter** when `n_test` is small.
 
 Any missing key falls back to the inline notebook defaults shown above. Edit the JSON and re-run Section 3 in Main_6 or Main_7 — no kernel restart needed.
 
