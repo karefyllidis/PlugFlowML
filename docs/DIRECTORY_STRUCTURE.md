@@ -56,9 +56,10 @@ HydrAI/
 ├── mechanisms/                          # Chemical kinetic mechanisms (YAMLs git-ignored; .gitkeep tracked)
 │   └── .gitkeep                         # Add *.yaml locally per README "Required External Files"
 ├── data/                                # Data directory
-│   ├── training/                        # Training data (generated)
-│   ├── processed/                       # Feature/target pickles (Main_3)
-│   └── logs/                            # Main_6/7 training progress CSV + Optuna JSON (monitor)
+│   ├── training/                        # training_data_complete_*.pkl, metadata_*.json
+│   │                                    # e.g. *_20260507_DEVEL.* (smoke), *_20260507_095243.* (full)
+│   ├── processed/                       # features_targets_*.pkl (Main_3 export)
+│   └── logs/                            # Main_6/7 §8 CSV + §6b Optuna JSON → monitor
 ├── models/                              # Trained ML models (generated; overwrite on each run)
 │   ├── tree_models_exit.joblib            # Main_4 baseline tree bundle
 │   ├── tree_model_tuned_exit_full.joblib  # Main_5 tuned exit + optional full-profile
@@ -108,7 +109,6 @@ HydrAI/
         ├── clean_completed_runs.py
         ├── consolidate_training_data.py
         ├── smoke_main7_cpu_scaling.py      # CPU thread / Optuna scaling smoke test
-        ├── smoke_monitor_log_compat.py     # data/logs path + monitor parser check
         └── sbatch_safe.sh
 ```
 

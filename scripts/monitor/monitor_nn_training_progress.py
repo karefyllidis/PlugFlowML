@@ -9,6 +9,7 @@ Picks **whichever log was updated most recently** (Optuna JSON during §6b, trai
 CSV during §8). ``LIVE=True`` refreshes until the log stops changing (~90s idle).
 """
 
+import csv
 import json
 import sys
 import time
@@ -25,6 +26,7 @@ LIVE = False  # True = refresh while the notebook runs; False = plot once and ex
 
 _INTERVAL_S = 1.0
 _IDLE_S = 90.0  # LIVE: stop after this many seconds with no log changes
+_WAIT_FOR_LOG_S = 30.0  # LIVE: exit if no log files appear within this window
 
 _REPO = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(_REPO))
@@ -110,7 +112,17 @@ def load_optuna_snapshot(log_path: Path) -> dict:
             "started_at": None,
             "study_name": None,
         }
-    snap = json.loads(log_path.read_text(encoding="utf-8"))
+    try:
+        snap = json.loads(log_path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError) as exc:
+        print(f"[WARN] Could not read Optuna log ({log_path.name}): {exc}")
+        return {
+            "trials": [],
+            "best_val_r2": float("nan"),
+            "n_trials_complete": 0,
+            "started_at": None,
+            "study_name": None,
+        }
     trials = snap.get("trials", [])
     best = snap.get("best_val_r2")
     return {
@@ -328,10 +340,17 @@ def _pair_signature(csv_path: Path, json_path: Path) -> tuple:
     return (_watch_signature(csv_path), _watch_signature(json_path))
 
 
+def _logs_exist(csv_path: Path, json_path: Path) -> bool:
+    return csv_path.is_file() or json_path.is_file()
+
+
 if __name__ == "__main__":
     print(f"{RUN_LABEL}  |  logs: data/logs/  |  LIVE={LIVE}")
-    if not TRAIN_LOG.is_file() and not OPTUNA_LOG.is_file():
-        print("[INFO] No logs yet — run Main_7 §6b or §8 (writes under data/logs/).")
+    if not _logs_exist(TRAIN_LOG, OPTUNA_LOG):
+        print(
+            f"[INFO] No logs yet — run {RUN_LABEL} §6b or §8 "
+            f"(writes under data/logs/)."
+        )
 
     if not LIVE:
         path, kind = _plot(TRAIN_LOG, OPTUNA_LOG, block=True, final=True)
@@ -340,9 +359,24 @@ if __name__ == "__main__":
         plt.ion()
         last_pair = None
         idle_polls = 0
+        wait_polls = 0
         stale_need = max(1, int(_IDLE_S / _INTERVAL_S))
+        wait_need = max(1, int(_WAIT_FOR_LOG_S / _INTERVAL_S))
         try:
             while True:
+                if not _logs_exist(TRAIN_LOG, OPTUNA_LOG):
+                    wait_polls += 1
+                    if wait_polls == 1:
+                        print(f"[wait] Waiting for {RUN_LABEL} logs in data/logs/ …")
+                    if wait_polls >= wait_need:
+                        print(
+                            f"[exit] No logs after {_WAIT_FOR_LOG_S:.0f}s. "
+                            f"Start {RUN_LABEL} §6b or §8, then re-run the monitor."
+                        )
+                        break
+                    time.sleep(_INTERVAL_S)
+                    continue
+                wait_polls = 0
                 pair = _pair_signature(TRAIN_LOG, OPTUNA_LOG)
                 if pair != last_pair:
                     plt.close("all")

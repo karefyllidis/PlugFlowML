@@ -16,7 +16,7 @@ Stems (match notebook names):
 
 Path helpers: `src/utils/training_progress_log.py`.
 
-## Live plots
+## External monitor
 
 From repo root:
 
@@ -24,12 +24,24 @@ From repo root:
 python scripts/monitor/monitor_nn_training_progress.py
 ```
 
-Edit flags at the top of that script:
+Edit flags at the top of `scripts/monitor/monitor_nn_training_progress.py`:
 
-- `MAIN_6` or `MAIN_7` (exactly one `True`)
-- `LIVE=True` — refresh until the log is idle ~90s; `False` — one-shot plot
+| Flag | Purpose |
+|------|---------|
+| `MAIN_6` / `MAIN_7` | Exactly one `True` — selects log filenames |
+| `LIVE` | `False` = one-shot plot; `True` = refresh until idle (~90s without file changes) |
 
-The monitor **auto-picks whichever log was updated most recently** (Optuna JSON during §6b, training CSV during §8).
+**Auto-selection:** the monitor plots whichever file was **modified most recently** (Optuna JSON during §6b, training CSV during §8).
+
+**Training view (§8 CSV):** three panels — log train MSE, train/test R² at checkpoints, train−test R² gap (overfitting).
+
+**Optuna view (§6b JSON):** trial history + parallel coordinates (validation R²).
+
+**LIVE behaviour:**
+
+- Waits up to **30s** for logs to appear, then exits with a message if none.
+- Stops refreshing after **90s** with no size/mtime change and shows a final plot.
+- Needs an interactive matplotlib backend (local desktop). On headless SSH, use `LIVE=False` or set `MPLBACKEND=Agg` and extend the script to save PNGs.
 
 ## Legacy paths
 

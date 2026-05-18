@@ -99,7 +99,6 @@ HydrAI/
 │       ├── clean_completed_runs.py       # Archive completed task artifacts
 │       ├── consolidate_training_data.py  # Merge per-task outputs for ML pipeline
 │       ├── smoke_main7_cpu_scaling.py    # Main_7 CPU / Optuna thread smoke test
-│       ├── smoke_monitor_log_compat.py   # data/logs + monitor parser check
 │       └── sbatch_safe.sh                # CRLF-safe sbatch wrapper
 │
 ├── temp/                         # Temporary files (auto-generated, git-ignored)
@@ -147,7 +146,8 @@ HydrAI/
 - **Cluster tuning:** current `scripts/cluster/*.sh` defaults are tuned for the University of Cambridge **CSD3** environment. On other SLURM systems, update account/partition/QoS/module settings in `#SBATCH` and `module load` lines.
 - **Progress files:** during chunk runs, each task updates `logs/data_generation_progress_task_<TASK_ID>.json` after every completed simulation. Per-run CSV logs: `temp/conditions_run_task_<TASK_ID>.csv`; completion lines: `temp/completed_runs_task_<TASK_ID>.txt`.
 - **Diagnostics:** `python scripts/dev/check_complete_runs.py` aggregates sweep status from config + `data/training/`. `bash scripts/monitor/monitor_cluster_jobs.sh` shows live status (run from repo root).
-- **NN training progress:** `python scripts/monitor/monitor_nn_training_progress.py` from the repo root while Main_6 / Main_7 runs (`MAIN_6` or `MAIN_7`, optional `LIVE=True`; auto-picks newest file in `data/logs/`).
+- **NN training progress:** `python scripts/monitor/monitor_nn_training_progress.py` while Main_6 / Main_7 runs (`MAIN_6` or `MAIN_7`, optional `LIVE=True`; auto-picks newest log in `data/logs/`; see [`data/logs/README.md`](../data/logs/README.md)).
+- **Main_3 smoke data:** pin `RUN_STAMP_DEVEL` (`20260507_DEVEL`) in Main_3 for small `data/training/` files; export full `features_targets_*_095243.pkl` for production ML notebooks.
 - **Data consolidation:** After a parallel run, merge per-task outputs for the ML notebook:
   `python scripts/dev/consolidate_training_data.py`
   This creates `data/training/training_data_complete_<timestamp>.pkl` which `Main_3_data_exploration_feature_engineering.ipynb` auto-detects.

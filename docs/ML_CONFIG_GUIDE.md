@@ -136,6 +136,8 @@ If `sampling_method` is `"random"` or `"latin"`, only `max_combinations_per_reac
 
 ### Notebook run control (`notebooks/Main_3_data_exploration_feature_engineering.ipynb`)
 
+- **`IF_PIN_SPECIFIC_FILES`**: If `True`, load pinned files from `data/training/` instead of the newest `training_data_complete_*.pkl`.
+- **`RUN_STAMP_DEVEL` / `RUN_STAMP_FULL`**: Filename stamps — e.g. `20260507_DEVEL` (small smoke-test campaign) vs `20260507_095243` (full production set). Set `RUN_STAMP = RUN_STAMP_DEVEL` for fast pipeline checks; use `RUN_STAMP_FULL` or `IF_PIN_SPECIFIC_FILES = False` for full data. Files: `training_data_complete_<stamp>.pkl` and `metadata_<stamp>.json`.
 - **`IF_SAVE_EDA_PLOTS`**: If `True`, EDA figures are saved to `outputs/figures/Main_3_data_exploration_feature_engineering/eda/`.
 - **`IF_SEPARATE_SPECIES_BY_CARBON`**: If `True`, species are grouped by carbon-number lumps (`C1`, `C2`, `C3`, ... and `inert`) for dimensionality reduction.
 - **`IF_CATEGORIZE_BY_CHEMISTRY`**: If `True`, species are grouped by process-role lumps (`olefins`, `aromatics`, `paraffins`, `coke_precursors`, `radicals`, `feedstock`, `hydrogen`, `diluent`, `other`).
@@ -170,6 +172,7 @@ Loads the latest `data/processed/features_targets_*.pkl`. If Main_3 used **`EXPO
 - Full-profile uses all axial rows and includes `relative_position` as an input
 - Full-profile train/test data are split by simulation run, not by row, to avoid leakage between axial points from the same PFR profile
 - `FULL_PROFILE_MAX_ROWS` can be set for a quick full-profile training smoke test on large datasets
+- **Inlet BC anchoring (§8):** after full-profile `predict`, `src/utils/profile_predictions.anchor_inlet_profile_predictions()` sets each test run’s prediction at **min `relative_position`** to match Cantera truth so axial overlay plots (§9) start at the same inlet state. Same helper is used in **Main_7 §9**.
 - Reports tuned ML inference speed for exit-plane and full-profile prediction; set `CANTERA_EXIT_SECONDS_PER_RUN` / `CANTERA_FULL_PROFILE_SECONDS_PER_RUN` to print speedup factors against measured Cantera timings
 - Exports tuned exit and full-profile artifacts to `models/tree_model_tuned_exit_full.joblib` (overwritten each run)
 - Adds axial diagnostics and regime diagnostics:
@@ -275,9 +278,22 @@ The tuning search space (`h1 ∈ [32,256] step 32`, `h2 ∈ [16,128] step 16`, `
 
 - **External training progress (Section 2, Main_6 / Main_7):** `WRITE_TRAINING_PROGRESS_LOG` (default `True`) appends `data/logs/<notebook_stem>_training_progress.csv` during §8 (per-epoch train MSE; checkpoint rows include test MSE/R² and LR). Optuna §6b rewrites `data/logs/<notebook_stem>_optuna_tuning_plot_data.json` after each completed trial; the final snapshot includes fANOVA importances when available. §8b / §6b-ii notebook cells still export static PNGs; Optuna PNGs from §6b-ii JSON. **Main_7** also defines **`USE_CUDA_AMP`**, **`USE_TORCH_COMPILE`**, and **`OPTUNA_N_JOBS`** (keep **`OPTUNA_N_JOBS=1`** on a single GPU when tuning).
 
-- **CPU parallelism (Main_7 Section 2):** `N_CPU_CORES` (`None` = all logical CPUs, or e.g. `8` to cap). Sets PyTorch and BLAS thread limits via `src/utils/cpu_threads.py`. `OPTUNA_N_JOBS` (`None` = auto: `1` on CUDA/MPS; on CPU-only tuning, `min(4, n_cores//2)`). Set explicitly for control (e.g. `N_CPU_CORES=8`, `OPTUNA_N_JOBS=4` → 2 threads per trial). **On one GPU, keep `OPTUNA_N_JOBS=1` or `None`.** Re-run Section 2 after changing.
+- **CPU parallelism (Main_7 Section 2):** `N_CPU_CORES` (`None` = all logical CPUs, or e.g. `10` to cap). `OPTUNA_N_JOBS` (`None` = auto: `1` on CUDA/MPS; on CPU, `min(4, n_cores//2)`). Thread limits via `src/utils/cpu_threads.py`: Section 2 bootstraps with **full cores for §8** (`parallel_jobs=1`); §6b re-applies `n_cores // OPTUNA_N_JOBS` threads per trial inside each Optuna worker. **On one GPU, keep `OPTUNA_N_JOBS=1`.** Example CPU tuning: `N_CPU_CORES=10`, `OPTUNA_N_JOBS=4` → 2 threads/trial. More cores is not always faster for this MLP (memory bandwidth).
 
-- **External monitor** — one command from repo root: `python scripts/monitor/monitor_nn_training_progress.py`. Reads `data/logs/` and plots whichever log was updated most recently (Optuna JSON in §6b, training CSV in §8). Optional flags at top of script: `MAIN_7=True` (or `MAIN_6`), `LIVE=True` to refresh until idle. Layout: [`data/logs/README.md`](../data/logs/README.md).
+- **External monitor** (`scripts/monitor/monitor_nn_training_progress.py`) — from repo root:
+
+  ```bash
+  python scripts/monitor/monitor_nn_training_progress.py
+  ```
+
+  | Flag | Purpose |
+  |------|---------|
+  | `MAIN_6` / `MAIN_7` | Exactly one `True` |
+  | `LIVE` | `False` = one-shot; `True` = refresh until log idle (~90s) |
+
+  Picks the **newest mtime** in `data/logs/` (Optuna JSON vs training CSV). §8 view: train MSE, test R², train−test gap. §6b view: trial curve + parallel coordinates. `LIVE` waits 30s for logs to appear, then exits if missing. Details: [`data/logs/README.md`](../data/logs/README.md).
+
+- **Full-profile inlet anchoring (Main_7 §9):** same `anchor_inlet_profile_predictions()` as Main_5 — applied after test `predict`, before metrics and §9b axial overlays.
 
 - **Main_7 — data splits and overfitting:**
   - **§4 test runs** (~`test_size` of simulation runs): held out for §8 checkpoints, LR scheduler, early stopping, and best-weight restore. Never used in Optuna.
