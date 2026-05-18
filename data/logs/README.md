@@ -6,7 +6,7 @@ Runtime progress files for **Main_6** and **Main_7** PyTorch notebooks. Not comm
 
 | File | Written by | Contents |
 |------|------------|----------|
-| `<stem>_training_progress.csv` | Main_6 / Main_7 §8 | Per-epoch train MSE; checkpoint rows add test MSE/R², LR |
+| `<stem>_training_progress.csv` | Main_6 / Main_7 §8, Main_8 §7 | Per-epoch train MSE; rows with val/test MSE (Main_8: val rollout); Main_6/7 checkpoints add R² |
 | `<stem>_optuna_tuning_plot_data.json` | §6b (when `IF_HYPERPARAM_TUNING=True`) | Incremental Optuna trial snapshot |
 
 Stems (match notebook names):
@@ -28,12 +28,12 @@ Edit flags at the top of `scripts/monitor/monitor_nn_training_progress.py`:
 
 | Flag | Purpose |
 |------|---------|
-| `MAIN_6` / `MAIN_7` | Exactly one `True` — selects log filenames |
-| `LIVE` | `False` = one-shot plot; `True` = refresh until idle (~90s without file changes) |
+| `MAIN_6` / `MAIN_7` / `MAIN_8` | Exactly one `True` — selects log filenames |
+| `LIVE` | `False` = one-shot plot; `True` = refresh while the notebook runs (recommended for Main_8 §7) |
 
-**Auto-selection:** the monitor plots whichever file was **modified most recently** (Optuna JSON during §6b, training CSV during §8).
+**Auto-selection:** the monitor plots whichever file was **modified most recently** (Optuna JSON during §6b, training CSV during §7/§8).
 
-**Training view (§8 CSV):** three panels — log train MSE, train/test R² at checkpoints, train−test R² gap (overfitting).
+**Training view:** Main_6/7 — three panels (train MSE, train/test R², gap). **Main_8** — one panel (teacher-forced train MSE + val rollout MSE, every epoch).
 
 **Optuna view (§6b JSON):** trial history + parallel coordinates (validation R²).
 

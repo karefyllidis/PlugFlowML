@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Plot Main_6 / Main_7 progress from ``data/logs/`` (one command).
 
-Edit at most two flags, then from repo root:
+Edit at most one MAIN_* flag, then from repo root:
 
     python scripts/monitor/monitor_nn_training_progress.py
 
@@ -20,9 +20,11 @@ import numpy as np
 
 # === settings (Main_7 default) ===
 MAIN_6 = False
-MAIN_7 = True
+MAIN_7 = False
+MAIN_8 = True
 
-LIVE = False  # True = refresh while the notebook runs; False = plot once and exit
+LIVE = True  # True = refresh while the notebook runs; False = plot once and exit
+# Tip: set LIVE=True while Main_8 §7 is running (Main_8 logs val rollout every epoch).
 
 _INTERVAL_S = 1.0
 _IDLE_S = 90.0  # LIVE: stop after this many seconds with no log changes
@@ -34,23 +36,26 @@ from src.utils.plot_style import setup_matplotlib
 from src.utils.training_progress_log import (
     MAIN_6_STEM,
     MAIN_7_STEM,
+    MAIN_8_STEM,
     optuna_snapshot_path,
     training_progress_log_path,
 )
 
 setup_matplotlib()
 
-if MAIN_6 and MAIN_7:
-    raise SystemExit("Only one of MAIN_6 or MAIN_7 can be True.")
-if not MAIN_6 and not MAIN_7:
-    raise SystemExit("Set MAIN_6 or MAIN_7 to True.")
+_n_main = int(MAIN_6) + int(MAIN_7) + int(MAIN_8)
+if _n_main != 1:
+    raise SystemExit("Set exactly one of MAIN_6, MAIN_7, MAIN_8 to True.")
 
 if MAIN_6:
     RUN_LABEL = "Main_6"
     _STEM = MAIN_6_STEM
-else:
+elif MAIN_7:
     RUN_LABEL = "Main_7"
     _STEM = MAIN_7_STEM
+else:
+    RUN_LABEL = "Main_8"
+    _STEM = MAIN_8_STEM
 
 TRAIN_LOG = training_progress_log_path(_REPO, _STEM)
 OPTUNA_LOG = optuna_snapshot_path(_REPO, _STEM)
@@ -78,15 +83,26 @@ def load_training_progress(log_path: Path) -> dict[str, list[float]]:
         c = line.split(",")
         if len(c) < 7:
             continue
-        ep.append(float(c[0]))
+        e = float(c[0])
+        ep.append(e)
         train_mse.append(float(c[1]))
+        # Main_8: val rollout MSE on most rows (not only is_checkpoint=1).
+        if MAIN_8:
+            if c[2].strip():
+                try:
+                    v = float(c[2])
+                except ValueError:
+                    continue
+                if np.isfinite(v):
+                    ck_ep.append(e)
+                    test_mse.append(v)
+            continue
         if c[6].strip() != "1":
             continue
-        e = float(c[0])
         ck_ep.append(e)
-        if c[2]:
+        if c[2].strip():
             test_mse.append(float(c[2]))
-        if c[3] and c[4]:
+        if c[3].strip() and c[4].strip():
             ck_r2.append(e)
             train_r2.append(float(c[3]))
             test_r2.append(float(c[4]))
@@ -154,22 +170,29 @@ def _plot_training(log_path: Path, block, *, final=False):
     ck_ep, test_mse = d["ck_ep"], d["test_mse"]
     ck_r2, train_r2, test_r2 = d["ck_r2"], d["train_r2"], d["test_r2"]
 
-    fig, (ax_loss, ax_r2, ax_gap) = plt.subplots(1, 3, figsize=(16, 4.5))
-    for _ax in (ax_loss, ax_r2, ax_gap):
-        setup_matplotlib(_ax)
+    if MAIN_8:
+        fig, ax_loss = plt.subplots(1, 1, figsize=(10, 4.5))
+        ax_r2 = ax_gap = None
+        setup_matplotlib(ax_loss)
+    else:
+        fig, (ax_loss, ax_r2, ax_gap) = plt.subplots(1, 3, figsize=(16, 4.5))
+        for _ax in (ax_loss, ax_r2, ax_gap):
+            setup_matplotlib(_ax)
 
     if ep:
-        ax_loss.plot(ep, train_mse, color="b", lw=1.6, label="Train (per epoch)")
+        ax_loss.plot(ep, train_mse, color="b", lw=1.6, label="Train teacher-forced (logged)")
         if ck_ep and test_mse:
-            ax_loss.plot(ck_ep[: len(test_mse)], test_mse, color="r", lw=1.6, ls="-", ms=4, label="Test (checkpoints)")
+            val_lbl = "Val rollout MSE" if MAIN_8 else "Test (checkpoints)"
+            ax_loss.plot(ck_ep[: len(test_mse)], test_mse, color="r", lw=1.6, ls="-", marker="o", ms=3, label=val_lbl)
         ax_loss.set_xlabel("Epoch")
-        ax_loss.set_ylabel("MSE (standardised targets)")
+        ylab = "MSE (scaled Δstate)" if MAIN_8 else "MSE (standardised targets)"
+        ax_loss.set_ylabel(ylab)
         ax_loss.set_yscale("log")
         ax_loss.set_title("Convergence — MSE loss", fontweight="normal")
         ax_loss.grid(True, which="both", alpha=0.35)
         ax_loss.legend(loc="upper right", frameon=True, fontsize=9)
 
-        if ck_r2:
+        if ck_r2 and ax_r2 is not None and ax_gap is not None:
             gaps = [tr - te for tr, te in zip(train_r2, test_r2)]
 
             ax_r2.plot(ck_r2, train_r2, color="b", lw=1.6, label="Train R²")
@@ -206,11 +229,21 @@ def _plot_training(log_path: Path, block, *, final=False):
                 ha="left",
                 fontweight="normal",
             )
-        else:
+        elif ax_r2 is not None and ax_gap is not None:
             ax_r2.legend(loc="lower right", frameon=True, fontsize=9)
             ax_gap.set_title("Overfit gap (waiting for checkpoints)", fontweight="normal")
     else:
         ax_loss.set_title("Waiting for log…", fontweight="normal")
+        if not log_path.is_file():
+            ax_loss.text(
+                0.5,
+                0.5,
+                f"No file yet:\n{log_path.name}\n\nRun Main_8 §7 with WRITE_TRAINING_PROGRESS_LOG=True",
+                transform=ax_loss.transAxes,
+                ha="center",
+                va="center",
+                fontsize=9,
+            )
 
     tag = "final" if final else "live"
     fig.suptitle(f"{RUN_LABEL} — training ({tag})", fontweight="normal", y=0.98)
@@ -345,11 +378,13 @@ def _logs_exist(csv_path: Path, json_path: Path) -> bool:
 
 
 if __name__ == "__main__":
-    print(f"{RUN_LABEL}  |  logs: data/logs/  |  LIVE={LIVE}")
+    print(f"{RUN_LABEL}  |  log: {TRAIN_LOG.relative_to(_REPO)}  |  LIVE={LIVE}")
+    if MAIN_8 and not LIVE:
+        print("[TIP] Set LIVE=True in this script for live refresh while Main_8 §7 runs.")
     if not _logs_exist(TRAIN_LOG, OPTUNA_LOG):
         print(
-            f"[INFO] No logs yet — run {RUN_LABEL} §6b or §8 "
-            f"(writes under data/logs/)."
+            f"[INFO] No logs yet — run {RUN_LABEL} training "
+            f"(§7 for Main_8, §8 for Main_6/7; writes under data/logs/)."
         )
 
     if not LIVE:
