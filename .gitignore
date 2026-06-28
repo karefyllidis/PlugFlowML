@@ -195,3 +195,6 @@ _main6_cells.txt
 _m7_cells_ascii.txt
 _m6_idx2_out.txt
 _m6_cell5_dump.py
+# Local session files
+.claude/
+futures_todo.md
