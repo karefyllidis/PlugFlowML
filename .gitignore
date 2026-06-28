@@ -198,3 +198,4 @@ _m6_cell5_dump.py
 # Local session files
 .claude/
 futures_todo.md
+.cursor/
