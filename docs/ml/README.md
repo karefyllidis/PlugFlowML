@@ -50,7 +50,7 @@ Tunes one selected tree model (`MODEL_TO_TUNE`) with `BayesSearchCV` on the exit
 
 **Step 2c — PyTorch MLP baseline (Jupyter notebook):**
 ```bash
-jupyter notebook notebooks/Main_6__train_evaluate_SimpleNN_IO.ipynb
+jupyter notebook notebooks/Main_6_train_evaluate_SimpleNN_IO.ipynb
 ```
 Defaults-only PyTorch counterpart of Main_4 on the same exit-plane data. Inputs are restricted to inlet / run-design columns (no axial coordinates); architecture is a 3-hidden-layer ReLU MLP (defaults `128 → 64 → 32`) with `nn.Dropout` between hidden blocks, `nn.MSELoss`, Adam. Reads `test_size`, `random_state`, and `neural_network.{epochs, batch_size, learning_rate, h1, h2, h3, dropout}` from `configs/ml/ml_training_config.json` (Section 3 of the notebook). Plots train + test convergence (MSE and R² vs epoch), **3-column** parity and residual grids for **all state + species** targets (`actual_vs_predicted_scatter_by_target.png`, `residuals_scatter_by_target.png`), and a per-target R² bar chart. Optional architecture diagram (matplotlib + standalone TikZ source) and `torchinfo` summary are gated by flags. Exports under `models/`: `simple_nn_exit_state_dict.pt`, `simple_nn_exit_scalers.joblib`, `simple_nn_exit_manifest.json` (includes **`chemistry_groups`**, **`metrics_by_group`**, **`auxiliary_exports`**), plus **`simple_nn_exit_per_target_metrics.csv`** and **`simple_nn_exit_group_metrics.csv`** (each run overwrites the previous files).
 
@@ -68,7 +68,7 @@ python src/ml/model_training.py configs/ml/ml_training_config.json
 - `gradient_boosting` - Gradient Boosting (scikit-learn)
 - `xgboost` - XGBoost
 - `adaboost` - AdaBoost with tree base (scikit-learn)
-- `neural_network` - **PyTorch MLP** training lives in `notebooks/Main_6__train_evaluate_SimpleNN_IO.ipynb` (exit-plane) and `notebooks/Main_7_train_evaluate_SimpleNN_full_profile.ipynb` (full axial profile). The same key in `src/ml/model_training.py` is still a no-op CLI placeholder.
+- `neural_network` - **PyTorch MLP** training lives in `notebooks/Main_6_train_evaluate_SimpleNN_IO.ipynb` (exit-plane) and `notebooks/Main_7_train_evaluate_SimpleNN_full_profile.ipynb` (full axial profile). The same key in `src/ml/model_training.py` is still a no-op CLI placeholder.
 
 **Target Types:**
 - `primary` - Core outputs (temperature, pressure, velocity, density)
@@ -121,7 +121,7 @@ The `generate_training_data.py` script:
 The `model_training.py` script and the current notebooks:
 - `Main_4_train_and_evaluate_tree_models_IO.ipynb` for default-parameter exit-plane tree-model baseline evaluation.
 - `Main_5_train_evaluate_tune_tree_model_evolution.ipynb` for one-tree-model tuning and full PFR evolution.
-- `Main_6__train_evaluate_SimpleNN_IO.ipynb` for the PyTorch MLP exit-plane baseline (configurable via `neural_network.*` in `ml_training_config.json`; optional Optuna TPE in Section 6b via `IF_HYPERPARAM_TUNING=True` and `neural_network.tuning`; Section 8 applies LR reduction on stalled test R², early stopping, and restores the best test-R² checkpoint before evaluation/export). §8 training progress CSV; §6b incremental Optuna JSON under `data/logs/` — `scripts/monitor/monitor_nn_training_progress.py` (`MAIN_6=True`, optional `LIVE=True`).
+- `Main_6_train_evaluate_SimpleNN_IO.ipynb` for the PyTorch MLP exit-plane baseline (configurable via `neural_network.*` in `ml_training_config.json`; optional Optuna TPE in Section 6b via `IF_HYPERPARAM_TUNING=True` and `neural_network.tuning`; Section 8 applies LR reduction on stalled test R², early stopping, and restores the best test-R² checkpoint before evaluation/export). §8 training progress CSV; §6b incremental Optuna JSON under `data/logs/` — `scripts/monitor/monitor_nn_training_progress.py` (`MAIN_6=True`, optional `LIVE=True`).
 - `Main_7_train_evaluate_SimpleNN_full_profile.ipynb` for the PyTorch **full-profile** surrogate (same config block; **run-level** test holdout in §4; Optuna §6b on validation rows from train only; §8 train vs test R² overfitting check; optional row cap; `data/logs/` + monitor with `MAIN_7=True`; `USE_CUDA_AMP` / `USE_TORCH_COMPILE` / `OPTUNA_N_JOBS`; §9b axial state+species; §10 4-column parity + shared hexbin colorbar; exports `simple_nn_full_profile_*` + CSVs + figure PNGs).
 
 1. **Data Preparation**:
@@ -131,7 +131,7 @@ The `model_training.py` script and the current notebooks:
 
 2. **Model Training**:
    - `model_training.py` trains tree / boosting models from JSON (no PyTorch path in the CLI).
-   - `Main_6__train_evaluate_SimpleNN_IO.ipynb` trains the PyTorch `SimpleNN` baseline with optional Optuna tuning; the main loop uses **`ReduceLROnPlateau`** on test R² checkpoints, **early stopping** when test R² stalls, then **restores the best test-R² checkpoint** before evaluation and export.
+   - `Main_6_train_evaluate_SimpleNN_IO.ipynb` trains the PyTorch `SimpleNN` baseline with optional Optuna tuning; the main loop uses **`ReduceLROnPlateau`** on test R² checkpoints, **early stopping** when test R² stalls, then **restores the best test-R² checkpoint** before evaluation and export.
    - Notebooks evaluate on a held-out test split after training.
 
 3. **Model Saving**:
@@ -340,7 +340,7 @@ pip install scikit-learn joblib xgboost
 ```
 FileNotFoundError: Model not found: models/xgboost_primary.pkl
 ```
-**Solution**: Train models first (`Main_4_train_and_evaluate_tree_models_IO.ipynb`, `Main_5_train_evaluate_tune_tree_model_evolution.ipynb`, `Main_6__train_evaluate_SimpleNN_IO.ipynb` for the PyTorch NN, or `python src/ml/model_training.py`). Ensure `model_type` in inference config matches an artifact model key you actually trained (e.g. `xgboost`, `random_forest`, `adaboost`).
+**Solution**: Train models first (`Main_4_train_and_evaluate_tree_models_IO.ipynb`, `Main_5_train_evaluate_tune_tree_model_evolution.ipynb`, `Main_6_train_evaluate_SimpleNN_IO.ipynb` for the PyTorch NN, or `python src/ml/model_training.py`). Ensure `model_type` in inference config matches an artifact model key you actually trained (e.g. `xgboost`, `random_forest`, `adaboost`).
 
 ### Out of Memory
 **Solution**: Reduce `max_combinations` or use random sampling

@@ -111,8 +111,11 @@ HydrAI/
 │   ├── Main_3_data_exploration_feature_engineering.ipynb  # Step 3: EDA + feature engineering
 │   ├── Main_4_train_and_evaluate_tree_models_IO.ipynb    # Step 4: Baseline tree evaluation (exit-plane)
 │   ├── Main_5_train_evaluate_tune_tree_model_evolution.ipynb  # Step 5: One-model tuning + full PFR evolution
-│   ├── Main_6__train_evaluate_SimpleNN_IO.ipynb          # Step 6: PyTorch MLP (3 hidden layers) + optional Optuna; §8 LR plateau / early stop / best ckpt; 3-col parity+residuals (all targets); exit exports
-│   └── Main_7_train_evaluate_SimpleNN_full_profile.ipynb # Step 7: full axial rows + relative_position; run-level split; §9b axial (state+species, fixed/random runs); 4-col parity+shared hexbin colorbar; full_profile exports
+│   ├── Main_6_train_evaluate_SimpleNN_IO.ipynb          # Step 6: PyTorch MLP (3 hidden layers) + optional Optuna; §8 LR plateau / early stop / best ckpt; 3-col parity+residuals (all targets); exit exports
+│   ├── Main_7_train_evaluate_SimpleNN_full_profile.ipynb # Step 7: full axial rows + relative_position; run-level split; §9b axial (state+species, fixed/random runs); 4-col parity+shared hexbin colorbar; full_profile exports
+│   ├── Main_8_train_evaluate_PINN_full_profile.ipynb    # Step 8: PINN with PFR ODE residuals; `PINNPFR` (`src/models/pinn.py`) + curriculum warmup; algebraic (EOS/mass/species) + energy ODE (autograd) physics loss; collocation points; pinn_pfr_* exports
+│   ├── Main_9_symbolic_regression_SR.ipynb              # Step 9: PySR distillation of any NN teacher (Main_6/7/8) → closed-form equations; exports sr_<teacher>_equations.py
+│   └── Main_10_optimisation_BO_surrogate_vs_cantera.ipynb # Step 10: Optuna GPSampler BO on MLP + SR surrogates; Cantera validation of both optima
 │
 ├── assets/                       # Static assets (images for README etc.)
 ├── tests/                        # Test suite
@@ -206,7 +209,7 @@ The notebook provides:
 ```bash
 jupyter notebook notebooks/Main_4_train_and_evaluate_tree_models_IO.ipynb
 jupyter notebook notebooks/Main_5_train_evaluate_tune_tree_model_evolution.ipynb
-jupyter notebook notebooks/Main_6__train_evaluate_SimpleNN_IO.ipynb
+jupyter notebook notebooks/Main_6_train_evaluate_SimpleNN_IO.ipynb
 jupyter notebook notebooks/Main_7_train_evaluate_SimpleNN_full_profile.ipynb
 ```
 - Main_4 trains baseline trees (RF, Gradient Boosting, XGBoost, AdaBoost) and saves them to `models/tree_models_exit.joblib` (overwritten each run).

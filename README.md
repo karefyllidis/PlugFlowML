@@ -1,85 +1,49 @@
 # HydrAI
 
-Steam cracking simulations are accurate but slow: one detailed chemistry solve can take seconds to minutes, which makes rapid reactor screening difficult. HydrAI addresses this with a physics-grounded machine-learning surrogate trained on high-fidelity plug-flow reactor data. The result is millisecond-scale inference for design iteration while keeping chemistry-aware behavior anchored to simulation data.
+Machine-learning surrogate models for plug-flow reactor (PFR) steam-cracking simulation.
+Cantera-generated training data flows through tree ensembles, PyTorch MLPs, a
+physics-informed neural network, symbolic regression, and Bayesian optimisation —
+all in a reproducible ten-notebook pipeline.
 
-**On simple single-target or narrow-target surrogates, mean test R² can reach ~0.97–0.99 on selected state/thermo scalars; the multi-output exit-plane models in this repo also include chemistry-lump species, which lowers the uniform eighteen-target average (see Results below).**
-
-[![Python](https://img.shields.io/badge/Python-3.8%2B-blue?logo=python&logoColor=white)](https://www.python.org/)
-[![Cantera](https://img.shields.io/badge/Cantera-3.2.0%2B-green)](https://cantera.org/)
-[![scikit-learn](https://img.shields.io/badge/scikit--learn-1.3%2B-orange?logo=scikit-learn&logoColor=white)](https://scikit-learn.org/)
-[![XGBoost](https://img.shields.io/badge/XGBoost-2.0%2B-red)](https://xgboost.readthedocs.io/)
+[![Python](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python&logoColor=white)](https://www.python.org/)
+[![Cantera](https://img.shields.io/badge/Cantera-3.2%2B-green)](https://cantera.org/)
+[![PyTorch](https://img.shields.io/badge/PyTorch-2.0%2B-red?logo=pytorch&logoColor=white)](https://pytorch.org/)
+[![scikit-learn](https://img.shields.io/badge/scikit--learn-1.3%2B-orange)](https://scikit-learn.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-**Nikolas Karefyllidis, PhD** — [GitHub](https://github.com/karefyllidis) · [LinkedIn](https://www.linkedin.com/in/karefyllidis/) · [Google Scholar](https://scholar.google.co.uk/citations?user=kLGU85cAAAAJ&hl=en)
-
-Parts of the scientific foundation for this project originate from prior doctoral work: [University of Oxford thesis repository entry](https://ora.ox.ac.uk/objects/uuid:2479abe8-fefb-4574-b573-a309c278a614).
+**Nikolas Karefyllidis, PhD** · [GitHub](https://github.com/karefyllidis) · [LinkedIn](https://www.linkedin.com/in/karefyllidis/) · [Google Scholar](https://scholar.google.co.uk/citations?user=kLGU85cAAAAJ&hl=en) · [Oxford thesis](https://ora.ox.ac.uk/objects/uuid:2479abe8-fefb-4574-b573-a309c278a614)
 
 ---
 
-## Problem
+## Motivation
 
-High-fidelity steam-cracking simulation is computationally expensive, so using it directly for broad operating-space exploration is slow. This creates a bottleneck for iterative design, model comparison, and what-if studies across multiple feedstocks. HydrAI targets this gap by preserving a simulation-grade baseline while enabling fast approximations.
+High-fidelity PFR simulation with detailed chemistry (150+ species, 2000+ reactions) takes
+minutes per run. HydrAI replaces the Cantera solver with surrogates that predict the full
+axial state profile — temperature, pressure, velocity, and 9 lumped species yields — in
+milliseconds, enabling real-time design and optimisation workflows.
 
-<details>
-<summary>Background: why detailed simulation is expensive</summary>
+---
 
-Accurate predictions require stiff ODE integration coupled to detailed reaction mechanisms that can include 10^2-10^3 species. HydrAI uses Cantera-based PFR simulation as the reference baseline and trains surrogates against that data.
+## Pipeline
 
-</details>
+| Step | Notebook | Purpose |
+|:---:|---|---|
+| 1 | `Main_1_run_pfr` | Single Cantera PFR run; inline axial profiles |
+| 2 | `Main_2_generate_training_data` | Latin-hypercube sweep; batch PFR generation |
+| 3 | `Main_3_data_exploration_feature_engineering` | Velocity QC · run ID · residence time · EDA · species lumping · `df_rates` |
+| 4 | `Main_4_train_and_evaluate_tree_models_IO` | Tree baselines — RF, GB, XGB, AdaBoost (exit-plane) |
+| 5 | `Main_5_train_evaluate_tune_tree_model_evolution` | Tuned tree + full axial profile reconstruction |
+| 6 | `Main_6_train_evaluate_SimpleNN_IO` | PyTorch `SimpleNN` exit-plane; Optuna; MC-Dropout UQ |
+| 7 | `Main_7_train_evaluate_SimpleNN_full_profile` | PyTorch `SimpleNN` full axial profile; run-level split |
+| 8 | `Main_8_train_evaluate_PINN_full_profile` | `PINNPFR` — PFR ODE residuals; curriculum warmup; collocation |
+| 9 | `Main_9_symbolic_regression_SR` | PySR distillation of any NN teacher → closed-form equations |
+| 10 | `Main_10_optimisation_BO_surrogate_vs_cantera` | Optuna GP-BO: optimise inlet conditions via MLP + SR; Cantera validation |
 
-## Solution
+Main_4 – Main_10 read from `data/processed/features_targets_*.pkl` produced by Main_3.
 
-HydrAI provides a reproducible workflow that pairs detailed simulation with machine-learning surrogates:
+---
 
-1. **Simulate** — Cantera PFR sweeps over broad operating conditions for multiple feedstocks (ethane, propane, n-hexane, naphtha).
-2. **Train surrogates** — multi-output tree ensembles (RF, Gradient Boosting, XGBoost, AdaBoost), with optional `RandomizedSearchCV`.
-3. **Evaluate** — held-out metrics (R², RMSE, MAPE, MBE) per model and per output target in dedicated notebooks.
-
-## Results
-
-- Inference latency shifts from **seconds-minutes** for full chemistry solves to **milliseconds** for surrogate predictions.
-- Representative held-out accuracy depends on **which outputs you score together**: several **state/thermo** targets (the nine `primary_targets` columns in the training notebooks, including velocity and transport-related quantities) reach **very high R²** on a held-out split, while **lumped species** (`Y_lump_chem_*`) are harder; the **uniform mean over all eighteen exit targets** is typically **~0.5–0.65** for the default tree and tuned PyTorch baselines in the table below.
-- One surrogate can be trained across chemically distinct feedstocks rather than only interpolating within a single feed.
-
-![Representative axial evolution](assets/axial_evolution.png)
-
-*Typical axial evolution along normalized reactor length (z/L): temperature rise, pressure drop, and reactant depletion — the full-resolution targets HydrAI learns to predict.*
-
-### Surrogate vs surrogate (rough numbers)
-
-Held-out test R² on the same exit-plane split (n-hexane dataset, 36,745 train / 9,187 test runs, 18 targets, uniform-average R² in physical units). All numbers are single-seed and ±0.01–0.02 across reruns — close calls within that band are noise.
-
-| Notebook | Model | Tuned? | Inputs | Test R² (avg) | Train–Test R² gap |
-|---|---|:---:|:---:|:---:|:---:|
-| `Main_4` | Gradient Boosting | – | 8 | **0.603** | 0.09 |
-| `Main_4` | Random Forest     | – | 8 | 0.593 | 0.35 |
-| `Main_4` | XGBoost           | – | 8 | 0.561 | 0.16 |
-| `Main_4` | AdaBoost          | – | 8 | 0.509 | 0.05 |
-| `Main_6` | **PyTorch MLP**   | Optuna TPE (30 trials, 50 epochs / trial) | 6 | **0.615** | **0.03** |
-
-Per-target headline (test R²): `pressure_Pa` ≈ 0.98 (NN, GBR, XGB all tied), `density_kgm3` ≈ 0.78–0.79, `temperature_K` ≈ 0.59–0.60. Species/lumped targets dominate the mid-band (R² ≈ 0.45–0.73) and are what drives the uniform average down.
-
-**State/thermo vs species (exit-plane):** The eighteen outputs are **nine** **state/thermo** columns from `primary_targets` in the training notebooks (temperature, pressure, velocity, density, mixture weight, `cp`/`cv`, enthalpy, thermal conductivity) and **nine** `Y_lump_chem_*` mass fractions. Uniform-average R² is almost always **higher on the nine state/thermo columns** than on the nine species lumps; the headline eighteen-target mean sits between the two. After you run `Main_6__train_evaluate_SimpleNN_IO.ipynb`, the export manifest `models/simple_nn_exit_manifest.json` includes `metrics.test_r2_state` and `metrics.test_r2_species` (plus train-side counterparts) so you can quote the split for your exact run. `Main_4_train_and_evaluate_tree_models_IO.ipynb` prints a full per-target test R² pivot for each tree family.
-
-**Does full axial / PFR-evolution training improve the exit-plane numbers?** In `Main_5_train_evaluate_tune_tree_model_evolution.ipynb`, **`TRAIN_FULL_PROFILE`** trains a **second** model on **all axial rows** with `relative_position` as an extra input and a **run-level train/test split** (no leakage along the same reactor profile). That step **does not retrain or retune the exit-only model**; it is a **different prediction task** (entire profile vs outlet row). It can deliver **strong profile-level accuracy** (the notebook reports about **R² ≈ 0.85** uniform average for tuned XGBoost on that task in the reference configuration), but you should **not** compare that scalar directly to exit-plane **~0.6** averages: different rows, different inputs, and different effective difficulty. To improve **exit** accuracy specifically, focus on tuning/features/data for the exit task; use full-profile training when you need **axial trajectories**, not as an automatic boost to exit metrics.
-
-Takeaways:
-- The tuned `SimpleNN` (Main_6) is **~0.01 R² ahead of the best default tree** and has the **smallest train-test gap** (0.03), so it generalises cleanly even though it sees two fewer inputs.
-- Tree baselines are competitive **without** tuning and train in seconds — a strong tabular default for this dataset.
-- A fair tuned-vs-tuned comparison needs `Main_5` (`BayesSearchCV` on XGBoost) run on the exit-plane task; expect parity with the NN at a fraction of the compute. Tuned XGBoost on the full-profile task (`relative_position` as an input) reaches R² ≈ **0.85**, but that is a **different objective** than the exit-plane eighteen-target average in the table above.
-
-### Why It Matters
-
-HydrAI delivers millisecond inference instead of second-to-minute chemistry solves, which substantially reduces iteration time during screening and early design studies. That speedup enables larger parameter sweeps and faster model-selection cycles without discarding a high-fidelity reference workflow. Because the surrogates are trained on detailed PFR simulations, the approach remains grounded in physically informed data. The same framework supports both local experimentation and cluster-scale data generation.
-
-## Impact
-
-- **Faster engineering loops:** screen operating windows in milliseconds instead of waiting for full chemistry solves.
-- **Broader search coverage:** evaluate more feedstock-condition combinations within the same compute budget.
-- **Better HPC utilization:** reserve expensive detailed simulations for dataset generation and final validation, then use surrogates for rapid iteration.
-- **Reproducible decision support:** move from simulation to model evaluation with a documented notebook and config-driven workflow.
-
-## How to Run
+## Quick Start
 
 ```bash
 git clone https://github.com/karefyllidis/HydrAI.git
@@ -87,66 +51,147 @@ cd HydrAI
 pip install -r requirements.txt
 ```
 
-1. Install **Cantera** for your interpreter ([guide](https://cantera.org)).
-2. Place mechanism YAML files in `mechanisms/` (configured in `configs/simulation/reactant_database.json`).
-3. Run notebooks in order:
-   - `Main_1` (single PFR run)
-   - `Main_2` (training data generation)
-   - `Main_3` (EDA + feature engineering)
-   - `Main_4_train_and_evaluate_tree_models_IO` (baseline inlet-to-outlet evaluation)
-   - `Main_5_train_evaluate_tune_tree_model_evolution` (one-model tuning + full PFR evolution)
-   - `Main_6__train_evaluate_SimpleNN_IO` (PyTorch MLP baseline, inlet→outlet only; `configs/ml/ml_training_config.json` → `neural_network`; optional Optuna §6b on a **validation** fold (test held out); §8 `ReduceLROnPlateau` on **test** R² checkpoints, early stopping, best-checkpoint restore; **3-column** parity + residual grids for **all state + species**; exports `simple_nn_exit_*` **including** per-target and group metric CSVs when `IF_MODEL_EXPORT`; §8 writes `data/logs/…_training_progress.csv`; §6b updates `data/logs/…_optuna_tuning_plot_data.json` — live plots: `scripts/monitor/monitor_nn_training_progress.py` with `MAIN_6=True`, optional `LIVE=True`)
-   - `Main_7_train_evaluate_SimpleNN_full_profile` (PyTorch **full axial** `SimpleNN` with `relative_position` in `feature_cols`; same `neural_network` keys and §8 pattern as Main_6; **run-level** train/test split (§4); Optuna §6b uses **validation rows** carved from train data only — **test runs never seen in tuning**; §8 train vs **test-run** R² is the main overfitting check; optional `FULL_PROFILE_MAX_ROWS` for smoke runs; same `data/logs/` + monitor as Main_6 (`MAIN_7=True`; monitor auto-picks Optuna JSON vs training CSV); plus **`USE_CUDA_AMP`**, **`USE_TORCH_COMPILE`**, **`OPTUNA_N_JOBS`**; §9 metrics + §9b **axial overlays** along `x/L` (state + species; **fixed vs random** test runs); §10 **4-column** parity (**shared hexbin** or scatter); exports `simple_nn_full_profile_*` + CSVs + manifest `auxiliary_exports`; figures under `outputs/figures/Main_7_train_evaluate_SimpleNN_full_profile/`. Details: [docs/ML_CONFIG_GUIDE.md](docs/ML_CONFIG_GUIDE.md) § *Main_7 — data splits and overfitting*.)
-4. Local parallel sweep: `python scripts/local/run_main2_local_parallel.py --ntasks 4`
+1. Install [Cantera](https://cantera.org) into the same environment.
+2. Place mechanism YAML files in `mechanisms/` (see `configs/simulation/reactant_database.json`).
+3. Run notebooks in order: `Main_1` → `Main_2` → `Main_3` → … → `Main_10`.
+4. All hyperparameters live in `configs/ml/ml_training_config.json`.
 
-For cluster execution, use `scripts/cluster/` and follow the post-run monitor/verify/consolidate workflow:
-- Monitor: `bash scripts/monitor/monitor_cluster_jobs.sh`
-- Verify: `python scripts/dev/check_complete_runs.py`
-- Consolidate: `python scripts/dev/consolidate_training_data.py` (`--no-cleanup` to keep task files, `--dry-run` to preview only)
-- Continue with `notebooks/Main_3_data_exploration_feature_engineering.ipynb`
+**CLI inference** (requires Main_6 / Main_7 / Main_8 exports):
 
-Cluster submission tip (CRLF-safe): `bash scripts/dev/sbatch_safe.sh scripts/cluster/run_training_mul_GPUs.sh`
+```bash
+# SimpleNN exit-plane prediction
+python scripts/predict.py --model nn \
+    --T 850 --P 2.5 --L 12 --D 0.032 --mdot 0.07 --q 180000
 
-Advanced references:
-- CSD3-specific SLURM setup: [docs/HPC_GUIDE.md](docs/HPC_GUIDE.md)
-- Figure export flags and species-lumping controls: [docs/SPECIES_LUMPING_MODEL_CARD.md](docs/SPECIES_LUMPING_MODEL_CARD.md)
-- Full ML config keys: [docs/ML_CONFIG_GUIDE.md](docs/ML_CONFIG_GUIDE.md)
-- Repository layout details: [docs/STRUCTURE.md](docs/STRUCTURE.md)
-- Main_6 / Main_7 live training logs: [data/logs/README.md](data/logs/README.md)
+# PINNPFR full axial profile → CSV
+python scripts/predict.py --model pinn --n-points 200 --output profile.csv
 
-## Repository Structure
-
-    HydrAI/
-    ├── notebooks/            # Main_1 → Main_7  ·  PFR → sweep → EDA → baseline trees → tuned trees + evolution → PyTorch exit NN → PyTorch full-profile NN
-    ├── src/                  # cantera/, ml/, utils/
-    ├── configs/              # simulation/, ml/, style/
-    ├── scripts/              # cluster/, local/, monitor/, dev/
-    ├── data/                 # training/, processed/, logs/ (generated; git-ignored)
-    ├── models/               # trained artifacts (generated; git-ignored)
-    ├── mechanisms/           # local YAML kinetic files (git-ignored)
-    └── docs/                 # guides, API reference, structure trees
-
-## Roadmap
-
-- [x] Multi-feed PFR with detailed chemistry
-- [x] LHS / grid sampling, SLURM-aware parallel data generation
-- [x] Multi-output tree surrogates, baseline comparison, and one-model hyperparameter tuning notebook
-- [x] Species lumping for dimensionality reduction (by carbon number & chemistry role); optional lumped export for ML
-- [x] Full axial-profile tuning workflow — `Main_5_train_evaluate_tune_tree_model_evolution.ipynb` tunes one selected tree model on full PFR evolution with `relative_position` as an input
-- [x] PyTorch MLP baseline (inlet→outlet) — `Main_6__train_evaluate_SimpleNN_IO.ipynb`; 3-hidden-layer `SimpleNN`, dropout, optional Optuna TPE (`IF_HYPERPARAM_TUNING`, `neural_network.tuning`), then production training with **LR on stalled test R²**, **early stopping**, **best-checkpoint restore**, train/test convergence, parity, residuals, and a per-target R² bar chart (hatch by state/thermo vs species; reference vlines such as R² = 0 labelled **naive baseline**)
-- [x] PyTorch full axial profile — `Main_7_train_evaluate_SimpleNN_full_profile.ipynb` (same `SimpleNN` + `neural_network.*` as Main_6; run-level split; optional Optuna; axial overlay figures; exports `simple_nn_full_profile_*`)
-- [ ] Physics-informed neural surrogate
-- [ ] Bayesian / gradient-free design optimisation loop
+# Tree ensemble batch prediction from JSON
+python scripts/predict.py --model tree --json conditions.json --output results.csv
+```
 
 ---
 
-## Contributing · License
+## Repository Layout
 
-Contributions are welcome via pull requests. [MIT](LICENSE) © Nikolas Karefyllidis
+```
+HydrAI/
+├── notebooks/          Main_1 – Main_10
+├── src/
+│   ├── cantera/        PFR simulator (Cantera wrapper)
+│   ├── ml/             data generation, tree training, inference
+│   ├── models/         SimpleNN, PINNPFR
+│   ├── physics/        PFR ODE residuals (PINN physics loss)
+│   └── utils/          plot_style, training_progress_log
+├── configs/
+│   ├── ml/             ml_training_config.json, ml_data_generation_config.json
+│   ├── simulation/     reactant_database.json, heat_flux_profile.json
+│   └── style/          plot aesthetics
+├── scripts/            cluster/, local/, monitor/, dev/
+├── data/               training/, processed/, logs/        (git-ignored)
+├── models/             trained artefacts + SR equations    (git-ignored)
+├── mechanisms/         YAML kinetic files                  (git-ignored)
+└── docs/               guides, config reference, conventions
+```
 
-## Model cards
+---
 
-- Repository model card: [docs/MODEL_CARD.md](docs/MODEL_CARD.md)
-- Hugging Face-ready template: [docs/HF_MODEL_CARD_TEMPLATE.md](docs/HF_MODEL_CARD_TEMPLATE.md)
-- Training data generation protocol: [docs/TRAINING_DATA_GENERATION_PROTOCOL_MODEL_CARD.md](docs/TRAINING_DATA_GENERATION_PROTOCOL_MODEL_CARD.md)
-- **Species lumping methodology** (grouping rules, sum-of-`Y_*` aggregation, export modes): [docs/SPECIES_LUMPING_MODEL_CARD.md](docs/SPECIES_LUMPING_MODEL_CARD.md)
+## Data Card
+
+| Field | Value |
+|---|---|
+| Feedstock | n-hexane (primary); ethane, propane, naphtha supported |
+| Mechanism | 153 species, 2 146 reactions |
+| Simulation | Cantera 3.2 PFR, wall heat flux |
+| Inlet T / P | 800 – 900 K / 1.5 – 3.5 bar |
+| Reactor L / D | 10 – 15 m / 25 – 40 mm |
+| Mass flow / Heat flux | 0.05 – 0.10 kg/s / 100 – 250 kW/m² |
+| Sampling | Latin Hypercube (6 parameters) |
+| Axial resolution | 200 steps per run |
+| Targets | 9 state/thermo variables + 9 lumped species mass fractions |
+| Train / test split | 80 / 20 run-level (no axial leakage) |
+| Velocity QC | Runs with u ≤ 0 or u above 99.5th-percentile removed (Main_3 §2.1b) |
+
+---
+
+## Model Architecture
+
+### SimpleNN (Main_6 / Main_7)
+
+Three-hidden-layer MLP with ReLU activations and Dropout (`src/models/simple_nn.py`).
+Main_6 uses the exit-plane variant (6 inlet inputs → 18 outputs) with Optuna
+hyperparameter tuning and MC-Dropout uncertainty quantification. Main_7 extends to the
+full axial profile by adding z/L as an input.
+
+### PINNPFR (Main_8)
+
+Dedicated physics-informed class (`src/models/pinn.py`), same MLP topology as SimpleNN
+but decoupled so PINN-specific changes never affect data-only surrogates.
+
+Composite loss:
+
+```
+L = λ_data · MSE(ŷ, y)  +  λ_phys · L_physics
+```
+
+Physics constraints enforced: EOS (ideal gas), mass conservation (ρuA = ṁ), species
+sum = 1, species ≥ 0, energy ODE via `torch.autograd.grad` on `relative_position`.
+Curriculum warmup trains on data loss only for the first `CURRICULUM_WARMUP_EPOCHS`,
+then switches on physics. Unlabelled collocation points sample random z/L per
+mini-batch. All λ weights in `configs/ml/ml_training_config.json → pinn.loss_weights`.
+
+---
+
+## Symbolic Regression (Main_9)
+
+Main_9 distils any trained NN teacher into closed-form NumPy-callable expressions via
+[PySR](https://github.com/MilesCranmer/PySR). Set `TEACHER_STEM` to choose the source:
+
+| `TEACHER_STEM` | Source | Inputs |
+|---|---|---|
+| `simple_nn_exit` | Main_6 | 6 inlet conditions |
+| `simple_nn_full_profile` | Main_7 | 6 inlet conditions + z/L |
+| `pinn_pfr` | Main_8 | 6 inlet conditions + z/L |
+
+Equations export to `models/sr_<teacher>/sr_<teacher>_equations.py` — inference requires
+no PyTorch runtime. Operators: `+, -, *, /, exp, sqrt, square`.
+
+---
+
+## Bayesian Optimisation (Main_10)
+
+Main_10 uses Optuna `GPSampler` to find inlet conditions that maximise a target yield
+(default: `Y_lump_olefins`) within the training domain. Two independent studies run
+in sequence — one with the MLP (Main_6) as the objective, one with the SR expressions
+(Main_9). Both optima are then validated by a real Cantera PFR simulation, and the
+surrogate prediction error is reported alongside a parameter-space comparison plot.
+
+---
+
+## Roadmap
+
+- [x] Cantera PFR simulation (multi-feed, detailed chemistry)
+- [x] Latin-hypercube sampling; cluster-aware parallel data generation
+- [x] Velocity QC, run ID, residence time, reaction rate proxies (`df_rates`)
+- [x] Tree surrogates with baseline comparison and hyperparameter tuning
+- [x] Species lumping (chemistry-role and carbon-number groupings)
+- [x] `SimpleNN` exit-plane — Optuna, early stopping, MC-Dropout UQ (Main_6)
+- [x] `SimpleNN` full axial profile — run-level split, Optuna (Main_7)
+- [x] `PINNPFR` — composite loss, curriculum warmup, autograd physics (Main_8)
+- [x] Symbolic regression distillation via PySR; multi-teacher support (Main_9)
+- [x] Bayesian optimisation: Optuna GP-BO with Cantera validation (Main_10)
+- [ ] Profile RNN / LSTM surrogate
+- [ ] Bayesian optimisation with safety constraints (SEBO)
+
+---
+
+## Further Reading
+
+- [docs/STRUCTURE.md](docs/STRUCTURE.md) — full repository layout
+- [docs/ML_CONFIG_GUIDE.md](docs/ML_CONFIG_GUIDE.md) — config key reference
+- [docs/HYDRAI_PROJECT_CONVENTIONS.md](docs/HYDRAI_PROJECT_CONVENTIONS.md) — coding and plotting standards
+- [CLAUDE.md](CLAUDE.md) — Claude Code project guidelines
+
+---
+
+[MIT](LICENSE) © Nikolas Karefyllidis
