@@ -244,11 +244,11 @@ python src/ml/model_training.py configs/ml/ml_training_config.json
 - `data_file`: Path to training data CSV (supports glob patterns)
 - `output_dir`: Directory to save trained models
 - `target_types`: List of target types (`primary`, `secondary`, `species`, `all`)
-- `models`: List of models to train (`neural_network` is a PyTorch placeholder in `src/ml/model_training.py` — production NN training is in `notebooks/Main_6__train_evaluate_SimpleNN_IO.ipynb` (exit-plane) and `notebooks/Main_7_train_evaluate_SimpleNN_full_profile.ipynb` (full axial profile). The CLI `all` keyword expands to RF + XGBoost + GB only.)
+- `models`: List of models to train (`neural_network` is a PyTorch placeholder in `src/ml/model_training.py` — production NN training is in `notebooks/Main_6_train_evaluate_SimpleNN_IO.ipynb` (exit-plane) and `notebooks/Main_7_train_evaluate_SimpleNN_full_profile.ipynb` (full axial profile). The CLI `all` keyword expands to RF + XGBoost + GB only.)
 - `test_size`: Fraction of data for testing (0.0-1.0)
 - `random_state`: Random seed for reproducibility
 
-**`neural_network` parameters (consumed by `notebooks/Main_6__train_evaluate_SimpleNN_IO.ipynb` and `notebooks/Main_7_train_evaluate_SimpleNN_full_profile.ipynb`):**
+**`neural_network` parameters (consumed by `notebooks/Main_6_train_evaluate_SimpleNN_IO.ipynb` and `notebooks/Main_7_train_evaluate_SimpleNN_full_profile.ipynb`):**
 
 - `epochs` (int, default 200): number of Adam epochs over the training set.
 - `batch_size` (int, default 256): mini-batch size for `DataLoader(shuffle=True)`. Capped at `len(train_ds)` if larger.

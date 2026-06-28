@@ -27,8 +27,9 @@ HydrAI/
 │   ├── Main_3_data_exploration_feature_engineering.ipynb  # Step 3: Data exploration and feature engineering
 │   ├── Main_4_train_and_evaluate_tree_models_IO.ipynb
 │   ├── Main_5_train_evaluate_tune_tree_model_evolution.ipynb
-│   ├── Main_6__train_evaluate_SimpleNN_IO.ipynb
-│   └── Main_7_train_evaluate_SimpleNN_full_profile.ipynb
+│   ├── Main_6_train_evaluate_SimpleNN_IO.ipynb
+│   ├── Main_7_train_evaluate_SimpleNN_full_profile.ipynb
+│   └── Main_8_train_evaluate_PINN_full_profile.ipynb
 ├── src/                                 # Source code
 │   ├── cantera/                         # Cantera simulation
 │   │   └── pfr_simulator.py            # Main PFR simulation
@@ -134,8 +135,9 @@ See **Version control** in `README.md` and root `.gitignore` for the authoritati
 | **Step 3 Exploration** | `notebooks/Main_3_data_exploration_feature_engineering.ipynb` | Present | OK |
 | **Step 4 Tree ML** | `notebooks/Main_4_train_and_evaluate_tree_models_IO.ipynb` | Baseline tree evaluation (RF, GB, XGBoost, AdaBoost; exit-plane only, no tuning) | OK |
 | **Step 5 Tuning + PFR Evolution** | `notebooks/Main_5_train_evaluate_tune_tree_model_evolution.ipynb` | One-tree-model `BayesSearchCV` tuning on exit plane; reuses params for full PFR evolution | OK |
-| **Step 6 PyTorch NN** | `notebooks/Main_6__train_evaluate_SimpleNN_IO.ipynb` | PyTorch `SimpleNN` (3 hidden layers); reads `neural_network.*`; optional Optuna §6b (val fold, test held out); §8 LR-on-plateau (test R²), early stopping, best-checkpoint restore; progress CSV + Optuna JSON; monitor `scripts/monitor/monitor_nn_training_progress.py` (`MAIN_6`, optional `LIVE`) | OK |
+| **Step 6 PyTorch NN** | `notebooks/Main_6_train_evaluate_SimpleNN_IO.ipynb` | PyTorch `SimpleNN` (3 hidden layers); reads `neural_network.*`; optional Optuna §6b (val fold, test held out); §8 LR-on-plateau (test R²), early stopping, best-checkpoint restore; progress CSV + Optuna JSON; monitor `scripts/monitor/monitor_nn_training_progress.py` (`MAIN_6`, optional `LIVE`) | OK |
 | **Step 7 PyTorch full profile** | `notebooks/Main_7_train_evaluate_SimpleNN_full_profile.ipynb` | Same `SimpleNN` + `neural_network.*` as Main_6; full axial rows with `relative_position`; **run-level** test holdout (§4); Optuna §6b on **val rows from train** (test blind); §8 train/test R² overfitting diagnostic; optional `FULL_PROFILE_MAX_ROWS`; monitor `scripts/monitor/monitor_nn_training_progress.py` (`MAIN_7`, optional `LIVE`); `USE_CUDA_AMP` / `USE_TORCH_COMPILE` / `OPTUNA_N_JOBS`; §9b axial overlays; §10 4-column parity; exports `simple_nn_full_profile_*` + figure PNGs. See `docs/ML_CONFIG_GUIDE.md` (Main_7 splits). | OK |
+| **Step 8 PINN PFR** | `notebooks/Main_8_train_evaluate_PINN_full_profile.ipynb` | Physics-informed `PINNPFR`; same arch as Main_7 + composite loss: `λ_data·MSE + λ_phys·L_physics`; algebraic constraints (EOS, mass, species sum/nonneg) + energy ODE via `torch.autograd.grad`; curriculum warmup; collocation points (N unlabelled z/L per batch); reads `pinn.*` + `neural_network.*`; §13 physics-residual-along-z diagnostic; exports `pinn_pfr_*`; monitor via same training progress CSV. | OK |
 | **Database** | `configs/simulation/reactant_database.json` | Present | OK |
 | **Template** | `configs/simulation/config_template.json` | Present | OK |
 | **Dependencies** | `requirements.txt` | Present | OK |
@@ -223,7 +225,7 @@ SIMULATION COMPLETED SUCCESSFULLY!
 | `notebooks/Main_3_data_exploration_feature_engineering.ipynb` | Step 3: Data exploration and feature engineering (Jupyter notebook) | Working |
 | `notebooks/Main_4_train_and_evaluate_tree_models_IO.ipynb` | Step 4: Baseline tree evaluation (exit-plane, no tuning) | OK |
 | `notebooks/Main_5_train_evaluate_tune_tree_model_evolution.ipynb` | Step 5: One-model tuning and full PFR evolution | OK |
-| `notebooks/Main_6__train_evaluate_SimpleNN_IO.ipynb` | Step 6: PyTorch MLP (`SimpleNN`, `h1`–`h3`) with optional Optuna (6b) and production training (8): LR schedule on test R², early stopping, best-checkpoint restore | OK |
+| `notebooks/Main_6_train_evaluate_SimpleNN_IO.ipynb` | Step 6: PyTorch MLP (`SimpleNN`, `h1`–`h3`) with optional Optuna (6b) and production training (8): LR schedule on test R², early stopping, best-checkpoint restore | OK |
 | `notebooks/Main_7_train_evaluate_SimpleNN_full_profile.ipynb` | Step 7: full-profile `SimpleNN`; run-level split; optional Optuna; §9b axial (state+species); §10 parity/residuals; optional row cap for smoke runs; exports `simple_nn_full_profile_*` + figures under `outputs/figures/Main_7_train_evaluate_SimpleNN_full_profile/` | OK |
 | `src/cantera/pfr_simulator.py` | Main simulation code | Working |
 | `configs/simulation/reactant_database.json` | Reactant definitions | Complete |
