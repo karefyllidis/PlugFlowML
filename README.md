@@ -35,61 +35,48 @@ High-fidelity steam-cracking simulation requires stiff ODE integration coupled t
 
 ---
 
-## Results
-
-Inference shifts from seconds–minutes (full chemistry solve) to milliseconds (surrogate). Representative held-out metrics on an n-hexane exit-plane split (36,745 train / 9,187 test runs, 18 targets):
-
-| Notebook | Model | Tuned | Test R² (avg) | Train–Test gap |
-|---|---|:---:|:---:|:---:|
-| `Main_4` | Gradient Boosting | – | 0.603 | 0.09 |
-| `Main_4` | Random Forest | – | 0.593 | 0.35 |
-| `Main_4` | XGBoost | – | 0.561 | 0.16 |
-| `Main_4` | AdaBoost | – | 0.509 | 0.05 |
-| `Main_6` | PyTorch MLP | Optuna (30 trials) | **0.615** | **0.03** |
-
-The 18 targets span nine state/thermo scalars (temperature, pressure, velocity, density, mixture weight, cp/cv, enthalpy, thermal conductivity) and nine lumped species mass fractions. State/thermo targets routinely reach R² ≈ 0.90–0.98; lumped species are harder and drive the uniform average down. Per-group metrics are exported to `models/simple_nn_exit_manifest.json` after each Main_6 run.
-
-Full axial-profile models (Main_5 tuned XGBoost, Main_7 `SimpleNN`) are trained on all axial rows with `relative_position` as an additional input and a run-level train/test split to prevent leakage. These target a different prediction task (entire PFR trajectory vs outlet row) and should not be compared directly to exit-plane averages.
-
----
-
 ## Architecture
 
 ### SimpleNN (`src/models/simple_nn.py`)
-Three hidden layers with ReLU activations and dropout, trained with AdamW and `ReduceLROnPlateau`. Optional Optuna TPE hyperparameter search on a validation fold (test set held out throughout). Best-checkpoint restore on test R² plateau.
+
+Three hidden layers with ReLU activations and dropout, trained with AdamW and `ReduceLROnPlateau`. Optional Optuna TPE hyperparameter search on a held-out validation fold. Best-checkpoint restore on test R² plateau.
 
 ### PINNPFR (`src/models/pinn.py`)
-Same topology as `SimpleNN` with an added physics-residual loss term derived from the PFR governing equations (`src/physics/pfr_residuals.py`). The composite loss is:
 
-$$\mathcal{L} = \mathcal{L}_\text{data} + \lambda \, \mathcal{L}_\text{physics}$$
+Same topology as `SimpleNN` with an added physics-residual loss derived from the PFR governing equations (`src/physics/pfr_residuals.py`):
+
+```
+L = λ_data · MSE(ŷ, y)  +  λ_phys · L_physics
+```
+
+Constraints enforced: ideal-gas EOS, mass conservation (ρuA = ṁ), species sum = 1, species ≥ 0, energy ODE via autograd on `relative_position`. Curriculum warmup trains on data loss only for the first `CURRICULUM_WARMUP_EPOCHS` epochs before switching on the physics term.
 
 ### Symbolic Regression (`Main_9`)
-PySR distillation from any NN teacher. Set `TEACHER_STEM` to `simple_nn_exit`, `simple_nn_full_profile`, or `pinn_pfr`; the notebook auto-selects model class, sampling strategy, and export directory. Output: human-readable Python equations importable by Main_10.
+
+PySR distillation from any NN teacher. Set `TEACHER_STEM` to `simple_nn_exit`, `simple_nn_full_profile`, or `pinn_pfr`; the notebook auto-selects model class, sampling strategy, and export directory. Output: human-readable Python equations importable by Main_10 with no PyTorch dependency.
 
 ### Bayesian Optimisation (`Main_10`)
-Optuna `GPSampler` maximises olefin yield over six inlet degrees of freedom. Runs two independent studies (MLP surrogate and SR equations), then validates both optima with Cantera PFR simulations and compares surrogate predictions against ground truth.
+
+Optuna `GPSampler` maximises olefin yield over six inlet degrees of freedom. Runs two independent studies (MLP surrogate and SR equations), then validates both optima with Cantera PFR simulations and reports surrogate prediction error alongside a parameter-space comparison plot.
 
 ---
 
 ## Quick Start
 
 ```bash
-git clone https://github.com/karefyllidis/HydrAI.git
-cd HydrAI
+git clone https://github.com/karefyllidis/open_HydrAI.git
+cd open_HydrAI
 pip install -r requirements.txt
 ```
 
 1. Install **Cantera** ([cantera.org](https://cantera.org)).
 2. Place mechanism YAML files in `mechanisms/` (referenced by `configs/simulation/reactant_database.json`).
-3. Run notebooks in order: `Main_1` → `Main_2` → `Main_3` → `Main_4` → … → `Main_10`.
+3. Run notebooks in order: `Main_1` → `Main_2` → `Main_3` → … → `Main_10`.
 
 For cluster data generation:
 
 ```bash
-# Submit
 bash scripts/dev/sbatch_safe.sh scripts/cluster/run_training_mul_GPUs.sh
-
-# Monitor → verify → consolidate
 bash scripts/monitor/monitor_cluster_jobs.sh
 python scripts/dev/check_complete_runs.py
 python scripts/dev/consolidate_training_data.py
@@ -98,10 +85,10 @@ python scripts/dev/consolidate_training_data.py
 Live training monitor (while Main_6 or Main_7 runs):
 
 ```bash
-python scripts/monitor/monitor_nn_training_progress.py  # auto-detects newest log
+python scripts/monitor/monitor_nn_training_progress.py
 ```
 
-**CLI inference** (requires Main_6 / Main_7 / Main_8 exports):
+CLI inference (requires trained model exports from Main_6 / Main_7 / Main_8):
 
 ```bash
 # SimpleNN exit-plane prediction
@@ -120,7 +107,7 @@ python scripts/predict.py --model tree --json conditions.json --output results.c
 ## Repository Layout
 
 ```
-HydrAI/
+open_HydrAI/
 ├── notebooks/          # Main_1 → Main_10
 ├── src/
 │   ├── cantera/        # PFR simulation wrapper
@@ -155,6 +142,7 @@ Full tree with file-level descriptions: [docs/STRUCTURE.md](docs/STRUCTURE.md).
 | Targets | 9 state/thermo variables + 9 lumped species mass fractions |
 | Train / test split | 80 / 20 run-level (no axial leakage) |
 | Velocity QC | Runs with u ≤ 0 or u above 99.5th-percentile removed (Main_3 §2.1b) |
+
 ---
 
 ## Roadmap
@@ -182,7 +170,6 @@ Full tree with file-level descriptions: [docs/STRUCTURE.md](docs/STRUCTURE.md).
 - ML configuration keys: [docs/ML_CONFIG_GUIDE.md](docs/ML_CONFIG_GUIDE.md)
 - CSD3 HPC setup: [docs/HPC_GUIDE.md](docs/HPC_GUIDE.md)
 - Project conventions: [docs/HYDRAI_PROJECT_CONVENTIONS.md](docs/HYDRAI_PROJECT_CONVENTIONS.md)
-- Claude Code guidelines: [CLAUDE.md](CLAUDE.md)
 
 Parts of the scientific foundation originate from prior doctoral work: [University of Oxford thesis](https://ora.ox.ac.uk/objects/uuid:2479abe8-fefb-4574-b573-a309c278a614).
 
