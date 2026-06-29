@@ -12,10 +12,10 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Mapping
 
-# Notebook figure/report stems (keep in sync with monitor MAIN_6 / MAIN_7 flags).
+# Notebook figure/report stems (keep in sync with monitor MAIN_6 / MAIN_7 / MAIN_8 flags).
 MAIN_6_STEM = "Main_6__train_evaluate_SimpleNN_IO"
 MAIN_7_STEM = "Main_7_train_evaluate_SimpleNN_full_profile"
-MAIN_8_STEM = "Main_8_train_evaluate_GRU_profile_evolution"
+MAIN_8_STEM = "Main_8_PINN_PFR"
 
 # Main_6 / Main_7 §8 CSV + §6b Optuna JSON (monitor reads via path helpers below).
 DATA_LOGS_DIRNAME = "data/logs"

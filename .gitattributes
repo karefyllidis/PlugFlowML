@@ -3,3 +3,5 @@
 
 # Preserve Windows launcher behavior.
 *.bat text eol=crlf
+*.ipynb filter=nbstripout
+*.ipynb diff=ipynb

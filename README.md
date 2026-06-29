@@ -101,6 +101,20 @@ Live training monitor (while Main_6 or Main_7 runs):
 python scripts/monitor/monitor_nn_training_progress.py  # auto-detects newest log
 ```
 
+**CLI inference** (requires Main_6 / Main_7 / Main_8 exports):
+
+```bash
+# SimpleNN exit-plane prediction
+python scripts/predict.py --model nn \
+    --T 850 --P 2.5 --L 12 --D 0.032 --mdot 0.07 --q 180000
+
+# PINNPFR full axial profile → CSV
+python scripts/predict.py --model pinn --n-points 200 --output profile.csv
+
+# Tree ensemble batch prediction from JSON
+python scripts/predict.py --model tree --json conditions.json --output results.csv
+```
+
 ---
 
 ## Repository Layout
@@ -126,6 +140,23 @@ Full tree with file-level descriptions: [docs/STRUCTURE.md](docs/STRUCTURE.md).
 
 ---
 
+## Data Card
+
+| Field | Value |
+|---|---|
+| Feedstock | n-hexane (primary); ethane, propane, naphtha supported |
+| Mechanism | 153 species, 2 146 reactions |
+| Simulation | Cantera 3.2 PFR, wall heat flux |
+| Inlet T / P | 800 – 900 K / 1.5 – 3.5 bar |
+| Reactor L / D | 10 – 15 m / 25 – 40 mm |
+| Mass flow / Heat flux | 0.05 – 0.10 kg/s / 100 – 250 kW/m² |
+| Sampling | Latin Hypercube (6 parameters) |
+| Axial resolution | 200 steps per run |
+| Targets | 9 state/thermo variables + 9 lumped species mass fractions |
+| Train / test split | 80 / 20 run-level (no axial leakage) |
+| Velocity QC | Runs with u ≤ 0 or u above 99.5th-percentile removed (Main_3 §2.1b) |
+---
+
 ## Roadmap
 
 - [x] Multi-feed PFR simulation with detailed chemistry (Cantera)
@@ -138,6 +169,8 @@ Full tree with file-level descriptions: [docs/STRUCTURE.md](docs/STRUCTURE.md).
 - [x] Physics-informed neural network with PFR residual loss (`Main_8`)
 - [x] Symbolic regression distillation from any NN teacher (`Main_9`)
 - [x] Gaussian-process Bayesian optimisation with Cantera validation (`Main_10`)
+- [ ] Profile RNN / LSTM surrogate
+- [ ] Bayesian optimisation with safety constraints (SEBO)
 
 ---
 
@@ -148,6 +181,8 @@ Full tree with file-level descriptions: [docs/STRUCTURE.md](docs/STRUCTURE.md).
 - Species lumping methodology: [docs/SPECIES_LUMPING_MODEL_CARD.md](docs/SPECIES_LUMPING_MODEL_CARD.md)
 - ML configuration keys: [docs/ML_CONFIG_GUIDE.md](docs/ML_CONFIG_GUIDE.md)
 - CSD3 HPC setup: [docs/HPC_GUIDE.md](docs/HPC_GUIDE.md)
+- Project conventions: [docs/HYDRAI_PROJECT_CONVENTIONS.md](docs/HYDRAI_PROJECT_CONVENTIONS.md)
+- Claude Code guidelines: [CLAUDE.md](CLAUDE.md)
 
 Parts of the scientific foundation originate from prior doctoral work: [University of Oxford thesis](https://ora.ox.ac.uk/objects/uuid:2479abe8-fefb-4574-b573-a309c278a614).
 

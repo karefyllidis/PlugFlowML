@@ -70,7 +70,7 @@ jupyter notebook notebooks/Main_5_train_evaluate_tune_tree_model_evolution.ipynb
 
 For the PyTorch MLP exit-plane baseline (multi-output regression on inlet-only features):
 ```bash
-jupyter notebook notebooks/Main_6__train_evaluate_SimpleNN_IO.ipynb
+jupyter notebook notebooks/Main_6_train_evaluate_SimpleNN_IO.ipynb
 ```
 Hyperparameters are read from `configs/ml/ml_training_config.json` → `neural_network.{epochs, batch_size, learning_rate, h1, h2, h3, dropout}`. To run an in-notebook Optuna TPE search, flip `IF_HYPERPARAM_TUNING = True` in Section 2; the search space and trial budget are controlled by `neural_network.tuning.{n_trials, epochs_per_trial, validation_fraction, timeout_seconds}` (`pip install optuna` required). The main training loop (Section 8) also applies **`ReduceLROnPlateau`** on test R² checkpoints, **early stopping** when test R² stalls, and **reloads the best test-R² weights** before final metrics and export. While Main_6 or Main_7 runs, in another terminal: `python scripts/monitor/monitor_nn_training_progress.py` — set `MAIN_6` or `MAIN_7`, and `LIVE=True` for live refresh (`LIVE=False` for a one-shot plot). Logs live in `data/logs/`; see [`data/logs/README.md`](../../data/logs/README.md) and `docs/ML_CONFIG_GUIDE.md`.
 
@@ -155,7 +155,7 @@ python src/ml/example_usage.py
 ## Troubleshooting
 
 ### "Model not found" error
-**Solution**: Train models first (Step 3); run `Main_4_train_and_evaluate_tree_models_IO.ipynb` for baseline tree models, `Main_5_train_evaluate_tune_tree_model_evolution.ipynb` for tuned tree models, `Main_6__train_evaluate_SimpleNN_IO.ipynb` for the PyTorch MLP baseline, or `python src/ml/model_training.py configs/ml/ml_training_config.json` for the CLI tree trainer.
+**Solution**: Train models first (Step 3); run `Main_4_train_and_evaluate_tree_models_IO.ipynb` for baseline tree models, `Main_5_train_evaluate_tune_tree_model_evolution.ipynb` for tuned tree models, `Main_6_train_evaluate_SimpleNN_IO.ipynb` for the PyTorch MLP baseline, or `python src/ml/model_training.py configs/ml/ml_training_config.json` for the CLI tree trainer.
 
 ### "Out of memory" during training
 **Solution**: Reduce `max_combinations_per_reactant` in config file
@@ -199,7 +199,7 @@ jupyter notebook notebooks/Main_5_train_evaluate_tune_tree_model_evolution.ipynb
 # 4b. PyTorch MLP baseline (inlet -> outlet); reads neural_network.* from ml_training_config.json
 #     Flip IF_HYPERPARAM_TUNING=True for an optional Optuna TPE search (neural_network.tuning).
 #     Section 8: LR-on-plateau (test R²), early stopping, best-checkpoint restore before export.
-jupyter notebook notebooks/Main_6__train_evaluate_SimpleNN_IO.ipynb
+jupyter notebook notebooks/Main_6_train_evaluate_SimpleNN_IO.ipynb
 
 # Alternative script route (trees only; NN remains placeholder):
 # Or: python src/ml/model_training.py configs/ml/ml_training_config.json
