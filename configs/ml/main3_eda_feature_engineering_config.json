@@ -1,0 +1,17 @@
+{
+  "_comment": "Main_3_data_exploration_feature_engineering.ipynb — EDA, species lumping, feature/target export. Keys consumed: see cell 4 ('Load config'). See docs/ML_CONFIG_GUIDE.md.",
+  "print_on_screen": true,
+  "if_load_data": true,
+  "if_save_eda_plots": true,
+  "if_velocity_qc": false,
+  "velocity_qc_quantile": 0.995,
+  "if_separate_species_by_carbon": true,
+  "if_categorize_by_chemistry": true,
+  "export_species_as": "lumped_chemistry",
+  "if_compute_rates": true,
+  "if_pin_specific_files": true,
+  "run_stamp_devel": "20260507_DEVEL",
+  "run_stamp_full": "20260507_095243",
+  "use_run_stamp": "full",
+  "if_export_features_targets": false
+}

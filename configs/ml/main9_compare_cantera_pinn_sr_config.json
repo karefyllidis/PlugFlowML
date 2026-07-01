@@ -1,0 +1,9 @@
+{
+  "_comment": "Main_9_compare_cantera_pinn_sr.ipynb — Cantera vs PINN (Main_7) vs SR (Main_8) comparison/validation. See docs/ML_CONFIG_GUIDE.md.",
+  "if_plot_shown": true,
+  "if_plot_export": true,
+  "if_export_report": true,
+  "sr_teacher_stem": "pinn_pfr",
+  "n_comparison_runs": 6,
+  "random_state": 42
+}

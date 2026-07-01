@@ -1,0 +1,37 @@
+{
+  "_comment": "Main_5_train_evaluate_tune_tree_model_evolution.ipynb — tuned tree (BayesSearchCV) + full axial profile. Keys consumed: top-level test_size/random_state/model_to_tune/full_profile_max_rows; random_forest, xgboost, gradient_boosting, adaboost blocks (used as untuned defaults when IF_HYPERPARAM_TUNING=False); tuning.*. See docs/ML_CONFIG_GUIDE.md.",
+  "test_size": 0.2,
+  "random_state": 42,
+  "model_to_tune": "xgboost",
+  "full_profile_max_rows": null,
+  "random_forest": {
+    "n_estimators": 100,
+    "max_depth": 20
+  },
+  "xgboost": {
+    "n_estimators": 100,
+    "max_depth": 6,
+    "learning_rate": 0.3,
+    "subsample": 1.0,
+    "colsample_bytree": 1.0,
+    "reg_alpha": 0.0,
+    "reg_lambda": 1.0
+  },
+  "gradient_boosting": {
+    "n_estimators": 150,
+    "max_depth": 5
+  },
+  "adaboost": {
+    "n_estimators": 200,
+    "learning_rate": 0.1,
+    "max_depth": 6
+  },
+  "tuning": {
+    "_comment": "BayesSearchCV budget for the exit-plane model_to_tune, only used when IF_HYPERPARAM_TUNING=True.",
+    "n_iter": 60,
+    "patience": 10,
+    "min_delta": 0.0005,
+    "cv": 3,
+    "scoring": "neg_mean_absolute_error"
+  }
+}

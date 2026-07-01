@@ -1,0 +1,4 @@
+{
+  "_comment": "Main_1_run_pfr.ipynb — single PFR run, inline profiles. Keys consumed: reactant_key (see configs/simulation/main1_reactant_database.json for the available options).",
+  "reactant_key": "n-hexane"
+}

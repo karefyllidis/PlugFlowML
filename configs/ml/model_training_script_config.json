@@ -1,0 +1,7 @@
+{
+  "_comment": "src/ml/model_training.py -- standalone legacy CLI trainer (RF/XGBoost/GB only), separate from the Main_4-8 notebook pipeline. Keys consumed: data_file, output_dir, target_types, models. Model hyperparameters are fixed in-script; test_size/random_state are not read from this file. Usage: python src/ml/model_training.py configs/ml/model_training_script_config.json",
+  "data_file": "data/training/training_data_complete_*.csv",
+  "output_dir": "models",
+  "target_types": ["primary"],
+  "models": ["all"]
+}

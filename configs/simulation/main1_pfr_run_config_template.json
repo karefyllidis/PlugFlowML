@@ -14,7 +14,7 @@
     },
     "mechanism": {
         "reaction_mechanism_file": "{{MECHANISM_FILE}}",
-        "heat_flux_file": "configs/simulation/heat_flux_profile.json",
+        "heat_flux_file": "configs/simulation/main1_heat_flux_profile.json",
         "n_species": "{{N_SPECIES}}",
         "n_reactions": "{{N_REACTIONS}}"
     },

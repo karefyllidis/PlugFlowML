@@ -1,0 +1,43 @@
+{
+  "_comment": "Main_7_train_evaluate_PINN_full_profile.ipynb — PINNPFR with PFR ODE residuals. Keys consumed: top-level test_size/random_state; neural_network.* (same architecture as Main_6, self-contained here); pinn.loss_weights.*; pinn.training.*. See docs/ML_CONFIG_GUIDE.md.",
+  "test_size": 0.2,
+  "random_state": 42,
+  "full_profile_max_rows": null,
+  "neural_network": {
+    "_comment": "h1-h3: hidden layer widths. Omitted keys use notebook fallbacks.",
+    "epochs": 400,
+    "batch_size": 256,
+    "learning_rate": 0.001,
+    "h1": 128,
+    "h2": 64,
+    "h3": 32,
+    "dropout": 0.1,
+    "tuning": {
+      "_comment": "Optuna (Section 6b) when IF_HYPERPARAM_TUNING=True (off by default). Each trial trains on the data loss only (no physics/collocation terms) for epochs_per_trial epochs, so this is a proxy search over architecture/optimiser hyperparameters, not the physics loss weights.",
+      "n_trials": 15,
+      "epochs_per_trial": 25,
+      "validation_fraction": 0.2,
+      "timeout_seconds": null
+    }
+  },
+  "pinn": {
+    "_comment": "Inherits neural_network.* above for architecture. loss_weights controls per-term scaling (sweep these via Optuna); training controls curriculum schedule and collocation budget.",
+    "loss_weights": {
+      "_comment": "Per-term multipliers for the composite loss: total = lambda_data*MSE + lambda_phys*(weighted sum of residuals). Sweep these to balance data fit vs constraint enforcement.",
+      "lambda_data": 1.0,
+      "lambda_phys": 0.1,
+      "lambda_eos": 1.0,
+      "lambda_mass": 1.0,
+      "lambda_species_sum": 1.0,
+      "lambda_species_nonneg": 0.5,
+      "lambda_energy_ode": 1.0
+    },
+    "training": {
+      "_comment": "Curriculum and collocation settings. curriculum_warmup_epochs: data-only phase before physics loss is switched on. n_colloc_per_batch: unlabelled z/L collocation points per training step. phys_loss_freq: apply physics loss every N steps (1 = every step).",
+      "curriculum_warmup_epochs": 20,
+      "n_colloc_per_batch": 256,
+      "phys_loss_freq": 1,
+      "use_cantera_residuals": false
+    }
+  }
+}

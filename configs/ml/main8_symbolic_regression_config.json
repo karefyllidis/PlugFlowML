@@ -1,0 +1,14 @@
+{
+  "_comment": "Main_8_symbolic_regression_SR.ipynb — PySR distillation of a trained NN teacher (Main_6 SimpleNN or Main_7 PINNPFR). See docs/ML_CONFIG_GUIDE.md.",
+  "if_plot_shown": true,
+  "if_plot_export": true,
+  "if_sr_export": true,
+  "teacher_stem": "simple_nn_full_profile",
+  "n_distill_samples": 5000,
+  "random_state": 42,
+  "sr_n_iterations": 100,
+  "sr_populations": 30,
+  "sr_population_size": 33,
+  "sr_maxsize": 25,
+  "sr_procs": 0
+}

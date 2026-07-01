@@ -1,0 +1,28 @@
+{
+  "_comment": "Main_6_train_evaluate_SimpleNN_full_profile.ipynb — PyTorch SimpleNN, full axial profile. Keys consumed: top-level test_size/random_state; runtime.* (read early, Section 2, before neural_network.*/tuning.* which are read in Section 3); neural_network.* (architecture + training); neural_network.tuning.* (Optuna Section 6b, only when IF_HYPERPARAM_TUNING=True). See docs/ML_CONFIG_GUIDE.md.",
+  "test_size": 0.2,
+  "random_state": 42,
+  "runtime": {
+    "_comment": "Read in Section 2 (Paths & Flags), ahead of the main config load, because thread pools must be configured before any data operations. subsample_max_rows: cap when SUBSAMPLE_ROWS=True. n_cpu_cores: null = use all logical CPUs. optuna_n_jobs: parallel Optuna trials in Section 6b (keep 1 on a single GPU).",
+    "subsample_max_rows": 1000,
+    "n_cpu_cores": 10,
+    "optuna_n_jobs": 10
+  },
+  "neural_network": {
+    "_comment": "h1-h3: hidden layer widths. Omitted keys use notebook fallbacks.",
+    "epochs": 400,
+    "batch_size": 256,
+    "learning_rate": 0.001,
+    "h1": 128,
+    "h2": 64,
+    "h3": 32,
+    "dropout": 0.1,
+    "tuning": {
+      "_comment": "Optuna (Section 6b) when IF_HYPERPARAM_TUNING=True. n_trials / epochs_per_trial / validation_fraction / timeout_seconds (null = no cap).",
+      "n_trials": 15,
+      "epochs_per_trial": 25,
+      "validation_fraction": 0.2,
+      "timeout_seconds": null
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "_comment": "Main_10_optimisation_BO_surrogate_vs_cantera.ipynb — Optuna GP-BO over the Main_8 SR surrogate, validated against Cantera. See docs/ML_CONFIG_GUIDE.md.",
+  "opt_target": "Y_lump_olefins",
+  "n_trials": 150,
+  "random_state": 42,
+  "reactant_key": "n-hexane",
+  "if_plot_shown": true,
+  "if_plot_export": true,
+  "bounds": {
+    "T_K": [800.0, 900.0],
+    "P_Pa": [150000.0, 350000.0],
+    "L_m": [10.0, 15.0],
+    "D_m": [0.025, 0.040],
+    "mdot": [0.05, 0.10],
+    "q_Wm2": [100000.0, 250000.0]
+  }
+}
