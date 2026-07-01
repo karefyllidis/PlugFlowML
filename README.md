@@ -1,6 +1,6 @@
 # HydrAI
 
-Machine-learning surrogates for steam-cracking plug-flow reactors. Cantera-based PFR simulations provide the reference dataset; a ten-notebook pipeline trains and evaluates tree ensembles, deep neural networks, a physics-informed network, and symbolic regression models — then uses Gaussian-process Bayesian optimisation to find optimal inlet conditions and validates the result against full Cantera simulations.
+ML surrogate modeling for chemical reactor simulation. A ten-stage pipeline trains and validates tree ensembles, deep neural networks, a physics-informed neural network (PINN), and symbolic regression against Cantera-generated plug-flow-reactor data, then runs Bayesian optimisation over the resulting surrogate.
 
 [![Python](https://img.shields.io/badge/Python-3.8%2B-blue?logo=python&logoColor=white)](https://www.python.org/)
 [![Cantera](https://img.shields.io/badge/Cantera-3.2.0%2B-green)](https://cantera.org/)
@@ -9,13 +9,13 @@ Machine-learning surrogates for steam-cracking plug-flow reactors. Cantera-based
 [![Optuna](https://img.shields.io/badge/Optuna-3.4%2B-lightblue?logo=optuna&logoColor=white)](https://optuna.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-**Nikolas Karefyllidis, PhD** — [GitHub](https://github.com/karefyllidis) · [LinkedIn](https://www.linkedin.com/in/karefyllidis/) · [Google Scholar](https://scholar.google.co.uk/citations?user=kLGU85cAAAAJ&hl=en)
+**Nikolas Karefyllidis, PhD** — [Website](https://karefyllidis.github.io/) · [GitHub](https://github.com/karefyllidis) · [LinkedIn](https://www.linkedin.com/in/karefyllidis/) · [Google Scholar](https://scholar.google.co.uk/citations?user=kLGU85cAAAAJ&hl=en)
 
 ---
 
 ## Motivation
 
-High-fidelity steam-cracking simulation requires stiff ODE integration coupled to detailed reaction mechanisms (10²–10³ species), making broad operating-space exploration prohibitively slow. HydrAI replaces the inner loop with millisecond-scale surrogate inference while keeping a fully validated Cantera reference for dataset generation and result verification.
+Steam-cracking simulation requires stiff ODE integration over detailed reaction mechanisms (10²–10³ species), making broad design-space exploration computationally prohibitive. HydrAI replaces that inner loop with a millisecond-scale ML surrogate — trained and validated against Cantera — enabling real-time inference and gradient-free optimisation without sacrificing physical fidelity.
 
 ---
 
@@ -40,29 +40,29 @@ High-fidelity steam-cracking simulation requires stiff ODE integration coupled t
 
 ### SimpleNN (`src/models/simple_nn.py`)
 
-Three hidden layers with ReLU activations and dropout, trained with AdamW and `ReduceLROnPlateau`. Optional Optuna TPE hyperparameter search on a held-out validation fold. Best-checkpoint restore on test R² plateau.
+Three hidden layers, ReLU + dropout, trained with AdamW and `ReduceLROnPlateau`. Optional Optuna TPE search over a held-out validation fold, with best-checkpoint restore on test R² plateau.
 
 ### PINNPFR (`src/models/pinn.py`)
 
-Same topology as `SimpleNN` with an added physics-residual loss derived from the PFR governing equations (`src/physics/pfr_residuals.py`):
+Same topology as `SimpleNN`, plus a physics-residual loss derived from the PFR governing equations (`src/physics/pfr_residuals.py`):
 
 ```
 L = λ_data · MSE(ŷ, y)  +  λ_phys · L_physics
 ```
 
-Constraints enforced: ideal-gas EOS, mass conservation (ρuA = ṁ), species sum = 1, species ≥ 0, energy ODE via autograd on `relative_position`. Curriculum warmup trains on data loss only for the first `CURRICULUM_WARMUP_EPOCHS` epochs before switching on the physics term.
+Enforced constraints: ideal-gas EOS, mass conservation (ρuA = ṁ), species sum = 1, species ≥ 0, and the energy ODE via autograd on `relative_position`. Curriculum warmup trains on data loss only before the physics term is switched on.
 
 ### Symbolic Regression (`Main_8`)
 
-PySR distillation from any NN teacher. Set `TEACHER_STEM` to `simple_nn_full_profile` or `pinn_pfr`; the notebook auto-selects model class, sampling strategy, and export directory. Output: human-readable Python equations importable by Main_9 and Main_10 with no PyTorch dependency.
+PySR distillation from either NN teacher (`TEACHER_STEM = simple_nn_full_profile` or `pinn_pfr`); the notebook auto-selects model class, sampling strategy, and export directory. Output: closed-form Python equations with no PyTorch dependency, consumed by Main_9 and Main_10.
 
 ### Comparison (`Main_9`)
 
-Validates the PINN and its SR distillation against Cantera ground truth on the same full axial profiles: axial-profile overlays, parity plots, a per-target R²/NMAE table, and a PINN-vs-SR inference-speed comparison.
+Validates the PINN and its SR distillation against Cantera ground truth on shared axial profiles: overlays, parity plots, a per-target R²/NMAE table, and a PINN-vs-SR inference-speed comparison.
 
 ### Bayesian Optimisation (`Main_10`)
 
-Optuna `GPSampler` maximises olefin yield over six inlet degrees of freedom using the SR surrogate, then validates the optimum with a Cantera PFR simulation and reports surrogate prediction error.
+Optuna `GPSampler` maximises olefin yield over six inlet degrees of freedom using the SR surrogate, then validates the optimum against a Cantera PFR run and reports surrogate prediction error.
 
 ---
 
