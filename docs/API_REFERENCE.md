@@ -69,7 +69,7 @@ def load_reactant_database() -> dict
 ```
 
 **Raises:**
-- `FileNotFoundError`: If reactant_database.json is not found
+- `FileNotFoundError`: If main1_reactant_database.json is not found
 - `json.JSONDecodeError`: If the JSON file is malformed
 
 **Example:**
@@ -137,7 +137,7 @@ def generate_config_for_reactant(reactant_key: str, database: dict) -> dict
 
 **Raises:**
 - `ValueError`: If the reactant_key is not found in the database
-- `FileNotFoundError`: If config_template.json is not found
+- `FileNotFoundError`: If main1_pfr_run_config_template.json is not found
 - `cantera.CanteraError`: If the mechanism file cannot be loaded
 
 **Example:**

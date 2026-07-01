@@ -20,7 +20,7 @@ Generate a large training dataset by running parameter sweeps:
 
 ```bash
 # Generate training data using JSON config file
-python src/ml/data_generation.py configs/ml/ml_data_generation_config.json
+python src/ml/data_generation.py configs/ml/main2_data_generation_config.json
 ```
 
 Or use the Jupyter notebook:
@@ -48,27 +48,21 @@ jupyter notebook notebooks/Main_5_train_evaluate_tune_tree_model_evolution.ipynb
 ```
 Tunes one selected tree model (`MODEL_TO_TUNE`) with `BayesSearchCV` on the exit-plane task when tuning is enabled; the full axial/PFR model reuses those hyperparameters. It covers inlet→outlet exit-plane prediction and, when enabled, full axial evolution using `relative_position` as an input. Full-profile train/test splitting is done by simulation run to avoid leakage between axial points from the same reactor profile. Speed reports compare tuned ML inference against measured Cantera baselines when `CANTERA_EXIT_SECONDS_PER_RUN` / `CANTERA_FULL_PROFILE_SECONDS_PER_RUN` are set.
 
-**Step 2c — PyTorch MLP baseline (Jupyter notebook):**
-```bash
-jupyter notebook notebooks/Main_6_train_evaluate_SimpleNN_IO.ipynb
-```
-Defaults-only PyTorch counterpart of Main_4 on the same exit-plane data. Inputs are restricted to inlet / run-design columns (no axial coordinates); architecture is a 3-hidden-layer ReLU MLP (defaults `128 → 64 → 32`) with `nn.Dropout` between hidden blocks, `nn.MSELoss`, Adam. Reads `test_size`, `random_state`, and `neural_network.{epochs, batch_size, learning_rate, h1, h2, h3, dropout}` from `configs/ml/ml_training_config.json` (Section 3 of the notebook). Plots train + test convergence (MSE and R² vs epoch), **3-column** parity and residual grids for **all state + species** targets (`actual_vs_predicted_scatter_by_target.png`, `residuals_scatter_by_target.png`), and a per-target R² bar chart. Optional architecture diagram (matplotlib + standalone TikZ source) and `torchinfo` summary are gated by flags. Exports under `models/`: `simple_nn_exit_state_dict.pt`, `simple_nn_exit_scalers.joblib`, `simple_nn_exit_manifest.json` (includes **`chemistry_groups`**, **`metrics_by_group`**, **`auxiliary_exports`**), plus **`simple_nn_exit_per_target_metrics.csv`** and **`simple_nn_exit_group_metrics.csv`** (each run overwrites the previous files).
+**Step 2c — PyTorch full axial profile (Jupyter notebook):** `notebooks/Main_6_train_evaluate_SimpleNN_full_profile.ipynb` (the exit-plane-only Main_6 notebook has been removed; this is the surviving PyTorch NN in the pipeline). Architecture is a 3-hidden-layer ReLU MLP (defaults `128 → 64 → 32`) with `nn.Dropout` between hidden blocks, `nn.MSELoss`, Adam. Reads `test_size`, `random_state`, and `neural_network.{epochs, batch_size, learning_rate, h1, h2, h3, dropout}` from `configs/ml/main6_simplenn_config.json` (Section 3 of the notebook), **run-level** train/test split, inputs include **`relative_position`**, optional **`FULL_PROFILE_MAX_ROWS`** for capped-row smoke runs. **§9** evaluates on the test tensor and (when `IF_MODEL_EXPORT`) writes **`simple_nn_full_profile_per_target_metrics.csv`** and **`simple_nn_full_profile_group_metrics.csv`** (same filenames are refreshed in **§11** with the full manifest). **§9b** overlays Cantera/test vs NN along **`x/L`** for preferred state targets **plus all species/lump columns** in `target_cols`; test runs are either **fixed order** (first *N* distinct `run_id` in DataFrame order) or **random** (`AXIAL_PROFILE_RUNS_RANDOM=True`, seed `RANDOM_STATE`). **§10** is a **four-column** actual-vs-predicted grid with a **single shared log colorbar** for hexbin counts when `n_test` is large; otherwise scatter. Figures live under `outputs/figures/Main_6_train_evaluate_SimpleNN_full_profile/` (e.g. `full_profile_cantera_vs_nn_axial_evolution.png`, `actual_vs_predicted_scatter_by_target.png`, `residuals_scatter_by_target.png`, `training_convergence.png`, optional Optuna PNGs). Exports `simple_nn_full_profile_*` under `models/`. See root `README.md` and `docs/ML_CONFIG_GUIDE.md`.
 
-**Step 2d — PyTorch full axial profile (optional notebook):** `notebooks/Main_7_train_evaluate_SimpleNN_full_profile.ipynb` — same `neural_network.*` keys as Main_6, **run-level** train/test split, inputs include **`relative_position`**, optional **`FULL_PROFILE_MAX_ROWS`** for capped-row smoke runs. **§9** evaluates on the test tensor and (when `IF_MODEL_EXPORT`) writes **`simple_nn_full_profile_per_target_metrics.csv`** and **`simple_nn_full_profile_group_metrics.csv`** (same filenames are refreshed in **§11** with the full manifest). **§9b** overlays Cantera/test vs NN along **`x/L`** for preferred state targets **plus all species/lump columns** in `target_cols`; test runs are either **fixed order** (first *N* distinct `run_id` in DataFrame order) or **random** (`AXIAL_PROFILE_RUNS_RANDOM=True`, seed `RANDOM_STATE`). **§10** is a **four-column** actual-vs-predicted grid with a **single shared log colorbar** for hexbin counts when `n_test` is large; otherwise scatter. Figures live under `outputs/figures/Main_7_train_evaluate_SimpleNN_full_profile/` (e.g. `full_profile_cantera_vs_nn_axial_evolution.png`, `actual_vs_predicted_scatter_by_target.png`, `residuals_scatter_by_target.png`, `training_convergence.png`, optional Optuna PNGs). Exports `simple_nn_full_profile_*` under `models/`. See root `README.md` and `docs/ML_CONFIG_GUIDE.md`.
-
-*Optional Optuna tuning (Section 6b):* set `IF_HYPERPARAM_TUNING=True` in Section 2 to run an in-notebook TPE search over `h1, h2, h3, dropout, learning_rate, batch_size` on a validation fold carved from the training split (test set held out). The best trial overwrites the notebook's hyperparameters and rebuilds the model before the main training loop. Search budget and validation fraction are configured under `neural_network.tuning` in the config. Requires `pip install optuna`. Section 6b-ii (after tuning) writes `optuna_optimization_history.png`, `optuna_parallel_coordinate.png`, `optuna_param_importance.png`, and a `tuning` block in the exported manifest. **Main_7:** test runs are split at §4 by `run_id`; Optuna val is a random row fraction of train rows only — monitor via `scripts/monitor/monitor_nn_training_progress.py` (`MAIN_7=True`, optional `LIVE=True`; auto-picks Optuna JSON vs training CSV — `docs/ML_CONFIG_GUIDE.md`).
+*Optional Optuna tuning (Section 6b):* set `IF_HYPERPARAM_TUNING=True` in Section 2 to run an in-notebook TPE search over `h1, h2, h3, dropout, learning_rate, batch_size` on a validation fold carved from the training split (test set held out). The best trial overwrites the notebook's hyperparameters and rebuilds the model before the main training loop. Search budget and validation fraction are configured under `neural_network.tuning` in the config. Requires `pip install optuna`. Section 6b-ii (after tuning) writes `optuna_optimization_history.png`, `optuna_parallel_coordinate.png`, `optuna_param_importance.png`, and a `tuning` block in the exported manifest. Test runs are split at §4 by `run_id`; Optuna val is a random row fraction of train rows only — monitor via `scripts/monitor/monitor_nn_training_progress.py` (optional `LIVE=True`; auto-picks Optuna JSON vs training CSV — `docs/ML_CONFIG_GUIDE.md`).
 
 **Option B – All model types (command-line):**
 ```bash
-python src/ml/model_training.py configs/ml/ml_training_config.json
+python src/ml/model_training.py configs/ml/model_training_script_config.json
 ```
 
-**Available models (notebooks: trees in Main_4/Main_5, PyTorch MLP in Main_6/Main_7; CLI script: RF + XGBoost + gradient boosting; CLI `neural_network` = placeholder):**
+**Available models (notebooks: trees in Main_4/Main_5, PyTorch MLP in Main_6; CLI script: RF + XGBoost + gradient boosting; CLI `neural_network` = placeholder):**
 - `random_forest` - Random Forest (scikit-learn)
 - `gradient_boosting` - Gradient Boosting (scikit-learn)
 - `xgboost` - XGBoost
 - `adaboost` - AdaBoost with tree base (scikit-learn)
-- `neural_network` - **PyTorch MLP** training lives in `notebooks/Main_6_train_evaluate_SimpleNN_IO.ipynb` (exit-plane) and `notebooks/Main_7_train_evaluate_SimpleNN_full_profile.ipynb` (full axial profile). The same key in `src/ml/model_training.py` is still a no-op CLI placeholder.
+- `neural_network` - **PyTorch MLP** training lives in `notebooks/Main_6_train_evaluate_SimpleNN_IO.ipynb` (exit-plane) and `notebooks/Main_6_train_evaluate_SimpleNN_full_profile.ipynb` (full axial profile). The same key in `src/ml/model_training.py` is still a no-op CLI placeholder.
 
 **Target Types:**
 - `primary` - Core outputs (temperature, pressure, velocity, density)
@@ -122,7 +116,7 @@ The `model_training.py` script and the current notebooks:
 - `Main_4_train_and_evaluate_tree_models_IO.ipynb` for default-parameter exit-plane tree-model baseline evaluation.
 - `Main_5_train_evaluate_tune_tree_model_evolution.ipynb` for one-tree-model tuning and full PFR evolution.
 - `Main_6_train_evaluate_SimpleNN_IO.ipynb` for the PyTorch MLP exit-plane baseline (configurable via `neural_network.*` in `ml_training_config.json`; optional Optuna TPE in Section 6b via `IF_HYPERPARAM_TUNING=True` and `neural_network.tuning`; Section 8 applies LR reduction on stalled test R², early stopping, and restores the best test-R² checkpoint before evaluation/export). §8 training progress CSV; §6b incremental Optuna JSON under `data/logs/` — `scripts/monitor/monitor_nn_training_progress.py` (`MAIN_6=True`, optional `LIVE=True`).
-- `Main_7_train_evaluate_SimpleNN_full_profile.ipynb` for the PyTorch **full-profile** surrogate (same config block; **run-level** test holdout in §4; Optuna §6b on validation rows from train only; §8 train vs test R² overfitting check; optional row cap; `data/logs/` + monitor with `MAIN_7=True`; `USE_CUDA_AMP` / `USE_TORCH_COMPILE` / `OPTUNA_N_JOBS`; §9b axial state+species; §10 4-column parity + shared hexbin colorbar; exports `simple_nn_full_profile_*` + CSVs + figure PNGs).
+- `Main_6_train_evaluate_SimpleNN_full_profile.ipynb` for the PyTorch **full-profile** surrogate (same config block; **run-level** test holdout in §4; Optuna §6b on validation rows from train only; §8 train vs test R² overfitting check; optional row cap; `data/logs/` + monitor with `MAIN_6=True`; `USE_CUDA_AMP` / `USE_TORCH_COMPILE` / `OPTUNA_N_JOBS`; §9b axial state+species; §10 4-column parity + shared hexbin colorbar; exports `simple_nn_full_profile_*` + CSVs + figure PNGs).
 
 1. **Data Preparation**:
    - Splits data into train/test sets
@@ -287,7 +281,7 @@ models/                         # Trained models
 ├── simple_nn_exit_manifest.json         # From Main_6: arch / training / metrics / tuning / chemistry_groups
 ├── simple_nn_exit_per_target_metrics.csv
 ├── simple_nn_exit_group_metrics.csv
-├── simple_nn_full_profile_state_dict.pt     # From Main_7 (optional)
+├── simple_nn_full_profile_state_dict.pt     # From Main_6 (optional)
 ├── simple_nn_full_profile_scalers.joblib
 ├── simple_nn_full_profile_manifest.json
 ├── simple_nn_full_profile_per_target_metrics.csv
@@ -340,7 +334,7 @@ pip install scikit-learn joblib xgboost
 ```
 FileNotFoundError: Model not found: models/xgboost_primary.pkl
 ```
-**Solution**: Train models first (`Main_4_train_and_evaluate_tree_models_IO.ipynb`, `Main_5_train_evaluate_tune_tree_model_evolution.ipynb`, `Main_6_train_evaluate_SimpleNN_IO.ipynb` for the PyTorch NN, or `python src/ml/model_training.py`). Ensure `model_type` in inference config matches an artifact model key you actually trained (e.g. `xgboost`, `random_forest`, `adaboost`).
+**Solution**: Train models first (`Main_4_train_and_evaluate_tree_models_IO.ipynb`, `Main_5_train_evaluate_tune_tree_model_evolution.ipynb`, `Main_6_train_evaluate_SimpleNN_full_profile.ipynb` for the PyTorch NN, or `python src/ml/model_training.py`). Ensure `model_type` in inference config matches an artifact model key you actually trained (e.g. `xgboost`, `random_forest`, `adaboost`).
 
 ### Out of Memory
 **Solution**: Reduce `max_combinations` or use random sampling

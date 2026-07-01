@@ -101,12 +101,12 @@ Species classification logic (`_classify_species_chemistry` function):
 | `Main_1` | Case generation | Creates parametric sweeps for PFR simulations |
 | `Main_2` | Training data generation | Runs Cantera simulations in parallel |
 | `Main_3` | EDA & feature engineering | Species lumping, feature selection, data export |
-| `Main_4_train_and_evaluate_tree_models_IO` | **Baseline evaluation** | Compares multiple tree models **without hyperparameter tuning**, exit-plane predictions only |
+| `Main_4_train_and_evaluate_tree_models_IO` | **Baseline evaluation** | Compares multiple tree models, exit-plane predictions only; optional `BayesSearchCV` tuning across all models (§7, off by default) |
 | `Main_5_train_evaluate_tune_tree_model_evolution` | **Tuning & evolution** | Hyperparameter tuning for one model, both exit-plane and full PFR axial evolution |
-| `Main_6_train_evaluate_SimpleNN_IO` | **SimpleNN exit-plane** | PyTorch MLP; Optuna; MC-Dropout UQ |
-| `Main_7_train_evaluate_SimpleNN_full_profile` | **SimpleNN full profile** | Full axial profile; run-level split |
-| `Main_8_train_evaluate_PINN_full_profile` | **PINNPFR physics-informed** | Composite loss; curriculum warmup; autograd physics |
-| `Main_9_symbolic_regression_SR` | **Symbolic regression** | PySR distillation of any NN teacher → closed-form equations |
+| `Main_6_train_evaluate_SimpleNN_full_profile` | **SimpleNN full profile** | Full axial profile; run-level split; PyTorch MLP; optional Optuna |
+| `Main_7_train_evaluate_PINN_full_profile` | **PINNPFR physics-informed** | Composite loss; curriculum warmup; autograd physics |
+| `Main_8_symbolic_regression_SR` | **Symbolic regression** | PySR distillation of any NN teacher → closed-form equations |
+| `Main_9_compare_cantera_pinn_sr` | **Cantera/PINN/SR comparison** | Validates SR and PINN predictions against Cantera ground truth |
 | `Main_10_optimisation_BO_surrogate_vs_cantera` | **Bayesian optimisation** | Optuna GP-BO on MLP + SR; Cantera validation of optima |
 
 ### 3.2 Main_2 (Training Data Generation) Standards
@@ -264,9 +264,9 @@ CANTERA_EXIT_SECONDS_PER_RUN = None  # Set to measured value if known
 CANTERA_FULL_PROFILE_SECONDS_PER_RUN = None
 ```
 
-### 4.4 Main_1 through Main_7 architecture map
+### 4.4 Main_1 through Main_6 architecture map
 
-**Reference**: `docs/HYDRAI_PROJECT_CONVENTIONS.md` §4.4 — pipeline order (Mermaid), per-notebook roles, config ownership (`neural_network.*` → **Main_6** and **Main_7** PyTorch notebooks only; ignored by Main_4), and **section-by-section maps** for each `Main_*.ipynb`. Update that file whenever you add a new pipeline step or rename major notebook sections.
+**Reference**: `docs/HYDRAI_PROJECT_CONVENTIONS.md` §4.4 — pipeline order (Mermaid), per-notebook roles, config ownership (`neural_network.*` → **Main_6** and **Main_6** PyTorch notebooks only; ignored by Main_4), and **section-by-section maps** for each `Main_*.ipynb`. Update that file whenever you add a new pipeline step or rename major notebook sections.
 
 ---
 
@@ -304,7 +304,7 @@ fig.savefig(FIG_DIR / 'actual_vs_predicted_state_scatter.png', dpi=120, bbox_inc
 - Main_4 figures: No prefix (all are exit-plane)
 - Main_5 exit figures: `exit_` prefix (e.g., `exit_chemistry_group_nmae.png`)
 - Main_5 full-profile figures: `full_` prefix (e.g., `full_state_evolution.png`)
-- Main_6 (PyTorch exit): parity/residual grids under `outputs/figures/Main_6_train_evaluate_SimpleNN_IO/` use `actual_vs_predicted_scatter_by_target.png` and `residuals_scatter_by_target.png` (3-column layout, all state + species targets); convergence and Optuna filenames unchanged.
+- Main_6 (PyTorch full profile): parity/residual grids under `outputs/figures/Main_6_train_evaluate_SimpleNN_full_profile/` use `actual_vs_predicted_scatter_by_target.png` and `residuals_scatter_by_target.png` (4-column layout, all state + species targets); convergence and Optuna filenames unchanged.
 
 ### 5.3 Chemistry Group Plots
 
@@ -730,14 +730,14 @@ for _, g in df_data[subset_cols].groupby(run_cols):
 **ML Models** (stable, overwrite-each-run paths — no embedded timestamps):
 - `models/tree_models_exit.joblib` — Main_4 baseline bundle (RF / GB / XGBoost / AdaBoost + scaler, label encoder, splits, config). Payload carries an ISO `run_at` field.
 - `models/tree_model_tuned_exit_full.joblib` — Main_5 bundle: tuned exit-plane model plus, when trained, the full-profile model and scaler.
-- `models/simple_nn_exit_state_dict.pt` + `models/simple_nn_exit_scalers.joblib` + `models/simple_nn_exit_manifest.json` — Main_6 PyTorch artefacts (state dict, X/y scalers + label encoder, JSON manifest with **3-hidden-layer** architecture `h1`–`h3`, training settings including **`early_stopped`**, **`best_test_r2_checkpoint`**, **`best_test_r2_epoch`**, headline + **state/thermo vs species** `metrics`, **`chemistry_groups`**, **`metrics_by_group`**, **`auxiliary_exports`**, and a compact `tuning` block when Optuna ran). Companion CSVs: **`simple_nn_exit_per_target_metrics.csv`**, **`simple_nn_exit_group_metrics.csv`**.
-- `models/simple_nn_full_profile_state_dict.pt` + `models/simple_nn_full_profile_scalers.joblib` + `models/simple_nn_full_profile_manifest.json` — Main_7 full-profile PyTorch artefacts (same class and training keys as Main_6; manifest adds **`workflow`**, **`run_level_split`**, **`feature_cols`** including **`relative_position`**, **`run_cols`**, row/run counts, **`chemistry_groups`**, **`metrics_by_group`**, **`auxiliary_exports`**). Companion CSVs: **`simple_nn_full_profile_per_target_metrics.csv`**, **`simple_nn_full_profile_group_metrics.csv`**.
+- `models/simple_nn_full_profile_state_dict.pt` + `models/simple_nn_full_profile_scalers.joblib` + `models/simple_nn_full_profile_manifest.json` — Main_6 PyTorch artefacts (state dict, X/y scalers + label encoder, JSON manifest with **3-hidden-layer** architecture `h1`–`h3`, training settings including **`early_stopped`**, **`best_test_r2_checkpoint`**, **`best_test_r2_epoch`**, headline + **state/thermo vs species** `metrics`, **`chemistry_groups`**, **`metrics_by_group`**, **`auxiliary_exports`**, a compact `tuning` block when Optuna ran, plus **`workflow`**, **`run_level_split`**, **`feature_cols`** including **`relative_position`**, and **`run_cols`**). Companion CSVs: **`simple_nn_full_profile_per_target_metrics.csv`**, **`simple_nn_full_profile_group_metrics.csv`**.
+- `models/pinn_pfr_state_dict.pt` + `models/pinn_pfr_scalers.joblib` + `models/pinn_pfr_manifest.json` — Main_7 `PINNPFR` artefacts (same architecture keys as Main_6 plus `pinn.loss_weights.*` / `pinn.training.*`).
 
 Each run overwrites these files. To compare runs, archive them externally (e.g. `models/archive/<date>_<note>/`) before re-running.
 
 **Notebook run logs** (auto-captured terminal output):
 - `outputs/reports/<NotebookName>.txt` — written by `src.utils.run_log.start_run_log(notebook_name)`. Mode is **overwrite** (`'w'`), so the file always reflects the latest execution. Curated `.md` summaries in the same folder are hand-written and tracked in git; the `.txt` logs are git-ignored.
-- `data/logs/<stem>_training_progress.csv` and `data/logs/<stem>_optuna_tuning_plot_data.json` — Main_6 / Main_7 §8 / §6b progress for `scripts/monitor/monitor_nn_training_progress.py` (see `data/logs/README.md`). Not under `outputs/reports/` or `outputs/figures/`.
+- `data/logs/<stem>_training_progress.csv` and `data/logs/<stem>_optuna_tuning_plot_data.json` — Main_6 / Main_6 §8 / §6b progress for `scripts/monitor/monitor_nn_training_progress.py` (see `data/logs/README.md`). Not under `outputs/reports/` or `outputs/figures/`.
 
 ### 10.3 Output Organization
 
@@ -747,8 +747,11 @@ outputs/
 │   ├── Main_3_data_exploration_feature_engineering/
 │   ├── Main_4_train_and_evaluate_tree_models_IO/
 │   ├── Main_5_train_evaluate_tune_tree_model_evolution/
-│   ├── Main_6_train_evaluate_SimpleNN_IO/
-│   └── Main_7_train_evaluate_SimpleNN_full_profile/
+│   ├── Main_6_train_evaluate_SimpleNN_full_profile/
+│   ├── Main_7_train_evaluate_PINN_full_profile/
+│   ├── Main_8_symbolic_regression/
+│   ├── Main_9_compare_cantera_pinn_sr/
+│   └── Main_10_optimisation/
 ├── reports/
 │   ├── README.md
 │   ├── Main_N_*.md                # curated per-notebook summaries (tracked)
@@ -759,14 +762,14 @@ outputs/
 models/                                # Root-level directory (git-ignored)
 ├── tree_models_exit.joblib            # Main_4 baseline bundle (stable name)
 ├── tree_model_tuned_exit_full.joblib  # Main_5 tuned exit + optional full-profile
-├── simple_nn_exit_state_dict.pt       # Main_6 PyTorch state_dict
-├── simple_nn_exit_scalers.joblib      # Main_6 X/y scalers + label encoder
-├── simple_nn_exit_manifest.json       # Main_6 manifest (architecture, training, metrics, tuning)
-├── simple_nn_full_profile_state_dict.pt   # Main_7 full-profile state_dict
-├── simple_nn_full_profile_scalers.joblib  # Main_7 X/y scalers + label encoder
-├── simple_nn_full_profile_manifest.json   # Main_7 manifest (full_profile workflow, feature_cols, groups)
+├── simple_nn_full_profile_state_dict.pt   # Main_6 state_dict
+├── simple_nn_full_profile_scalers.joblib  # Main_6 X/y scalers + label encoder
+├── simple_nn_full_profile_manifest.json   # Main_6 manifest (full_profile workflow, feature_cols, groups)
 ├── simple_nn_full_profile_per_target_metrics.csv
-└── simple_nn_full_profile_group_metrics.csv
+├── simple_nn_full_profile_group_metrics.csv
+├── pinn_pfr_state_dict.pt             # Main_7 PINNPFR state_dict
+├── pinn_pfr_scalers.joblib            # Main_7 X/y scalers
+└── pinn_pfr_manifest.json             # Main_7 manifest (architecture, loss weights, training)
 ```
 
 All model exports are **overwritten on every notebook run** so disk doesn't accumulate dated artefacts. Archive a snapshot manually (move to `models/archive/<date>_<note>/`) before re-running if you need to keep an old version.
@@ -1106,16 +1109,20 @@ joblib.dump({'model': model, 'scaler': scaler_X}, 'model_artifact.joblib')
 
 **Implementation**:
 ```python
-#!/usr/bin/env python
-"""Run the complete HydrAI ML pipeline."""
+#!/usr/bin/env python3
+"""Run the HydrAI ML pipeline. Run Main_1-3 manually first to generate training data."""
+import subprocess, sys
 
-from pathlib import Path
-import subprocess
-import sys
-
-notebooks = ['Main_1', 'Main_2', 'Main_3', 'Main_4_train_and_evaluate_tree_models_IO']
-for nb in notebooks:
-    subprocess.run([sys.executable, '-m', 'jupyter', 'execute', f'notebooks/{nb}.ipynb'], check=True)
+NOTEBOOKS = [
+    "Main_4_train_and_evaluate_tree_models_IO",
+    "Main_5_train_evaluate_tune_tree_model_evolution",
+    "Main_6_train_evaluate_SimpleNN_full_profile",
+    "Main_7_train_evaluate_PINN_full_profile",
+    "Main_8_symbolic_regression_SR",
+    "Main_10_optimisation_BO_surrogate_vs_cantera",
+]
+for nb in NOTEBOOKS:
+    subprocess.run([sys.executable, "-m", "nbconvert", "--to", "notebook", "--execute", f"notebooks/{nb}.ipynb"], check=True)
 ```
 
 **No loops for advanced features**: Keep it as simple as possible for portfolio/demo purposes

@@ -20,7 +20,7 @@
 ## Training Data
 
 - Generated from Cantera PFR simulations over parameter sweeps.
-- Supports multiple feedstocks configured through `configs/simulation/reactant_database.json`.
+- Supports multiple feedstocks configured through `configs/simulation/main1_reactant_database.json`.
 - Sampling strategies include Latin Hypercube, random sampling, and structured grids.
 - Main_3 exports ML-ready `df_features` and `df_target` artifacts under `data/processed/`.
 - Species targets are mass-fraction based; mole fractions (`X_*`) are not used as ML targets in the current workflow.

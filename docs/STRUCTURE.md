@@ -26,15 +26,24 @@ HydrAI/
 │
 ├── configs/                      # Configuration files
 │   ├── simulation/               # PFR templates, reactants, heat flux
-│   │   ├── config_template.json
-│   │   ├── reactant_database.json
-│   │   └── heat_flux_profile.json
+│   │   ├── main1_pfr_run_config_template.json
+│   │   ├── main1_reactant_database.json
+│   │   └── main1_heat_flux_profile.json
 │   ├── style/
 │   │   └── figure_aesthetics.json # Matplotlib styling (colors, fonts, save DPI)
 │   └── ml/
-│       ├── ml_data_generation_config.json
-│       ├── ml_data_generation_config.smoke.json
-│       ├── ml_training_config.json
+│       ├── main1_run_pfr_config.json
+│       ├── main2_data_generation_config.json
+│       ├── main2_data_generation_config.smoke.json
+│       ├── main3_eda_feature_engineering_config.json
+│       ├── main4_tree_baseline_config.json
+│       ├── main5_tree_tuning_config.json
+│       ├── main6_simplenn_config.json
+│       ├── main7_pinn_config.json
+│       ├── main8_symbolic_regression_config.json
+│       ├── main9_compare_cantera_pinn_sr_config.json
+│       ├── main10_bayesian_optimisation_config.json
+│       ├── model_training_script_config.json
 │       └── ml_inference_config.json
 │
 ├── mechanisms/                    # Chemical kinetic mechanisms (YAMLs git-ignored; add locally)
@@ -48,16 +57,14 @@ HydrAI/
 ├── models/                       # Trained ML models (generated, git-ignored)
 │   ├── tree_models_exit.joblib            # Main_4 baseline bundle (overwritten each run)
 │   ├── tree_model_tuned_exit_full.joblib  # Main_5 tuned exit + optional full-profile bundle
-│   ├── simple_nn_exit_state_dict.pt       # Main_6 PyTorch state_dict (exit-plane)
-│   ├── simple_nn_exit_scalers.joblib      # Main_6 X/y scalers + label encoder
-│   ├── simple_nn_exit_manifest.json       # Main_6 manifest (h1–h3, training, grouped metrics, chemistry_groups, metrics_by_group, tuning)
-│   ├── simple_nn_exit_per_target_metrics.csv   # Main_6 per-target test metrics (CSV)
-│   ├── simple_nn_exit_group_metrics.csv        # Main_6 uniform-average metrics by state vs chemistry group (CSV)
-│   ├── simple_nn_full_profile_state_dict.pt   # Main_7 full-profile PyTorch state_dict
-│   ├── simple_nn_full_profile_scalers.joblib  # Main_7 X/y scalers + label encoder
-│   ├── simple_nn_full_profile_manifest.json   # Main_7 manifest (includes feature_cols, run_level_split, groups)
+│   ├── simple_nn_full_profile_state_dict.pt   # Main_6 full-profile PyTorch state_dict
+│   ├── simple_nn_full_profile_scalers.joblib  # Main_6 X/y scalers + label encoder
+│   ├── simple_nn_full_profile_manifest.json   # Main_6 manifest (includes feature_cols, run_level_split, groups)
 │   ├── simple_nn_full_profile_per_target_metrics.csv
-│   └── simple_nn_full_profile_group_metrics.csv
+│   ├── simple_nn_full_profile_group_metrics.csv
+│   ├── pinn_pfr_state_dict.pt             # Main_7 PINNPFR state_dict
+│   ├── pinn_pfr_scalers.joblib            # Main_7 X/y scalers
+│   └── pinn_pfr_manifest.json             # Main_7 manifest (architecture, loss weights, training)
 │
 ├── outputs/                      # Simulation outputs
 │   ├── results/                  # CSV results and summaries
@@ -98,7 +105,7 @@ HydrAI/
 │       ├── check_complete_runs.py        # Training sweep summary / manifests
 │       ├── clean_completed_runs.py       # Archive completed task artifacts
 │       ├── consolidate_training_data.py  # Merge per-task outputs for ML pipeline
-│       ├── smoke_main7_cpu_scaling.py    # Main_7 CPU / Optuna thread smoke test
+│       ├── smoke_main7_cpu_scaling.py    # Main_6 CPU / Optuna thread smoke test
 │       └── sbatch_safe.sh                # CRLF-safe sbatch wrapper
 │
 ├── temp/                         # Temporary files (auto-generated, git-ignored)
@@ -110,16 +117,15 @@ HydrAI/
 │   ├── Main_3_data_exploration_feature_engineering.ipynb  # Step 3: EDA + feature engineering
 │   ├── Main_4_train_and_evaluate_tree_models_IO.ipynb    # Step 4: Baseline tree evaluation (exit-plane)
 │   ├── Main_5_train_evaluate_tune_tree_model_evolution.ipynb  # Step 5: One-model tuning + full PFR evolution
-│   ├── Main_6_train_evaluate_SimpleNN_IO.ipynb          # Step 6: PyTorch MLP (3 hidden layers) + optional Optuna; §8 LR plateau / early stop / best ckpt; 3-col parity+residuals (all targets); exit exports
-│   ├── Main_7_train_evaluate_SimpleNN_full_profile.ipynb # Step 7: full axial rows + relative_position; run-level split; §9b axial (state+species, fixed/random runs); 4-col parity+shared hexbin colorbar; full_profile exports
-│   ├── Main_8_train_evaluate_PINN_full_profile.ipynb    # Step 8: PINN with PFR ODE residuals; `PINNPFR` (`src/models/pinn.py`) + curriculum warmup; algebraic (EOS/mass/species) + energy ODE (autograd) physics loss; collocation points; pinn_pfr_* exports
-│   ├── Main_9_symbolic_regression_SR.ipynb              # Step 9: PySR distillation of any NN teacher (Main_6/7/8) → closed-form equations; exports sr_<teacher>_equations.py
+│   ├── Main_6_train_evaluate_SimpleNN_full_profile.ipynb # Step 6: full axial rows + relative_position; run-level split; §9b axial (state+species, fixed/random runs); 4-col parity+shared hexbin colorbar; full_profile exports
+│   ├── Main_7_train_evaluate_PINN_full_profile.ipynb    # Step 7: PINN with PFR ODE residuals; `PINNPFR` (`src/models/pinn.py`) + curriculum warmup; algebraic (EOS/mass/species) + energy ODE (autograd) physics loss; collocation points; pinn_pfr_* exports
+│   ├── Main_8_symbolic_regression_SR.ipynb              # Step 8: PySR distillation of any NN teacher (Main_6/7) → closed-form equations; exports sr_<teacher>_equations.py
+│   ├── Main_9_compare_cantera_pinn_sr.ipynb             # Step 9: Cantera vs PINN vs SR comparison/validation
 │   └── Main_10_optimisation_BO_surrogate_vs_cantera.ipynb # Step 10: Optuna GPSampler BO on MLP + SR surrogates; Cantera validation of both optima
 │
 ├── assets/                       # Static assets (images for README etc.)
 ├── tests/                        # Test suite
-├── run_pipeline.py               # Run all notebooks in order
-├── run_pipeline.bat              # Windows batch wrapper
+├── run_pipeline.py               # Run Main_4-10 in order (run Main_1-3 manually first for data)
 ├── requirements.txt
 ├── README.md
 └── LICENSE
@@ -141,7 +147,7 @@ HydrAI/
 
 ### 4. Notebooks
 - **Location**: All interactive entry points are in **`notebooks/`**
-- **Naming**: Notebooks use **`Main_N_`** prefix for pipeline order through **`Main_7`** (exit-plane PyTorch in Main_6; full-profile PyTorch in Main_7).
+- **Naming**: Notebooks use **`Main_N_`** prefix for pipeline order, **`Main_1`** through **`Main_10`**.
 
 ### 4b. Scripts & SLURM monitoring
 
@@ -209,18 +215,18 @@ The notebook provides:
 ```bash
 jupyter notebook notebooks/Main_4_train_and_evaluate_tree_models_IO.ipynb
 jupyter notebook notebooks/Main_5_train_evaluate_tune_tree_model_evolution.ipynb
-jupyter notebook notebooks/Main_6_train_evaluate_SimpleNN_IO.ipynb
-jupyter notebook notebooks/Main_7_train_evaluate_SimpleNN_full_profile.ipynb
+jupyter notebook notebooks/Main_6_train_evaluate_SimpleNN_full_profile.ipynb
+jupyter notebook notebooks/Main_7_train_evaluate_PINN_full_profile.ipynb
 ```
-- Main_4 trains baseline trees (RF, Gradient Boosting, XGBoost, AdaBoost) and saves them to `models/tree_models_exit.joblib` (overwritten each run).
+- Main_4 trains baseline trees (RF, Gradient Boosting, XGBoost, AdaBoost) and saves them to `models/tree_models_exit.joblib` (overwritten each run); optional `IF_HYPERPARAM_TUNING` (§7) runs BayesSearchCV per model before the export.
 - Main_5 tunes one tree model and, when enabled, also fits the full-profile model; both are bundled into `models/tree_model_tuned_exit_full.joblib`.
-- Main_6 trains a PyTorch `SimpleNN` (optional Optuna §6b on a validation fold; test held out), applies **ReduceLROnPlateau** / **early stopping** / **best test-R² checkpoint restore** in Section 8, and writes `models/simple_nn_exit_state_dict.pt`, `_scalers.joblib`, `_manifest.json`, plus **`simple_nn_exit_per_target_metrics.csv`** and **`simple_nn_exit_group_metrics.csv`** when `IF_MODEL_EXPORT` (overwritten each run). Parity and residual figure grids use **three columns** and cover **all state + species** targets. §8 appends a **training progress CSV** under `data/logs/`; §6b updates `data/logs/…_optuna_tuning_plot_data.json` incrementally. External live plots: `scripts/monitor/monitor_nn_training_progress.py` (auto-picks Optuna JSON vs training CSV in `data/logs/`).
-- Main_7 trains the same `SimpleNN` on **all axial rows** with **`relative_position`**, **run-level** train/test split (§4), Optuna §6b on **validation rows from train data only**, and the same §8 controls on **held-out test runs**. Overfitting during tuning = validation R² across trials; during production training = **train vs test R²** (and gap) at §8 checkpoints. Optional **`FULL_PROFILE_MAX_ROWS`** for smoke runs; exports **`models/simple_nn_full_profile_*`** + CSVs. §9b: **`full_profile_cantera_vs_nn_axial_evolution.png`**. §10: **four columns**, shared hexbin colorbar or scatter (`PARITY_HEXBIN_MIN_POINTS`). Monitor: same script with `MAIN_7=True`; see `docs/ML_CONFIG_GUIDE.md`.
+- Main_6 trains the `SimpleNN` on **all axial rows** with **`relative_position`**, **run-level** train/test split (§4), optional Optuna §6b on **validation rows from train data only**, and §8 **ReduceLROnPlateau** / **early stopping** / **best test-R² checkpoint restore**. Overfitting during tuning = validation R² across trials; during production training = **train vs test R²** (and gap) at §8 checkpoints. Optional **`FULL_PROFILE_MAX_ROWS`** for smoke runs; exports **`models/simple_nn_full_profile_*`** + CSVs. §9b: **`full_profile_cantera_vs_nn_axial_evolution.png`**. §10: **four columns**, shared hexbin colorbar or scatter (`PARITY_HEXBIN_MIN_POINTS`). Monitor: `scripts/monitor/monitor_nn_training_progress.py` (`MAIN_6=True`); see `docs/ML_CONFIG_GUIDE.md`.
+- Main_7 trains `PINNPFR` with the composite data + physics loss; exports `models/pinn_pfr_*`. Monitor: same script with `MAIN_7=True`.
 - Each notebook also tees its terminal output to `outputs/reports/<NotebookName>.txt` via `src.utils.run_log.start_run_log` (stable path, **overwritten on every run**).
 
 **Alternative (all model types including neural network):**
 ```bash
-python src/ml/model_training.py configs/ml/ml_training_config.json
+python src/ml/model_training.py configs/ml/model_training_script_config.json
 ```
 
 **Note:** All workflows use Jupyter notebooks for interactive use. Command-line scripts are available in `src/ml/` for batch processing.

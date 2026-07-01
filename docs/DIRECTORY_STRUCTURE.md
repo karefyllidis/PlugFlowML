@@ -27,9 +27,11 @@ HydrAI/
 │   ├── Main_3_data_exploration_feature_engineering.ipynb  # Step 3: Data exploration and feature engineering
 │   ├── Main_4_train_and_evaluate_tree_models_IO.ipynb
 │   ├── Main_5_train_evaluate_tune_tree_model_evolution.ipynb
-│   ├── Main_6_train_evaluate_SimpleNN_IO.ipynb
-│   ├── Main_7_train_evaluate_SimpleNN_full_profile.ipynb
-│   └── Main_8_train_evaluate_PINN_full_profile.ipynb
+│   ├── Main_6_train_evaluate_SimpleNN_full_profile.ipynb
+│   ├── Main_7_train_evaluate_PINN_full_profile.ipynb
+│   ├── Main_8_symbolic_regression_SR.ipynb
+│   ├── Main_9_compare_cantera_pinn_sr.ipynb
+│   └── Main_10_optimisation_BO_surrogate_vs_cantera.ipynb
 ├── src/                                 # Source code
 │   ├── cantera/                         # Cantera simulation
 │   │   └── pfr_simulator.py            # Main PFR simulation
@@ -44,15 +46,24 @@ HydrAI/
 │       └── run_log.py                  # Notebook run-log capture
 ├── configs/                             # Configuration files
 │   ├── simulation/
-│   │   ├── config_template.json
-│   │   ├── reactant_database.json
-│   │   └── heat_flux_profile.json
+│   │   ├── main1_pfr_run_config_template.json
+│   │   ├── main1_reactant_database.json
+│   │   └── main1_heat_flux_profile.json
 │   ├── style/
 │   │   └── figure_aesthetics.json
 │   └── ml/
-│       ├── ml_data_generation_config.json
-│       ├── ml_data_generation_config.smoke.json
-│       ├── ml_training_config.json
+│       ├── main1_run_pfr_config.json
+│       ├── main2_data_generation_config.json
+│       ├── main2_data_generation_config.smoke.json
+│       ├── main3_eda_feature_engineering_config.json
+│       ├── main4_tree_baseline_config.json
+│       ├── main5_tree_tuning_config.json
+│       ├── main6_simplenn_config.json
+│       ├── main7_pinn_config.json
+│       ├── main8_symbolic_regression_config.json
+│       ├── main9_compare_cantera_pinn_sr_config.json
+│       ├── main10_bayesian_optimisation_config.json
+│       ├── model_training_script_config.json
 │       └── ml_inference_config.json
 ├── mechanisms/                          # Chemical kinetic mechanisms (YAMLs git-ignored; .gitkeep tracked)
 │   └── .gitkeep                         # Add *.yaml locally per README "Required External Files"
@@ -64,16 +75,14 @@ HydrAI/
 ├── models/                              # Trained ML models (generated; overwrite on each run)
 │   ├── tree_models_exit.joblib            # Main_4 baseline tree bundle
 │   ├── tree_model_tuned_exit_full.joblib  # Main_5 tuned exit + optional full-profile
-│   ├── simple_nn_exit_state_dict.pt       # Main_6 PyTorch state_dict (exit-plane)
-│   ├── simple_nn_exit_scalers.joblib      # Main_6 X/y scalers + label encoder
-│   ├── simple_nn_exit_manifest.json       # Main_6 manifest (h1–h3, training incl. best-ckpt, metrics, tuning, chemistry_groups)
-│   ├── simple_nn_exit_per_target_metrics.csv   # Main_6 per-target test metrics
-│   ├── simple_nn_exit_group_metrics.csv        # Main_6 metrics by state vs chemistry group
-│   ├── simple_nn_full_profile_state_dict.pt   # Main_7 full-profile PyTorch state_dict
-│   ├── simple_nn_full_profile_scalers.joblib  # Main_7 X/y scalers + label encoder
-│   ├── simple_nn_full_profile_manifest.json   # Main_7 manifest (feature_cols incl. relative_position; run_level_split)
+│   ├── simple_nn_full_profile_state_dict.pt   # Main_6 full-profile PyTorch state_dict
+│   ├── simple_nn_full_profile_scalers.joblib  # Main_6 X/y scalers + label encoder
+│   ├── simple_nn_full_profile_manifest.json   # Main_6 manifest (feature_cols incl. relative_position; run_level_split)
 │   ├── simple_nn_full_profile_per_target_metrics.csv
-│   └── simple_nn_full_profile_group_metrics.csv
+│   ├── simple_nn_full_profile_group_metrics.csv
+│   ├── pinn_pfr_state_dict.pt              # Main_7 PINNPFR state_dict
+│   ├── pinn_pfr_scalers.joblib             # Main_7 X/y scalers
+│   └── pinn_pfr_manifest.json              # Main_7 manifest (architecture, loss weights, training)
 ├── outputs/                              # Simulation outputs
 │   ├── results/                         # CSV and summary files
 │   ├── figures/                         # Generated plots (per-notebook subdirs)
@@ -133,13 +142,15 @@ See **Version control** in `README.md` and root `.gitignore` for the authoritati
 | **Step 1 Entry** | `notebooks/Main_1_run_pfr.ipynb` | Present | OK |
 | **Step 2 Data Gen** | `notebooks/Main_2_generate_training_data.ipynb` | Present | OK |
 | **Step 3 Exploration** | `notebooks/Main_3_data_exploration_feature_engineering.ipynb` | Present | OK |
-| **Step 4 Tree ML** | `notebooks/Main_4_train_and_evaluate_tree_models_IO.ipynb` | Baseline tree evaluation (RF, GB, XGBoost, AdaBoost; exit-plane only, no tuning) | OK |
+| **Step 4 Tree ML** | `notebooks/Main_4_train_and_evaluate_tree_models_IO.ipynb` | Baseline tree evaluation (RF, GB, XGBoost, AdaBoost; exit-plane only); optional BayesSearchCV tuning (§7, off by default) | OK |
 | **Step 5 Tuning + PFR Evolution** | `notebooks/Main_5_train_evaluate_tune_tree_model_evolution.ipynb` | One-tree-model `BayesSearchCV` tuning on exit plane; reuses params for full PFR evolution | OK |
-| **Step 6 PyTorch NN** | `notebooks/Main_6_train_evaluate_SimpleNN_IO.ipynb` | PyTorch `SimpleNN` (3 hidden layers); reads `neural_network.*`; optional Optuna §6b (val fold, test held out); §8 LR-on-plateau (test R²), early stopping, best-checkpoint restore; progress CSV + Optuna JSON; monitor `scripts/monitor/monitor_nn_training_progress.py` (`MAIN_6`, optional `LIVE`) | OK |
-| **Step 7 PyTorch full profile** | `notebooks/Main_7_train_evaluate_SimpleNN_full_profile.ipynb` | Same `SimpleNN` + `neural_network.*` as Main_6; full axial rows with `relative_position`; **run-level** test holdout (§4); Optuna §6b on **val rows from train** (test blind); §8 train/test R² overfitting diagnostic; optional `FULL_PROFILE_MAX_ROWS`; monitor `scripts/monitor/monitor_nn_training_progress.py` (`MAIN_7`, optional `LIVE`); `USE_CUDA_AMP` / `USE_TORCH_COMPILE` / `OPTUNA_N_JOBS`; §9b axial overlays; §10 4-column parity; exports `simple_nn_full_profile_*` + figure PNGs. See `docs/ML_CONFIG_GUIDE.md` (Main_7 splits). | OK |
-| **Step 8 PINN PFR** | `notebooks/Main_8_train_evaluate_PINN_full_profile.ipynb` | Physics-informed `PINNPFR`; same arch as Main_7 + composite loss: `λ_data·MSE + λ_phys·L_physics`; algebraic constraints (EOS, mass, species sum/nonneg) + energy ODE via `torch.autograd.grad`; curriculum warmup; collocation points (N unlabelled z/L per batch); reads `pinn.*` + `neural_network.*`; §13 physics-residual-along-z diagnostic; exports `pinn_pfr_*`; monitor via same training progress CSV. | OK |
-| **Database** | `configs/simulation/reactant_database.json` | Present | OK |
-| **Template** | `configs/simulation/config_template.json` | Present | OK |
+| **Step 6 PyTorch full profile** | `notebooks/Main_6_train_evaluate_SimpleNN_full_profile.ipynb` | PyTorch `SimpleNN` (3 hidden layers); full axial rows with `relative_position`; **run-level** test holdout (§4); optional Optuna §6b on **val rows from train** (test blind); §8 LR-on-plateau (test R²), early stopping, best-checkpoint restore; optional `FULL_PROFILE_MAX_ROWS`; monitor `scripts/monitor/monitor_nn_training_progress.py` (`MAIN_6`, optional `LIVE`); `USE_CUDA_AMP` / `USE_TORCH_COMPILE` / `OPTUNA_N_JOBS`; §9b axial overlays; §10 4-column parity; exports `simple_nn_full_profile_*` + figure PNGs. See `docs/ML_CONFIG_GUIDE.md`. | OK |
+| **Step 7 PINN PFR** | `notebooks/Main_7_train_evaluate_PINN_full_profile.ipynb` | Physics-informed `PINNPFR`; same arch as Main_6 + composite loss: `λ_data·MSE + λ_phys·L_physics`; algebraic constraints (EOS, mass, species sum/nonneg) + energy ODE via `torch.autograd.grad`; curriculum warmup; collocation points (N unlabelled z/L per batch); reads `pinn.*` + `neural_network.*`; §13 physics-residual-along-z diagnostic; exports `pinn_pfr_*`; monitor via same training progress CSV (`MAIN_7`). | OK |
+| **Step 8 Symbolic Regression** | `notebooks/Main_8_symbolic_regression_SR.ipynb` | PySR distillation of any NN teacher (Main_6 or Main_7) → closed-form equations | OK |
+| **Step 9 Comparison** | `notebooks/Main_9_compare_cantera_pinn_sr.ipynb` | Cantera vs PINN vs SR comparison/validation | OK |
+| **Step 10 Bayesian Optimisation** | `notebooks/Main_10_optimisation_BO_surrogate_vs_cantera.ipynb` | Optuna GP-BO on the SR surrogate; Cantera validation | OK |
+| **Database** | `configs/simulation/main1_reactant_database.json` | Present | OK |
+| **Template** | `configs/simulation/main1_pfr_run_config_template.json` | Present | OK |
 | **Dependencies** | `requirements.txt` | Present | OK |
 | **License** | `LICENSE` | Present | OK |
 | **Changelog** | `docs/CHANGELOG.md` | Present | OK |
@@ -149,7 +160,7 @@ See **Version control** in `README.md` and root `.gitignore` for the authoritati
 | **Mechanisms** | `mechanisms/*.yaml` (local; not committed by default) | Add per README | OK |
 | **Results** | `outputs/results/` directory | Present | OK |
 | **Plots** | `outputs/figures/` directory | Present | OK |
-| **Heat Flux** | `configs/simulation/heat_flux_profile.json` | Present | OK |
+| **Heat Flux** | `configs/simulation/main1_heat_flux_profile.json` | Present | OK |
 | **ML Models** | `src/ml/` modules | Present | OK |
 | **Aesthetics** | `configs/style/figure_aesthetics.json` | Present | OK |
 
@@ -190,7 +201,7 @@ Each script starts Jupyter and opens `notebooks/Main_1_run_pfr.ipynb`.
 ### **SLURM / cluster (Main_2 sweeps)**
 
 Submit batch scripts from the repo root (see `README.md` § HPC). Override config for smoke tests:
-`export HYDRAI_ML_CONFIG=$PWD/configs/ml/ml_data_generation_config.smoke.json`.  
+`export HYDRAI_ML_CONFIG=$PWD/configs/ml/main2_data_generation_config.smoke.json`.  
 Monitor: `tail -f logs/data_generation_progress_task_0.json` (use the task id of your worker).
 Current `scripts/cluster/*.sh` values are tuned for the University of Cambridge **CSD3** environment; adjust account/partition/QoS/modules for other SLURM clusters.
 
@@ -223,13 +234,16 @@ SIMULATION COMPLETED SUCCESSFULLY!
 | `notebooks/Main_1_run_pfr.ipynb` | Step 1: Main entry point (Jupyter notebook) | Working |
 | `notebooks/Main_2_generate_training_data.ipynb` | Step 2: ML data generation (Jupyter notebook) | Working |
 | `notebooks/Main_3_data_exploration_feature_engineering.ipynb` | Step 3: Data exploration and feature engineering (Jupyter notebook) | Working |
-| `notebooks/Main_4_train_and_evaluate_tree_models_IO.ipynb` | Step 4: Baseline tree evaluation (exit-plane, no tuning) | OK |
+| `notebooks/Main_4_train_and_evaluate_tree_models_IO.ipynb` | Step 4: Baseline tree evaluation (exit-plane); optional BayesSearchCV tuning (§7, off by default) | OK |
 | `notebooks/Main_5_train_evaluate_tune_tree_model_evolution.ipynb` | Step 5: One-model tuning and full PFR evolution | OK |
-| `notebooks/Main_6_train_evaluate_SimpleNN_IO.ipynb` | Step 6: PyTorch MLP (`SimpleNN`, `h1`–`h3`) with optional Optuna (6b) and production training (8): LR schedule on test R², early stopping, best-checkpoint restore | OK |
-| `notebooks/Main_7_train_evaluate_SimpleNN_full_profile.ipynb` | Step 7: full-profile `SimpleNN`; run-level split; optional Optuna; §9b axial (state+species); §10 parity/residuals; optional row cap for smoke runs; exports `simple_nn_full_profile_*` + figures under `outputs/figures/Main_7_train_evaluate_SimpleNN_full_profile/` | OK |
+| `notebooks/Main_6_train_evaluate_SimpleNN_full_profile.ipynb` | Step 6: full-profile `SimpleNN`; run-level split; optional Optuna; §9b axial (state+species); §10 parity/residuals; optional row cap for smoke runs; exports `simple_nn_full_profile_*` + figures under `outputs/figures/Main_6_train_evaluate_SimpleNN_full_profile/` | OK |
+| `notebooks/Main_7_train_evaluate_PINN_full_profile.ipynb` | Step 7: `PINNPFR` with PFR ODE residuals; exports `pinn_pfr_*` | OK |
+| `notebooks/Main_8_symbolic_regression_SR.ipynb` | Step 8: PySR distillation of Main_6/Main_7 teacher | OK |
+| `notebooks/Main_9_compare_cantera_pinn_sr.ipynb` | Step 9: Cantera vs PINN vs SR comparison/validation | OK |
+| `notebooks/Main_10_optimisation_BO_surrogate_vs_cantera.ipynb` | Step 10: Optuna GP-BO on SR surrogate; Cantera validation | OK |
 | `src/cantera/pfr_simulator.py` | Main simulation code | Working |
-| `configs/simulation/reactant_database.json` | Reactant definitions | Complete |
-| `configs/simulation/config_template.json` | Configuration template | Valid |
+| `configs/simulation/main1_reactant_database.json` | Reactant definitions | Complete |
+| `configs/simulation/main1_pfr_run_config_template.json` | Configuration template | Valid |
 | `requirements.txt` | Dependencies list | All installed |
 | `scripts/cluster/run_main2_slurm_chunk.py` | Main-2 worker (`TASK_ID` / `NTASKS`) | Use on HPC |
 | `scripts/cluster/run_training_mul_CPUs.sh` | Example multi-CPU SLURM job | Site-specific `#SBATCH` |
@@ -237,7 +251,7 @@ SIMULATION COMPLETED SUCCESSFULLY!
 | `scripts/local/run_main2_local_parallel.py` | Multi-process Main_2 on one machine | All OS |
 | `scripts/dev/check_complete_runs.py` | Sweep completeness / manifests | Run from repo root |
 | `scripts/notebook/run_simulation.sh` | Opens Main_1 in Jupyter | Working |
-| `configs/simulation/heat_flux_profile.json` | Heat flux data | Present |
+| `configs/simulation/main1_heat_flux_profile.json` | Heat flux data | Present |
 | `configs/style/figure_aesthetics.json` | Figure styling | Present |
 
 ---

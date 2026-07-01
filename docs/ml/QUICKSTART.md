@@ -17,7 +17,7 @@ Generate training data from Cantera simulations:
 
 ```bash
 # Using JSON config file (recommended)
-python src/ml/data_generation.py configs/ml/ml_data_generation_config.json
+python src/ml/data_generation.py configs/ml/main2_data_generation_config.json
 ```
 
 Or use the Jupyter notebook:
@@ -68,15 +68,15 @@ For hyperparameter tuning and full axial/PFR evolution with one selected model:
 jupyter notebook notebooks/Main_5_train_evaluate_tune_tree_model_evolution.ipynb
 ```
 
-For the PyTorch MLP exit-plane baseline (multi-output regression on inlet-only features):
+For the PyTorch `SimpleNN` full axial profile (multi-output regression; the exit-plane-only Main_6 notebook has been removed):
 ```bash
-jupyter notebook notebooks/Main_6_train_evaluate_SimpleNN_IO.ipynb
+jupyter notebook notebooks/Main_6_train_evaluate_SimpleNN_full_profile.ipynb
 ```
-Hyperparameters are read from `configs/ml/ml_training_config.json` → `neural_network.{epochs, batch_size, learning_rate, h1, h2, h3, dropout}`. To run an in-notebook Optuna TPE search, flip `IF_HYPERPARAM_TUNING = True` in Section 2; the search space and trial budget are controlled by `neural_network.tuning.{n_trials, epochs_per_trial, validation_fraction, timeout_seconds}` (`pip install optuna` required). The main training loop (Section 8) also applies **`ReduceLROnPlateau`** on test R² checkpoints, **early stopping** when test R² stalls, and **reloads the best test-R² weights** before final metrics and export. While Main_6 or Main_7 runs, in another terminal: `python scripts/monitor/monitor_nn_training_progress.py` — set `MAIN_6` or `MAIN_7`, and `LIVE=True` for live refresh (`LIVE=False` for a one-shot plot). Logs live in `data/logs/`; see [`data/logs/README.md`](../../data/logs/README.md) and `docs/ML_CONFIG_GUIDE.md`.
+Hyperparameters are read from `configs/ml/main6_simplenn_config.json` → `neural_network.{epochs, batch_size, learning_rate, h1, h2, h3, dropout}`. To run an in-notebook Optuna TPE search, flip `IF_HYPERPARAM_TUNING = True` in Section 2; the search space and trial budget are controlled by `neural_network.tuning.{n_trials, epochs_per_trial, validation_fraction, timeout_seconds}` (`pip install optuna` required). The main training loop (Section 8) also applies **`ReduceLROnPlateau`** on test R² checkpoints, **early stopping** when test R² stalls, and **reloads the best test-R² weights** before final metrics and export. While Main_6 runs, in another terminal: `python scripts/monitor/monitor_nn_training_progress.py`, and `LIVE=True` for live refresh (`LIVE=False` for a one-shot plot). Logs live in `data/logs/`; see [`data/logs/README.md`](../../data/logs/README.md) and `docs/ML_CONFIG_GUIDE.md`.
 
 **Option B – All model types (command-line):**
 ```bash
-python src/ml/model_training.py configs/ml/ml_training_config.json
+python src/ml/model_training.py configs/ml/model_training_script_config.json
 ```
 
 **What this does:**
@@ -155,7 +155,7 @@ python src/ml/example_usage.py
 ## Troubleshooting
 
 ### "Model not found" error
-**Solution**: Train models first (Step 3); run `Main_4_train_and_evaluate_tree_models_IO.ipynb` for baseline tree models, `Main_5_train_evaluate_tune_tree_model_evolution.ipynb` for tuned tree models, `Main_6_train_evaluate_SimpleNN_IO.ipynb` for the PyTorch MLP baseline, or `python src/ml/model_training.py configs/ml/ml_training_config.json` for the CLI tree trainer.
+**Solution**: Train models first (Step 3); run `Main_4_train_and_evaluate_tree_models_IO.ipynb` for baseline tree models, `Main_5_train_evaluate_tune_tree_model_evolution.ipynb` for tuned tree models, `Main_6_train_evaluate_SimpleNN_full_profile.ipynb` for the PyTorch MLP, or `python src/ml/model_training.py configs/ml/model_training_script_config.json` for the CLI tree trainer.
 
 ### "Out of memory" during training
 **Solution**: Reduce `max_combinations_per_reactant` in config file
@@ -178,14 +178,14 @@ python src/ml/example_usage.py
 
 - **Fast predictions**: **XGBoost** or **Random Forest** (tree surrogates)
 - **Interpretable models**: Use `random_forest`
-- **Large datasets**: XGBoost / gradient boosting; the **PyTorch** MLP baseline (`Main_6`) scales linearly and runs on CPU/CUDA/MPS
+- **Large datasets**: XGBoost / gradient boosting; the **PyTorch** MLP (`Main_6`) scales linearly and runs on CPU/CUDA/MPS
 - **Small datasets**: Random Forest or XGBoost often better than the NN baseline; raise `dropout` if the NN overfits
 
 ## Full Workflow
 
 ```bash
-# 1. Generate data (edit configs/ml/ml_data_generation_config.json first)
-python src/ml/data_generation.py configs/ml/ml_data_generation_config.json
+# 1. Generate data (edit configs/ml/main2_data_generation_config.json first)
+python src/ml/data_generation.py configs/ml/main2_data_generation_config.json
 
 # 2. (Optional) Explore data
 jupyter notebook notebooks/Main_3_data_exploration_feature_engineering.ipynb
@@ -196,13 +196,13 @@ jupyter notebook notebooks/Main_4_train_and_evaluate_tree_models_IO.ipynb
 # 4. Optional one-model tuning + full PFR evolution
 jupyter notebook notebooks/Main_5_train_evaluate_tune_tree_model_evolution.ipynb
 
-# 4b. PyTorch MLP baseline (inlet -> outlet); reads neural_network.* from ml_training_config.json
+# 4b. PyTorch SimpleNN, full axial profile; reads neural_network.* from main6_simplenn_config.json
 #     Flip IF_HYPERPARAM_TUNING=True for an optional Optuna TPE search (neural_network.tuning).
 #     Section 8: LR-on-plateau (test R²), early stopping, best-checkpoint restore before export.
-jupyter notebook notebooks/Main_6_train_evaluate_SimpleNN_IO.ipynb
+jupyter notebook notebooks/Main_6_train_evaluate_SimpleNN_full_profile.ipynb
 
 # Alternative script route (trees only; NN remains placeholder):
-# Or: python src/ml/model_training.py configs/ml/ml_training_config.json
+# Or: python src/ml/model_training.py configs/ml/model_training_script_config.json
 
 # 5. Test predictions
 python src/ml/inference.py configs/ml/ml_inference_config.json

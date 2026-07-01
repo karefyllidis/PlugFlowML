@@ -20,8 +20,8 @@ It is a process model card (how data is produced), not a trained-model performan
 ## Inputs (Generation Controls)
 
 - **Simulation configs:** `configs/simulation/`
-- **ML sweep config:** `configs/ml/ml_data_generation_config.json` (or smoke variant)
-- **Feed/mechanism mapping:** `configs/simulation/reactant_database.json`
+- **ML sweep config:** `configs/ml/main2_data_generation_config.json` (or smoke variant)
+- **Feed/mechanism mapping:** `configs/simulation/main1_reactant_database.json`
 - **Sampling method:** Latin Hypercube (`latin_hypercube`) or grid/random (config-driven)
 - **Key sweep variables:**
   - `initial_temperature_K`

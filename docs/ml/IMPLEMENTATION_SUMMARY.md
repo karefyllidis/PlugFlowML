@@ -36,7 +36,7 @@ The ML Surrogate Models module successfully implements machine learning models t
 
 **Tuning / evolution notebook** (`Main_5_train_evaluate_tune_tree_model_evolution.ipynb`): tunes one selected tree model with `BayesSearchCV` (exit-plane only) when `IF_HYPERPARAM_TUNING=True`; optional full axial/PFR evolution training reuses those hyperparameters (no second search).
 
-**PyTorch MLP notebook** (`Main_6_train_evaluate_SimpleNN_IO.ipynb`): defaults-first multi-output regression on the same exit-plane data, with an optional in-notebook Optuna TPE search. 3-hidden-layer ReLU MLP (`128 → 64 → 32` by default) with `nn.Dropout` between hidden blocks, `nn.MSELoss`, Adam. Reads `test_size`, `random_state`, and `neural_network.{epochs, batch_size, learning_rate, h1, h2, h3, dropout}` from `ml_training_config.json`. Diagnostics: train + test convergence (MSE + R² vs epoch), parity plots, residuals, per-target R² bar chart (white bars with hatch by state/thermo vs species); optional architecture diagram (matplotlib + TikZ) and `torchinfo` summary. Setting `IF_HYPERPARAM_TUNING=True` (Section 2) activates Section 6b, which carves a validation fold out of the training split (test set held out), runs an Optuna TPE study with a median pruner over `h1, h2, h3, dropout, learning_rate, batch_size` (budget and validation fraction from `neural_network.tuning`), refits the production model on the best hyperparameters, and Section 6b-ii records `optuna_optimization_history.png`, `optuna_parallel_coordinate.png`, `optuna_param_importance.png`, plus a `tuning` block in the export manifest. Section 8 production training applies **`ReduceLROnPlateau`** on test R² checkpoints, **early stopping** when test R² stalls, **restores the best test-R² checkpoint** before evaluation/export, and writes grouped metrics plus `training.{early_stopped,best_test_r2_checkpoint,best_test_r2_epoch}` into the manifest.
+**PyTorch MLP notebook** (`Main_6_train_evaluate_SimpleNN_IO.ipynb`): defaults-first multi-output regression on the same exit-plane data, with an optional in-notebook Optuna TPE search. 3-hidden-layer ReLU MLP (`128 → 64 → 32` by default) with `nn.Dropout` between hidden blocks, `nn.MSELoss`, Adam. Reads `test_size`, `random_state`, and `neural_network.{epochs, batch_size, learning_rate, h1, h2, h3, dropout}` from `main6_simplenn_config.json` (Main_6's config; Main_6 has been removed — this paragraph otherwise describes the exit-plane workflow it used to cover). Diagnostics: train + test convergence (MSE + R² vs epoch), parity plots, residuals, per-target R² bar chart (white bars with hatch by state/thermo vs species); optional architecture diagram (matplotlib + TikZ) and `torchinfo` summary. Setting `IF_HYPERPARAM_TUNING=True` (Section 2) activates Section 6b, which carves a validation fold out of the training split (test set held out), runs an Optuna TPE study with a median pruner over `h1, h2, h3, dropout, learning_rate, batch_size` (budget and validation fraction from `neural_network.tuning`), refits the production model on the best hyperparameters, and Section 6b-ii records `optuna_optimization_history.png`, `optuna_parallel_coordinate.png`, `optuna_param_importance.png`, plus a `tuning` block in the export manifest. Section 8 production training applies **`ReduceLROnPlateau`** on test R² checkpoints, **early stopping** when test R² stalls, **restores the best test-R² checkpoint** before evaluation/export, and writes grouped metrics plus `training.{early_stopped,best_test_r2_checkpoint,best_test_r2_epoch}` into the manifest.
 
 **Supported Models** (notebooks: trees in Main_4/Main_5, PyTorch MLP in Main_6; CLI script: trees only):
 - **Random Forest** (scikit-learn) - Ensemble of decision trees; fast training and inference
@@ -89,9 +89,13 @@ src/ml/
 └── example_usage.py             # Example usage scripts
 
 configs/ml/
-├── ml_data_generation_config.json    # Data generation config
-├── ml_training_config.json           # Model training config
-└── ml_inference_config.json          # Inference config
+├── main2_data_generation_config.json    # Main_2 data generation config
+├── main4_tree_baseline_config.json      # Main_4 tree baseline config
+├── main5_tree_tuning_config.json        # Main_5 tree tuning config
+├── main6_simplenn_config.json           # Main_6 SimpleNN config
+├── main7_pinn_config.json               # Main_7 PINN config
+├── model_training_script_config.json    # Legacy src/ml/model_training.py CLI config
+└── ml_inference_config.json             # Inference config
 
 data/training/                   # Generated training data (created at runtime)
 ├── training_data_complete_*.pkl
@@ -117,12 +121,12 @@ docs/ml/
 
 1. **Generate Training Data** (5-30 minutes)
    ```bash
-   python src/ml/data_generation.py configs/ml/ml_data_generation_config.json
+   python src/ml/data_generation.py configs/ml/main2_data_generation_config.json
    ```
 
 2. **Train ML Models** (2-10 minutes)
    ```bash
-   python src/ml/model_training.py configs/ml/ml_training_config.json
+   python src/ml/model_training.py configs/ml/model_training_script_config.json
    ```
 
 3. **Use ML Models** (instant)

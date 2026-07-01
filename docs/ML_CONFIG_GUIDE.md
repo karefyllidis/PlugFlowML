@@ -2,11 +2,13 @@
 
 All ML scripts now use JSON configuration files instead of command-line arguments.
 
+**Convention**: notebook flag cells hold only boolean (`IF_*`) literals and `Path` objects. Every number, string, or list a user might reasonably tune — model lists, tuning budgets, row caps, CPU/Optuna job counts, teacher/model selectors — is read from the matching JSON config via `config.get(key, default)`. This keeps "what changes behaviour" entirely in the config files and out of code cells, so re-running a notebook can't accidentally pick up a hand-edited number.
+
 ## Configuration Files
 
 ### 1. Training Data Generation
 
-**File**: `configs/ml/ml_data_generation_config.json`
+**File**: `configs/ml/main2_data_generation_config.json`
 
 ```json
 {
@@ -33,10 +35,10 @@ All ML scripts now use JSON configuration files instead of command-line argument
 
 **Usage:**
 ```bash
-python src/ml/data_generation.py configs/ml/ml_data_generation_config.json
+python src/ml/data_generation.py configs/ml/main2_data_generation_config.json
 ```
 
-**Optional — SLURM chunk runner** (`scripts/cluster/run_main2_slurm_chunk.py`): set `HYDRAI_ML_CONFIG` to a JSON path (absolute or relative to repo root) to override the default `configs/ml/ml_data_generation_config.json`. For a minimal test workload use `configs/ml/ml_data_generation_config.smoke.json`. Each task writes live status to `logs/data_generation_progress_task_<TASK_ID>.json`. See `README.md` (HPC / SLURM).
+**Optional — SLURM chunk runner** (`scripts/cluster/run_main2_slurm_chunk.py`): set `HYDRAI_ML_CONFIG` to a JSON path (absolute or relative to repo root) to override the default `configs/ml/main2_data_generation_config.json`. For a minimal test workload use `configs/ml/main2_data_generation_config.smoke.json`. Each task writes live status to `logs/data_generation_progress_task_<TASK_ID>.json`. See `README.md` (HPC / SLURM).
 
 **Post-run consolidation (parallel runs):**
 
@@ -130,11 +132,15 @@ If `sampling_method` is `"random"` or `"latin"`, only `max_combinations_per_reac
 
 ### Notebook run control (`notebooks/Main_1_run_pfr.ipynb`)
 
+**File**: `configs/ml/main1_run_pfr_config.json` — `reactant_key` (one of the keys in `configs/simulation/main1_reactant_database.json`, e.g. `ethane`, `propane`, `naphtha`, `n-hexane`).
+
 - **`IF_SAVE_PLOTS`**: If `True`, quick inline figures are saved to `outputs/figures/`:
   - `quick_profiles_<reactant>.png`
   - `conversion_products_<reactant>.png`
 
 ### Notebook run control (`notebooks/Main_3_data_exploration_feature_engineering.ipynb`)
+
+**File**: `configs/ml/main3_eda_feature_engineering_config.json` — loaded in cell 4 ("Load config"); every key below falls back to the inline default shown if the file or key is missing. Edit the JSON and re-run cell 4 — no kernel restart needed.
 
 - **`IF_PIN_SPECIFIC_FILES`**: If `True`, load pinned files from `data/training/` instead of the newest `training_data_complete_*.pkl`.
 - **`RUN_STAMP_DEVEL` / `RUN_STAMP_FULL`**: Filename stamps — e.g. `20260507_DEVEL` (small smoke-test campaign) vs `20260507_095243` (full production set). Set `RUN_STAMP = RUN_STAMP_DEVEL` for fast pipeline checks; use `RUN_STAMP_FULL` or `IF_PIN_SPECIFIC_FILES = False` for full data. Files: `training_data_complete_<stamp>.pkl` and `metadata_<stamp>.json`.
@@ -148,6 +154,8 @@ If `sampling_method` is `"random"` or `"latin"`, only `max_combinations_per_reac
   - `main3_top12_species_exit_mean_mass_fraction.png`
   - `main3_species_lumped_by_carbon_bar_exit.png`
   - `main3_species_lumped_by_chemistry_bar_exit.png`
+- **`IF_VELOCITY_QC`** / **`VELOCITY_QC_QUANTILE`** (§2.1b): drop simulation runs with non-physical or extreme-outlier velocity before feature/target export.
+- **`IF_COMPUTE_RATES`** (§3c): compute `df_rates` (finite-difference reaction rate proxies) for Main_8; requires `EXPORT_SPECIES_AS=lumped_chemistry`.
 - **Methodology model card (species lumping):** [`docs/SPECIES_LUMPING_MODEL_CARD.md`](SPECIES_LUMPING_MODEL_CARD.md) — carbon vs chemistry taxonomy, sum-of-`Y_*` aggregation, export column names, limitations.
 
 ### 2. ML Model Training
@@ -172,35 +180,55 @@ Loads the latest `data/processed/features_targets_*.pkl`. If Main_3 used **`EXPO
 - Full-profile uses all axial rows and includes `relative_position` as an input
 - Full-profile train/test data are split by simulation run, not by row, to avoid leakage between axial points from the same PFR profile
 - `FULL_PROFILE_MAX_ROWS` can be set for a quick full-profile training smoke test on large datasets
-- **Inlet BC anchoring (§8):** after full-profile `predict`, `src/utils/profile_predictions.anchor_inlet_profile_predictions()` sets each test run’s prediction at **min `relative_position`** to match Cantera truth so axial overlay plots (§9) start at the same inlet state. Same helper is used in **Main_7 §9**.
+- **Inlet BC anchoring (§8):** after full-profile `predict`, `src/utils/profile_predictions.anchor_inlet_profile_predictions()` sets each test run’s prediction at **min `relative_position`** to match Cantera truth so axial overlay plots (§9) start at the same inlet state. Same helper is used in **Main_6 §9**.
 - Reports tuned ML inference speed for exit-plane and full-profile prediction; set `CANTERA_EXIT_SECONDS_PER_RUN` / `CANTERA_FULL_PROFILE_SECONDS_PER_RUN` to print speedup factors against measured Cantera timings
 - Exports tuned exit and full-profile artifacts to `models/tree_model_tuned_exit_full.joblib` (overwritten each run)
 - Adds axial diagnostics and regime diagnostics:
   - `full_profile_cantera_vs_ml_axial_evolution.png` (Main_5 full-profile trees: Cantera vs ML along `x/L` at selected stations)
-  - `full_profile_cantera_vs_nn_axial_evolution.png` (Main_7 §9b: Cantera / test vs PyTorch NN; preferred state columns plus all `species_cols` present in `target_cols`, same `x/L` grid)
+  - `full_profile_cantera_vs_nn_axial_evolution.png` (Main_6 §9b: Cantera / test vs PyTorch NN; preferred state columns plus all `species_cols` present in `target_cols`, same `x/L` grid)
   - `exit_error_vs_conditions_boxplots.png` (error vs inlet-condition bins)
   - `exit_error_tp_map.png` (temperature-pressure error map)
 
 **Why full-profile matters:** Steam cracking is an axial-evolving reacting flow. Exit-only surrogates predict final yields; full-profile surrogates predict the entire temperature/species evolution along the reactor — essential for coil design, coking analysis, and process optimization.
 
-**Legacy notebooks** (for advanced use):
-- `Main_4_train_tree_models.ipynb` — older combined tree training workflow
-- `Main_4b_tree_models_comparison.ipynb` — older detailed per-target metrics and ranking workflow
+**Every Main notebook that reads JSON owns its own dedicated config file** — no file is shared across two Main_N notebooks. This keeps "which config changes which notebook" unambiguous; see the table in `CLAUDE.md` § Config structure for the full list.
 
-**Script (tree / boosting models from JSON):** `python src/ml/model_training.py configs/ml/ml_training_config.json`
-
-**File**: `configs/ml/ml_training_config.json`
+**File**: `configs/ml/main4_tree_baseline_config.json` (Main_4) / `configs/ml/main5_tree_tuning_config.json` (Main_5) — same shape, independent files:
 
 ```json
 {
-    "data_file": "data/training/training_data_complete_*.csv",
-    "output_dir": "models",
-    "target_types": ["primary"],
-    "models": ["all"],
     "test_size": 0.2,
     "random_state": 42,
+    "models_to_train": ["random_forest", "gradient_boosting", "xgboost", "adaboost"],
+    "random_forest": { "n_estimators": 100, "max_depth": 20 },
+    "xgboost": { "n_estimators": 100, "max_depth": 6, "learning_rate": 0.3, "subsample": 1.0, "colsample_bytree": 1.0, "reg_alpha": 0.0, "reg_lambda": 1.0 },
+    "gradient_boosting": { "n_estimators": 150, "max_depth": 5 },
+    "adaboost": { "n_estimators": 200, "learning_rate": 0.1, "max_depth": 6 },
+    "tuning": { "n_iter": 60, "patience": 10, "min_delta": 0.0005, "cv": 3, "scoring": "neg_mean_absolute_error" }
+}
+```
+
+Main_5's file additionally has `model_to_tune` (string, default `"xgboost"`) and `full_profile_max_rows` (int or `null`) at the top level.
+
+**Usage (baseline notebook):** `jupyter notebook notebooks/Main_4_train_and_evaluate_tree_models_IO.ipynb` — reads `main4_tree_baseline_config.json` in cell 3. `IF_HYPERPARAM_TUNING` (off by default) is the only notebook-only flag; when `True`, Section 7 runs `BayesSearchCV` on every model in `models_to_train` using the `tuning.*` budget.
+
+**Usage (tuning/evolution notebook):** `jupyter notebook notebooks/Main_5_train_evaluate_tune_tree_model_evolution.ipynb` — reads `main5_tree_tuning_config.json` in cell 3. `IF_HYPERPARAM_TUNING` and `TRAIN_FULL_PROFILE` are the only notebook-only flags; `model_to_tune` and the `tuning.*` budget are config-driven. The tree blocks above are the **untuned** defaults used when `IF_HYPERPARAM_TUNING=False`.
+
+**Parameters** (both files): `test_size` (float, fraction held out), `random_state` (int seed), and one block per tree model with its `n_estimators`/`max_depth`/etc. Any missing key falls back to the inline notebook default shown as the second argument to `config.get(...)`.
+
+**File**: `configs/ml/main6_simplenn_config.json` (Main_6 — PyTorch `SimpleNN`, full axial profile):
+
+```json
+{
+    "test_size": 0.2,
+    "random_state": 42,
+    "runtime": {
+        "subsample_max_rows": 1000,
+        "n_cpu_cores": 10,
+        "optuna_n_jobs": 10
+    },
     "neural_network": {
-        "epochs": 200,
+        "epochs": 400,
         "batch_size": 256,
         "learning_rate": 0.001,
         "h1": 128,
@@ -208,103 +236,177 @@ Loads the latest `data/processed/features_targets_*.pkl`. If Main_3 used **`EXPO
         "h3": 32,
         "dropout": 0.1,
         "tuning": {
-            "n_trials": 30,
-            "epochs_per_trial": 50,
+            "n_trials": 15,
+            "epochs_per_trial": 25,
             "validation_fraction": 0.2,
             "timeout_seconds": null
         }
-    },
-    "random_forest": {
-        "n_estimators": 100,
-        "max_depth": 20
-    },
-    "xgboost": {
-        "n_estimators": 150,
-        "max_depth": 6
-    },
-    "gradient_boosting": {
-        "n_estimators": 150,
-        "max_depth": 5
-    },
-    "adaboost": {
-        "n_estimators": 200,
-        "learning_rate": 0.1,
-        "max_depth": 6
     }
 }
 ```
 
-**Usage (baseline notebook):** `jupyter notebook notebooks/Main_4_train_and_evaluate_tree_models_IO.ipynb`
+`runtime.*` is read early in Section 2 (Paths & Flags), before `neural_network.*`/`tuning.*` (read in Section 3) — thread pools must be configured before any data operations. `subsample_max_rows` caps rows when `SUBSAMPLE_ROWS=True` (the only notebook-only boolean here); `n_cpu_cores` (`null` = all logical CPUs) and `optuna_n_jobs` control `src/utils/cpu_threads.py` thread allocation.
 
-**Usage (tuning/evolution notebook):** `jupyter notebook notebooks/Main_5_train_evaluate_tune_tree_model_evolution.ipynb`
+**`neural_network` parameters:**
+- `epochs` (int): number of Adam epochs over the training set.
+- `batch_size` (int): mini-batch size for `DataLoader(shuffle=True)`. Capped at `len(train_ds)` if larger.
+- `learning_rate` (float): Adam learning rate.
+- `h1`, `h2`, `h3` (int): number of units in hidden layers 1–3 of the multi-output `SimpleNN` MLP.
+- `dropout` (float): probability passed to `nn.Dropout` after each hidden ReLU; off automatically under `model.eval()`.
 
-**Usage (script for all types):**
+**`neural_network.tuning` parameters (Section 6b only when `IF_HYPERPARAM_TUNING=True`):**
+- `n_trials` (int): number of Optuna TPE trials in the study.
+- `epochs_per_trial` (int): training epochs per Optuna trial; intentionally smaller than the final-model `epochs` to keep the search cheap. Median pruner stops weak trials early.
+- `validation_fraction` (float): fraction of the **training** split carved out as the Optuna validation fold. The held-out test set is never seen during tuning.
+- `timeout_seconds` (int or `null`): wallclock cap for the entire study; `null` = no time limit.
+
+The tuning search space (`h1 ∈ [32,256] step 32`, `h2 ∈ [16,128] step 16`, `h3 ∈ [8,64] step 8`, `dropout ∈ [0.0,0.3]`, `learning_rate ∈ [1e-4,1e-2]` log, `batch_size ∈ {64,128,256,512}`) is defined in the notebook objective function. The objective maximises validation R² (uniform average across all targets, physical units). Requires `pip install optuna`.
+
+**Main_6 production training (Section 8):** `ReduceLROnPlateau` stepped on periodic **test** R² checkpoints, **early stopping** if test R² fails to improve across several consecutive checkpoints, then **reload the best test-R² weights** before Section 9 metrics and Section 11 export. Exports `models/simple_nn_full_profile_manifest.json` (plus `workflow`, `run_level_split`, `feature_cols` incl. `relative_position`, `run_cols`, row/run counts, `chemistry_groups`, `metrics_by_group`, `auxiliary_exports`) and `simple_nn_full_profile_{per_target,group}_metrics.csv`.
+
+**Main_6 notebook-only controls (booleans and paths only; everything else lives in the JSON config above):**
+
+- **External training progress (Section 2):** `WRITE_TRAINING_PROGRESS_LOG` (default `True`) appends `data/logs/Main_6_..._training_progress.csv` during §8. Optuna §6b rewrites `data/logs/Main_6_..._optuna_tuning_plot_data.json` after each completed trial. `USE_CUDA_AMP`, `USE_TORCH_COMPILE` are notebook booleans; `OPTUNA_N_JOBS` is config-driven (`runtime.optuna_n_jobs`, keep at `1` on a single GPU when tuning).
+- **CPU parallelism:** `N_CPU_CORES` is config-driven (`runtime.n_cpu_cores`, `null` = all logical CPUs). Thread limits via `src/utils/cpu_threads.py`.
+- **External monitor** (`scripts/monitor/monitor_nn_training_progress.py`): picks the newest mtime in `data/logs/` (Optuna JSON vs training CSV); `LIVE` flag toggles one-shot vs refresh-until-idle. Details: [`data/logs/README.md`](../data/logs/README.md).
+- **Inlet BC anchoring (§9):** `src/utils/profile_predictions.anchor_inlet_profile_predictions()` sets each test run's prediction at min `relative_position` to match Cantera truth, so axial overlay plots start at the same inlet state. Same helper used in Main_5 §8.
+- **Data splits and overfitting:** §4 test runs (~`test_size` of simulation runs) are held out for §8 checkpoints, LR scheduler, early stopping, and best-weight restore, and are never used in Optuna; §6b validation rows come from the **train** split only. Growing train R² − test R² gap at §8 checkpoints → raise `dropout` or shrink `h1`–`h3`.
+- **Row cap, axial parity:** `FULL_PROFILE_MAX_ROWS` is derived from `runtime.subsample_max_rows` when `SUBSAMPLE_ROWS=True` (the notebook boolean); it caps total train+test rows after the run-level split. §9b `AXIAL_PROFILE_N_RUNS`, `AXIAL_PROFILE_RUNS_RANDOM`. §10 `PARITY_HEXBIN_MIN_POINTS` selects hexbin vs scatter.
+
+Any missing key falls back to the inline notebook defaults. Edit the JSON and re-run Section 3 in Main_6 — no kernel restart needed.
+
+**File**: `configs/ml/main7_pinn_config.json` (Main_7 — PINNPFR with PFR ODE residuals):
+
+```json
+{
+    "test_size": 0.2,
+    "random_state": 42,
+    "full_profile_max_rows": null,
+    "neural_network": {
+        "epochs": 400, "batch_size": 256, "learning_rate": 0.001,
+        "h1": 128, "h2": 64, "h3": 32, "dropout": 0.1,
+        "tuning": { "n_trials": 15, "epochs_per_trial": 25, "validation_fraction": 0.2, "timeout_seconds": null }
+    },
+    "pinn": {
+        "loss_weights": {
+            "lambda_data": 1.0, "lambda_phys": 0.1, "lambda_eos": 1.0,
+            "lambda_mass": 1.0, "lambda_species_sum": 1.0,
+            "lambda_species_nonneg": 0.5, "lambda_energy_ode": 1.0
+        },
+        "training": {
+            "curriculum_warmup_epochs": 20, "n_colloc_per_batch": 256,
+            "phys_loss_freq": 1, "use_cantera_residuals": false
+        }
+    }
+}
+```
+
+`neural_network.*` mirrors Main_6's architecture block but lives in its own file (self-contained — PINN changes never touch Main_6's config). `full_profile_max_rows` (int or `null`) is a smoke-test row cap. `pinn.loss_weights.*` are per-term multipliers for the composite loss `L = λ_data·MSE + λ_phys·L_physics`; `pinn.training.*` controls the curriculum warmup and collocation-point budget. See `CLAUDE.md` § PINN specifics for the full physics description.
+
+**Main_7 optional tuning (Section 6b, `IF_HYPERPARAM_TUNING=True`, off by default):** unlike Main_6, each trial trains on the **data loss only** (no physics/collocation terms, no curriculum) for `neural_network.tuning.epochs_per_trial` epochs — a cheap proxy search over `h1, h2, h3, dropout, learning_rate, batch_size`, not over the physics loss weights. Adopts the best trial and rebuilds `model` before Section 7 (collocation) onward.
+
+**Legacy standalone script (not part of the Main_N notebook pipeline):**
+
+**File**: `configs/ml/model_training_script_config.json`
+
+```json
+{
+    "data_file": "data/training/training_data_complete_*.csv",
+    "output_dir": "models",
+    "target_types": ["primary"],
+    "models": ["all"]
+}
+```
+
+**Usage:**
 ```bash
-python src/ml/model_training.py configs/ml/ml_training_config.json
+python src/ml/model_training.py configs/ml/model_training_script_config.json
 ```
 
 **Parameters:**
 - `data_file`: Path to training data CSV (supports glob patterns)
 - `output_dir`: Directory to save trained models
 - `target_types`: List of target types (`primary`, `secondary`, `species`, `all`)
-- `models`: List of models to train (`neural_network` is a PyTorch placeholder in `src/ml/model_training.py` — production NN training is in `notebooks/Main_6_train_evaluate_SimpleNN_IO.ipynb` (exit-plane) and `notebooks/Main_7_train_evaluate_SimpleNN_full_profile.ipynb` (full axial profile). The CLI `all` keyword expands to RF + XGBoost + GB only.)
-- `test_size`: Fraction of data for testing (0.0-1.0)
-- `random_state`: Random seed for reproducibility
+- `models`: List of models to train (`neural_network` is an unimplemented placeholder — production NN training is the Main_6/Main_7 notebooks. `all` expands to RF + XGBoost + GB only.)
 
-**`neural_network` parameters (consumed by `notebooks/Main_6_train_evaluate_SimpleNN_IO.ipynb` and `notebooks/Main_7_train_evaluate_SimpleNN_full_profile.ipynb`):**
+`test_size` and `random_state` are **not** read by this script (it uses fixed in-code defaults); the tree hyperparameters are likewise fixed in-code rather than sourced from JSON. This script predates the Main_4/Main_5 notebooks and is kept for quick CLI-only smoke tests.
 
-- `epochs` (int, default 200): number of Adam epochs over the training set.
-- `batch_size` (int, default 256): mini-batch size for `DataLoader(shuffle=True)`. Capped at `len(train_ds)` if larger.
-- `learning_rate` (float, default 1e-3): Adam learning rate.
-- `h1`, `h2`, `h3` (int, defaults 128 / 64 / 32): number of units in hidden layers 1–3 of the multi-output `SimpleNN` MLP.
-- `dropout` (float, default 0.1): probability passed to `nn.Dropout` after each hidden ReLU; off automatically under `model.eval()`.
+### 3. Symbolic Regression (Main_8)
 
-**`neural_network.tuning` parameters (consumed by Main_6 / Main_7 Section 6b only when `IF_HYPERPARAM_TUNING=True`):**
+**File**: `configs/ml/main8_symbolic_regression_config.json`
 
-- `n_trials` (int, default 30): number of Optuna TPE trials in the study.
-- `epochs_per_trial` (int, default 50): training epochs per Optuna trial; intentionally smaller than the final-model `epochs` to keep the search cheap. Median pruner stops weak trials early.
-- `validation_fraction` (float, default 0.2): fraction of the **training** split carved out as the Optuna validation fold. The held-out test set is never seen during tuning.
-- `timeout_seconds` (int or `null`, default `null`): wallclock cap for the entire study. `null` means no time limit; the study stops only when `n_trials` is reached.
+```json
+{
+    "if_plot_shown": true,
+    "if_plot_export": true,
+    "if_sr_export": true,
+    "teacher_stem": "simple_nn_full_profile",
+    "n_distill_samples": 5000,
+    "random_state": 42,
+    "sr_n_iterations": 100,
+    "sr_populations": 30,
+    "sr_population_size": 33,
+    "sr_maxsize": 25,
+    "sr_procs": 0
+}
+```
 
-The tuning search space (`h1 ∈ [32,256] step 32`, `h2 ∈ [16,128] step 16`, `h3 ∈ [8,64] step 8`, `dropout ∈ [0.0,0.3]`, `learning_rate ∈ [1e-4,1e-2]` log, `batch_size ∈ {64,128,256,512}`) is defined in the notebook objective function. The objective maximises validation R² (uniform average across all targets, physical units). The best trial's parameters overwrite the top-level `neural_network.{h1,h2,h3,dropout,learning_rate,batch_size}` values inside the notebook, and the final model is rebuilt before the training loop in Section 8. Requires `pip install optuna`.
+- `teacher_stem`: which trained NN to distil — `simple_nn_full_profile` (Main_6) or `pinn_pfr` (Main_7).
+- `n_distill_samples`: number of (run, z) rows sampled from the processed dataset to query the teacher for distillation targets.
+- `sr_n_iterations`, `sr_populations`, `sr_population_size`, `sr_maxsize`, `sr_procs`: PySR search budget — increase for production runs (see notebook Summary for tips).
 
-**Main_6 / Main_7 production training (Section 8 — not separate JSON keys):** Both notebooks apply **`ReduceLROnPlateau`** stepped on the same periodic **test** R² checkpoints used for the convergence figure, **early stopping** if test R² fails to improve across several consecutive checkpoints, then **reload the best test-R² weights** before Section 9 metrics and Section 11 export. Main_6 saves `models/simple_nn_exit_manifest.json`; Main_7 saves `models/simple_nn_full_profile_manifest.json` with the same training keys plus **`workflow`**, **`run_level_split`**, **`feature_cols`** (includes `relative_position`), **`run_cols`**, row/run counts, and (like Main_6) **`chemistry_groups`**, **`metrics_by_group`**, **`auxiliary_exports`** pointing at per-target and group metric CSVs.
+**Usage:** `jupyter notebook notebooks/Main_8_symbolic_regression_SR.ipynb` — reads the config in cell 2. Requires the source notebook (Main_6 or Main_7) to have been run with `IF_MODEL_EXPORT=True` first.
 
-**Main_6 auxiliary exports (not separate JSON keys):** When `IF_MODEL_EXPORT=True`, Main_6 also writes `models/simple_nn_exit_per_target_metrics.csv` and `models/simple_nn_exit_group_metrics.csv`, and the manifest lists their absolute paths under **`auxiliary_exports`** together with **`chemistry_groups`** and **`metrics_by_group`** (uniform-average test R² / MAE / RMSE per chemistry role and for state/thermo).
+### 4. Cantera / PINN / SR Comparison (Main_9)
 
-**Main_7 auxiliary exports:** Same CSV + manifest pattern with stem **`simple_nn_full_profile_*`**. Section **§9** may write the two CSVs when `IF_MODEL_EXPORT`; **§11** overwrites them when exporting the final **`simple_nn_full_profile_manifest.json`**.
+**File**: `configs/ml/main9_compare_cantera_pinn_sr_config.json`
 
-**Main_6 / Main_7 notebook-only controls (not in `ml_training_config.json`):**
+```json
+{
+    "if_plot_shown": true,
+    "if_plot_export": true,
+    "if_export_report": true,
+    "sr_teacher_stem": "pinn_pfr",
+    "n_comparison_runs": 6,
+    "random_state": 42
+}
+```
 
-- **External training progress (Section 2, Main_6 / Main_7):** `WRITE_TRAINING_PROGRESS_LOG` (default `True`) appends `data/logs/<notebook_stem>_training_progress.csv` during §8 (per-epoch train MSE; checkpoint rows include test MSE/R² and LR). Optuna §6b rewrites `data/logs/<notebook_stem>_optuna_tuning_plot_data.json` after each completed trial; the final snapshot includes fANOVA importances when available. §8b / §6b-ii notebook cells still export static PNGs; Optuna PNGs from §6b-ii JSON. **Main_7** also defines **`USE_CUDA_AMP`**, **`USE_TORCH_COMPILE`**, and **`OPTUNA_N_JOBS`** (keep **`OPTUNA_N_JOBS=1`** on a single GPU when tuning).
+- `sr_teacher_stem`: which Main_8 SR export to load (`pinn_pfr` → `models/sr_pinn/`, `simple_nn_full_profile` → `models/sr_full_profile/`). Use `pinn_pfr` so SR is compared against the same PINN it was distilled from.
+- `n_comparison_runs`: number of full-profile runs sampled (from the full processed dataset, not a strict held-out test set) for the axial-overlay plots.
 
-- **CPU parallelism (Main_7 Section 2):** `N_CPU_CORES` (`None` = all logical CPUs, or e.g. `10` to cap). `OPTUNA_N_JOBS` (`None` = auto: `1` on CUDA/MPS; on CPU, `min(4, n_cores//2)`). Thread limits via `src/utils/cpu_threads.py`: Section 2 bootstraps with **full cores for §8** (`parallel_jobs=1`); §6b re-applies `n_cores // OPTUNA_N_JOBS` threads per trial inside each Optuna worker. **On one GPU, keep `OPTUNA_N_JOBS=1`.** Example CPU tuning: `N_CPU_CORES=10`, `OPTUNA_N_JOBS=4` → 2 threads/trial. More cores is not always faster for this MLP (memory bandwidth).
+**Usage:** `jupyter notebook notebooks/Main_9_compare_cantera_pinn_sr.ipynb` — reads the config in cell 2. Requires Main_7 (`IF_MODEL_EXPORT=True`) and Main_8 (matching `TEACHER_STEM`, `IF_SR_EXPORT=True`) to have been run first.
 
-- **External monitor** (`scripts/monitor/monitor_nn_training_progress.py`) — from repo root:
+### 5. Bayesian Optimisation (Main_10)
 
-  ```bash
-  python scripts/monitor/monitor_nn_training_progress.py
-  ```
+**File**: `configs/ml/main10_bayesian_optimisation_config.json`
 
-  | Flag | Purpose |
-  |------|---------|
-  | `MAIN_6` / `MAIN_7` | Exactly one `True` |
-  | `LIVE` | `False` = one-shot; `True` = refresh until log idle (~90s) |
+```json
+{
+    "opt_target": "Y_lump_olefins",
+    "n_trials": 150,
+    "random_state": 42,
+    "reactant_key": "n-hexane",
+    "if_plot_shown": true,
+    "if_plot_export": true,
+    "bounds": {
+        "T_K": [800.0, 900.0],
+        "P_Pa": [150000.0, 350000.0],
+        "L_m": [10.0, 15.0],
+        "D_m": [0.025, 0.040],
+        "mdot": [0.05, 0.10],
+        "q_Wm2": [100000.0, 250000.0]
+    }
+}
+```
 
-  Picks the **newest mtime** in `data/logs/` (Optuna JSON vs training CSV). §8 view: train MSE, test R², train−test gap. §6b view: trial curve + parallel coordinates. `LIVE` waits 30s for logs to appear, then exits if missing. Details: [`data/logs/README.md`](../data/logs/README.md).
+- `opt_target`: column name in the SR `target_cols` to maximise at reactor exit.
+- `n_trials`: Optuna `GPSampler` study budget.
+- `bounds`: inlet-condition search domain for the 6 optimisation variables — should stay within the training-data domain (see Main_2/Main_3 parameter ranges).
 
-- **Full-profile inlet anchoring (Main_7 §9):** same `anchor_inlet_profile_predictions()` as Main_5 — applied after test `predict`, before metrics and §9b axial overlays.
+**Usage:** `jupyter notebook notebooks/Main_10_optimisation_BO_surrogate_vs_cantera.ipynb` — reads the config in cell 2. Requires Main_8 to have been run with `IF_SR_EXPORT=True` first.
 
-- **Main_7 — data splits and overfitting:**
-  - **§4 test runs** (~`test_size` of simulation runs): held out for §8 checkpoints, LR scheduler, early stopping, and best-weight restore. Never used in Optuna.
-  - **§6b validation rows** (`validation_fraction` of **train** rows, row-level shuffle): Optuna objective = **validation R²** only. Test runs stay blind. Many trials can overfit this val fold (hyperparameter selection bias); §8 test R² is the honest generalization check.
-  - **§8 overfitting diagnostic:** growing **train R² − test R²** gap at checkpoints → raise `dropout` or shrink `h1`–`h3` in config (see notebook **Overfitting controls used here**).
-
-- **Main_7 — row cap, axial parity:** Section 2 **`FULL_PROFILE_MAX_ROWS`** optionally caps total train+test rows after the run-level split (`None` = all rows). Section **§9b** — **`AXIAL_PROFILE_N_RUNS`**, **`AXIAL_PROFILE_RUNS_RANDOM`**, overlays **state + species/lumps** along **`x/L`**. Section **§10** — **`PARITY_HEXBIN_MIN_POINTS`** selects **hexbin** (shared log colorbar) vs **scatter** when `n_test` is small.
-
-Any missing key falls back to the inline notebook defaults shown above. Edit the JSON and re-run Section 3 in Main_6 or Main_7 — no kernel restart needed.
-
-### 3. ML Inference
+### 6. ML Inference
 
 **File**: `configs/ml/ml_inference_config.json`
 
@@ -362,7 +464,7 @@ python src/ml/inference.py configs/ml/ml_inference_config.json
 **Example:**
 ```bash
 # Copy template
-cp configs/ml/ml_data_generation_config.json configs/ml/my_training_config.json
+cp configs/ml/main2_data_generation_config.json configs/ml/my_training_config.json
 
 # Edit configs/ml/my_training_config.json with your parameters
 

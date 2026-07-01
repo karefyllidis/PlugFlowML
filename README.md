@@ -27,11 +27,11 @@ High-fidelity steam-cracking simulation requires stiff ODE integration coupled t
 | `Main_3` | EDA, species lumping, feature engineering, pickle export |
 | `Main_4` | Baseline tree surrogates (RF, GBR, XGBoost, AdaBoost) |
 | `Main_5` | Hyperparameter tuning (BayesSearchCV) + full axial-profile tree model |
-| `Main_6` | Exit-plane PyTorch MLP (`SimpleNN`) with Optuna TPE tuning |
-| `Main_7` | Full axial-profile `SimpleNN` with run-level train/test split |
-| `Main_8` | Physics-informed neural network (PINN) with PFR residual loss |
-| `Main_9` | Symbolic regression (PySR) distillation of any NN teacher → closed-form equations |
-| `Main_10` | Bayesian optimisation (Optuna GP sampler) via MLP and SR surrogates; Cantera validation |
+| `Main_6` | Full axial-profile `SimpleNN` with run-level train/test split |
+| `Main_7` | Physics-informed neural network (PINN) with PFR residual loss |
+| `Main_8` | Symbolic regression (PySR) distillation of any NN teacher → closed-form equations |
+| `Main_9` | Cantera vs PINN vs SR comparison/validation |
+| `Main_10` | Bayesian optimisation (Optuna GP sampler) via SR surrogate; Cantera validation |
 
 ---
 
@@ -51,13 +51,17 @@ L = λ_data · MSE(ŷ, y)  +  λ_phys · L_physics
 
 Constraints enforced: ideal-gas EOS, mass conservation (ρuA = ṁ), species sum = 1, species ≥ 0, energy ODE via autograd on `relative_position`. Curriculum warmup trains on data loss only for the first `CURRICULUM_WARMUP_EPOCHS` epochs before switching on the physics term.
 
-### Symbolic Regression (`Main_9`)
+### Symbolic Regression (`Main_8`)
 
-PySR distillation from any NN teacher. Set `TEACHER_STEM` to `simple_nn_exit`, `simple_nn_full_profile`, or `pinn_pfr`; the notebook auto-selects model class, sampling strategy, and export directory. Output: human-readable Python equations importable by Main_10 with no PyTorch dependency.
+PySR distillation from any NN teacher. Set `TEACHER_STEM` to `simple_nn_full_profile` or `pinn_pfr`; the notebook auto-selects model class, sampling strategy, and export directory. Output: human-readable Python equations importable by Main_9 and Main_10 with no PyTorch dependency.
+
+### Comparison (`Main_9`)
+
+Validates the PINN and its SR distillation against Cantera ground truth on the same full axial profiles: axial-profile overlays, parity plots, a per-target R²/NMAE table, and a PINN-vs-SR inference-speed comparison.
 
 ### Bayesian Optimisation (`Main_10`)
 
-Optuna `GPSampler` maximises olefin yield over six inlet degrees of freedom. Runs two independent studies (MLP surrogate and SR equations), then validates both optima with Cantera PFR simulations and reports surrogate prediction error alongside a parameter-space comparison plot.
+Optuna `GPSampler` maximises olefin yield over six inlet degrees of freedom using the SR surrogate, then validates the optimum with a Cantera PFR simulation and reports surrogate prediction error.
 
 ---
 
@@ -70,7 +74,7 @@ pip install -r requirements.txt
 ```
 
 1. Install **Cantera** ([cantera.org](https://cantera.org)).
-2. Place mechanism YAML files in `mechanisms/` (referenced by `configs/simulation/reactant_database.json`).
+2. Place mechanism YAML files in `mechanisms/` (referenced by `configs/simulation/main1_reactant_database.json`).
 3. Run notebooks in order: `Main_1` → `Main_2` → `Main_3` → … → `Main_10`.
 
 For cluster data generation:
@@ -82,17 +86,17 @@ python scripts/dev/check_complete_runs.py
 python scripts/dev/consolidate_training_data.py
 ```
 
-Live training monitor (while Main_6 or Main_7 runs):
+Live training monitor (while Main_6 runs):
 
 ```bash
 python scripts/monitor/monitor_nn_training_progress.py
 ```
 
-CLI inference (requires trained model exports from Main_6 / Main_7 / Main_8):
+CLI inference (requires trained model exports from Main_6 / Main_7):
 
 ```bash
-# SimpleNN exit-plane prediction
-python scripts/predict.py --model nn \
+# SimpleNN full-profile prediction
+python scripts/predict.py --model nn --mode full_profile \
     --T 850 --P 2.5 --L 12 --D 0.032 --mdot 0.07 --q 180000
 
 # PINNPFR full axial profile → CSV
@@ -152,10 +156,10 @@ Full tree with file-level descriptions: [docs/STRUCTURE.md](docs/STRUCTURE.md).
 - [x] Species lumping by carbon number and chemistry role
 - [x] Baseline tree surrogates with per-target metrics
 - [x] Hyperparameter tuning (BayesSearchCV on trees, Optuna TPE on NNs)
-- [x] Exit-plane PyTorch MLP (`Main_6`)
-- [x] Full axial-profile PyTorch MLP with run-level split (`Main_7`)
-- [x] Physics-informed neural network with PFR residual loss (`Main_8`)
-- [x] Symbolic regression distillation from any NN teacher (`Main_9`)
+- [x] Full axial-profile PyTorch MLP with run-level split (`Main_6`)
+- [x] Physics-informed neural network with PFR residual loss (`Main_7`)
+- [x] Symbolic regression distillation from any NN teacher (`Main_8`)
+- [x] Cantera vs PINN vs SR comparison/validation (`Main_9`)
 - [x] Gaussian-process Bayesian optimisation with Cantera validation (`Main_10`)
 - [ ] Profile RNN / LSTM surrogate
 - [ ] Bayesian optimisation with safety constraints (SEBO)
