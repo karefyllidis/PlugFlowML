@@ -196,6 +196,7 @@ _m7_cells_ascii.txt
 _m6_idx2_out.txt
 _m6_cell5_dump.py
 # Local session files
-.claude/
+.claude/*
+!.claude/skills/
 futures_todo.md
 .cursor/
