@@ -1,72 +1,167 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 100" width="320" height="100">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 120" width="480" height="120">
   <defs>
-    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" style="stop-color:#0d1117;stop-opacity:1"/>
-      <stop offset="100%" style="stop-color:#161b22;stop-opacity:1"/>
+    <!-- Background gradient: very dark charcoal, nearly flat -->
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1" gradientUnits="objectBoundingBox">
+      <stop offset="0%" stop-color="#0e1117"/>
+      <stop offset="100%" stop-color="#13181f"/>
     </linearGradient>
-    <linearGradient id="tubeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" style="stop-color:#1f6feb;stop-opacity:1"/>
-      <stop offset="100%" style="stop-color:#58a6ff;stop-opacity:1"/>
+
+    <!-- Accent blue gradient for the reactor tube -->
+    <linearGradient id="tubeStroke" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#2563eb"/>
+      <stop offset="100%" stop-color="#3b82f6"/>
     </linearGradient>
-    <linearGradient id="flameGrad" x1="0%" y1="100%" x2="0%" y2="0%">
-      <stop offset="0%" style="stop-color:#f78166;stop-opacity:1"/>
-      <stop offset="60%" style="stop-color:#ffa657;stop-opacity:1"/>
-      <stop offset="100%" style="stop-color:#ffe57a;stop-opacity:0.8"/>
+
+    <!-- Subtle fill for reactor interior -->
+    <linearGradient id="tubeFill" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1e3a5f" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#0f1e33" stop-opacity="0.4"/>
     </linearGradient>
-    <filter id="glow">
-      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
-      <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+
+    <!-- Orange-amber gradient for heat marks -->
+    <linearGradient id="heat" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#ea580c"/>
+      <stop offset="100%" stop-color="#f59e0b"/>
+    </linearGradient>
+
+    <!-- Glow filter for nodes and key elements -->
+    <filter id="nodeGlow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="1.8" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
     </filter>
+
+    <!-- Soft drop shadow for the card -->
+    <filter id="cardShadow" x="-2%" y="-2%" width="104%" height="108%">
+      <feDropShadow dx="0" dy="3" stdDeviation="6" flood-color="#000" flood-opacity="0.5"/>
+    </filter>
+
+    <!-- Clip to rounded rect -->
+    <clipPath id="cardClip">
+      <rect width="480" height="120" rx="10"/>
+    </clipPath>
   </defs>
-  <rect width="320" height="100" rx="8" fill="url(#bgGrad)"/>
-  <rect x="12" y="38" width="90" height="24" rx="3" fill="none" stroke="url(#tubeGrad)" stroke-width="2"/>
-  <rect x="10" y="34" width="6" height="32" rx="2" fill="url(#tubeGrad)"/>
-  <rect x="102" y="44" width="10" height="12" rx="1" fill="url(#tubeGrad)"/>
-  <line x1="25" y1="50" x2="90" y2="50" stroke="#58a6ff" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.7"/>
-  <polygon points="90,46 98,50 90,54" fill="#58a6ff" opacity="0.8"/>
-  <path d="M30,37 Q33,30 36,37 Q39,30 42,37" stroke="url(#flameGrad)" stroke-width="1.5" fill="none" filter="url(#glow)"/>
-  <path d="M50,37 Q53,30 56,37 Q59,30 62,37" stroke="url(#flameGrad)" stroke-width="1.5" fill="none" filter="url(#glow)"/>
-  <path d="M70,37 Q73,30 76,37 Q79,30 82,37" stroke="url(#flameGrad)" stroke-width="1.5" fill="none" filter="url(#glow)"/>
-  <path d="M30,63 Q33,70 36,63 Q39,70 42,63" stroke="url(#flameGrad)" stroke-width="1.5" fill="none" filter="url(#glow)"/>
-  <path d="M50,63 Q53,70 56,63 Q59,70 62,63" stroke="url(#flameGrad)" stroke-width="1.5" fill="none" filter="url(#glow)"/>
-  <path d="M70,63 Q73,70 76,63 Q79,70 82,63" stroke="url(#flameGrad)" stroke-width="1.5" fill="none" filter="url(#glow)"/>
-  <circle cx="132" cy="32" r="5" fill="#1f6feb" filter="url(#glow)"/>
-  <circle cx="132" cy="50" r="5" fill="#1f6feb" filter="url(#glow)"/>
-  <circle cx="132" cy="68" r="5" fill="#1f6feb" filter="url(#glow)"/>
-  <circle cx="162" cy="26" r="5" fill="#3fb950" filter="url(#glow)"/>
-  <circle cx="162" cy="42" r="5" fill="#3fb950" filter="url(#glow)"/>
-  <circle cx="162" cy="58" r="5" fill="#3fb950" filter="url(#glow)"/>
-  <circle cx="162" cy="74" r="5" fill="#3fb950" filter="url(#glow)"/>
-  <circle cx="192" cy="36" r="5" fill="#58a6ff" filter="url(#glow)"/>
-  <circle cx="192" cy="54" r="5" fill="#58a6ff" filter="url(#glow)"/>
-  <circle cx="192" cy="70" r="5" fill="#58a6ff" filter="url(#glow)"/>
-  <line x1="137" y1="32" x2="157" y2="26" stroke="#30363d" stroke-width="1"/>
-  <line x1="137" y1="32" x2="157" y2="42" stroke="#30363d" stroke-width="1"/>
-  <line x1="137" y1="32" x2="157" y2="58" stroke="#30363d" stroke-width="1"/>
-  <line x1="137" y1="32" x2="157" y2="74" stroke="#30363d" stroke-width="1"/>
-  <line x1="137" y1="50" x2="157" y2="26" stroke="#30363d" stroke-width="1"/>
-  <line x1="137" y1="50" x2="157" y2="42" stroke="#30363d" stroke-width="1"/>
-  <line x1="137" y1="50" x2="157" y2="58" stroke="#30363d" stroke-width="1"/>
-  <line x1="137" y1="50" x2="157" y2="74" stroke="#30363d" stroke-width="1"/>
-  <line x1="137" y1="68" x2="157" y2="26" stroke="#30363d" stroke-width="1"/>
-  <line x1="137" y1="68" x2="157" y2="42" stroke="#30363d" stroke-width="1"/>
-  <line x1="137" y1="68" x2="157" y2="58" stroke="#30363d" stroke-width="1"/>
-  <line x1="137" y1="68" x2="157" y2="74" stroke="#30363d" stroke-width="1"/>
-  <line x1="167" y1="26" x2="187" y2="36" stroke="#30363d" stroke-width="1"/>
-  <line x1="167" y1="26" x2="187" y2="54" stroke="#30363d" stroke-width="1"/>
-  <line x1="167" y1="26" x2="187" y2="70" stroke="#30363d" stroke-width="1"/>
-  <line x1="167" y1="42" x2="187" y2="36" stroke="#30363d" stroke-width="1"/>
-  <line x1="167" y1="42" x2="187" y2="54" stroke="#30363d" stroke-width="1"/>
-  <line x1="167" y1="42" x2="187" y2="70" stroke="#30363d" stroke-width="1"/>
-  <line x1="167" y1="58" x2="187" y2="36" stroke="#30363d" stroke-width="1"/>
-  <line x1="167" y1="58" x2="187" y2="54" stroke="#30363d" stroke-width="1"/>
-  <line x1="167" y1="58" x2="187" y2="70" stroke="#30363d" stroke-width="1"/>
-  <line x1="167" y1="74" x2="187" y2="36" stroke="#30363d" stroke-width="1"/>
-  <line x1="167" y1="74" x2="187" y2="54" stroke="#30363d" stroke-width="1"/>
-  <line x1="167" y1="74" x2="187" y2="70" stroke="#30363d" stroke-width="1"/>
-  <line x1="112" y1="50" x2="124" y2="50" stroke="#58a6ff" stroke-width="1.5" opacity="0.6"/>
-  <polygon points="122,47 127,50 122,53" fill="#58a6ff" opacity="0.6"/>
-  <text x="207" y="46" font-family="'Segoe UI','SFMono-Regular',monospace" font-size="11" fill="#8b949e" letter-spacing="0.5">open_</text>
-  <text x="205" y="67" font-family="'Segoe UI',Arial,sans-serif" font-size="26" font-weight="700" fill="#f0f6fc" letter-spacing="-0.5">HydrAI</text>
-  <text x="207" y="82" font-family="'Segoe UI',Arial,sans-serif" font-size="8.5" fill="#6e7681" letter-spacing="0.3">ML surrogate · steam cracking · PFR</text>
+
+  <!-- Card background -->
+  <rect width="480" height="120" rx="10" fill="url(#bg)" filter="url(#cardShadow)"/>
+
+  <!-- Thin top accent line -->
+  <rect x="0" y="0" width="480" height="2" rx="1" fill="url(#tubeStroke)" clip-path="url(#cardClip)"/>
+
+  <!-- ══════════════════════════════════════════════
+       LEFT ICON BLOCK  (x: 18 – 160)
+       PFR reactor + connecting arrow + NN diagram
+       ══════════════════════════════════════════════ -->
+
+  <!-- === REACTOR TUBE === -->
+  <!-- Tube body -->
+  <rect x="18" y="44" width="76" height="32" rx="4"
+        fill="url(#tubeFill)" stroke="url(#tubeStroke)" stroke-width="1.8"/>
+  <!-- Left inlet flange -->
+  <rect x="14" y="40" width="7" height="40" rx="2"
+        fill="url(#tubeStroke)" opacity="0.9"/>
+  <!-- Right outlet nozzle -->
+  <rect x="94" y="52" width="12" height="16" rx="2"
+        fill="url(#tubeStroke)" opacity="0.8"/>
+
+  <!-- Flow dashes inside tube -->
+  <line x1="28" y1="60" x2="86" y2="60"
+        stroke="#60a5fa" stroke-width="1.4" stroke-dasharray="5 3.5" opacity="0.55"/>
+  <!-- Arrow head -->
+  <polygon points="85,55.5 94,60 85,64.5" fill="#60a5fa" opacity="0.7"/>
+
+  <!-- Heat flux marks — top row -->
+  <path d="M32,43 Q34.5,36 37,43 Q39.5,36 42,43"
+        stroke="url(#heat)" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+  <path d="M48,43 Q50.5,36 53,43 Q55.5,36 58,43"
+        stroke="url(#heat)" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+  <path d="M64,43 Q66.5,36 69,43 Q71.5,36 74,43"
+        stroke="url(#heat)" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+  <!-- Heat flux marks — bottom row -->
+  <path d="M32,77 Q34.5,84 37,77 Q39.5,84 42,77"
+        stroke="url(#heat)" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+  <path d="M48,77 Q50.5,84 53,77 Q55.5,84 58,77"
+        stroke="url(#heat)" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+  <path d="M64,77 Q66.5,84 69,77 Q71.5,84 74,77"
+        stroke="url(#heat)" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+
+  <!-- Connector from reactor to NN -->
+  <line x1="106" y1="60" x2="122" y2="60"
+        stroke="#3b82f6" stroke-width="1.5" opacity="0.5"/>
+  <polygon points="120,56.5 126,60 120,63.5" fill="#3b82f6" opacity="0.5"/>
+
+  <!-- === NEURAL NETWORK === -->
+  <!-- Edge lines (drawn first so nodes sit on top) -->
+  <!-- Input → Hidden -->
+  <g stroke="#1e3a5f" stroke-width="0.9" opacity="0.9">
+    <line x1="131" y1="42" x2="151" y2="34"/>
+    <line x1="131" y1="42" x2="151" y2="50"/>
+    <line x1="131" y1="42" x2="151" y2="66"/>
+    <line x1="131" y1="42" x2="151" y2="82"/>
+    <line x1="131" y1="60" x2="151" y2="34"/>
+    <line x1="131" y1="60" x2="151" y2="50"/>
+    <line x1="131" y1="60" x2="151" y2="66"/>
+    <line x1="131" y1="60" x2="151" y2="82"/>
+    <line x1="131" y1="78" x2="151" y2="34"/>
+    <line x1="131" y1="78" x2="151" y2="50"/>
+    <line x1="131" y1="78" x2="151" y2="66"/>
+    <line x1="131" y1="78" x2="151" y2="82"/>
+  </g>
+  <!-- Hidden → Output -->
+  <g stroke="#1e3a5f" stroke-width="0.9" opacity="0.9">
+    <line x1="157" y1="34" x2="177" y2="42"/>
+    <line x1="157" y1="34" x2="177" y2="60"/>
+    <line x1="157" y1="34" x2="177" y2="78"/>
+    <line x1="157" y1="50" x2="177" y2="42"/>
+    <line x1="157" y1="50" x2="177" y2="60"/>
+    <line x1="157" y1="50" x2="177" y2="78"/>
+    <line x1="157" y1="66" x2="177" y2="42"/>
+    <line x1="157" y1="66" x2="177" y2="60"/>
+    <line x1="157" y1="66" x2="177" y2="78"/>
+    <line x1="157" y1="82" x2="177" y2="42"/>
+    <line x1="157" y1="82" x2="177" y2="60"/>
+    <line x1="157" y1="82" x2="177" y2="78"/>
+  </g>
+
+  <!-- Input layer (blue) -->
+  <circle cx="131" cy="42" r="5.5" fill="#1d4ed8" filter="url(#nodeGlow)"/>
+  <circle cx="131" cy="60" r="5.5" fill="#1d4ed8" filter="url(#nodeGlow)"/>
+  <circle cx="131" cy="78" r="5.5" fill="#1d4ed8" filter="url(#nodeGlow)"/>
+  <!-- Hidden layer (teal/green) -->
+  <circle cx="154" cy="34" r="5.5" fill="#059669" filter="url(#nodeGlow)"/>
+  <circle cx="154" cy="50" r="5.5" fill="#059669" filter="url(#nodeGlow)"/>
+  <circle cx="154" cy="66" r="5.5" fill="#059669" filter="url(#nodeGlow)"/>
+  <circle cx="154" cy="82" r="5.5" fill="#059669" filter="url(#nodeGlow)"/>
+  <!-- Output layer (bright blue) -->
+  <circle cx="177" cy="42" r="5.5" fill="#2563eb" filter="url(#nodeGlow)"/>
+  <circle cx="177" cy="60" r="5.5" fill="#2563eb" filter="url(#nodeGlow)"/>
+  <circle cx="177" cy="78" r="5.5" fill="#2563eb" filter="url(#nodeGlow)"/>
+
+  <!-- Thin vertical separator -->
+  <line x1="205" y1="20" x2="205" y2="100" stroke="#1f2937" stroke-width="1"/>
+
+  <!-- ══════════════════════════════════════════════
+       RIGHT TEXT BLOCK  (x: 218+)
+       ══════════════════════════════════════════════ -->
+
+  <!-- "open_" superscript-style label -->
+  <text x="220" y="46"
+        font-family="'SF Mono','Fira Code','Consolas',monospace"
+        font-size="12" letter-spacing="1.5"
+        fill="#4b5563" font-weight="400">open_</text>
+
+  <!-- "HydrAI" main wordmark -->
+  <text x="218" y="80"
+        font-family="'Inter','Segoe UI','Helvetica Neue',Arial,sans-serif"
+        font-size="38" font-weight="700" letter-spacing="-1"
+        fill="#f9fafb">Hydr</text>
+  <text x="338" y="80"
+        font-family="'Inter','Segoe UI','Helvetica Neue',Arial,sans-serif"
+        font-size="38" font-weight="700" letter-spacing="-1"
+        fill="#3b82f6">AI</text>
+
+  <!-- Tagline -->
+  <text x="220" y="98"
+        font-family="'Inter','Segoe UI',Arial,sans-serif"
+        font-size="9.5" letter-spacing="0.8" fill="#6b7280"
+        font-weight="400">ML SURROGATE  ·  STEAM CRACKING  ·  PFR</text>
 </svg>
