@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 100" width="320" height="100">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#0d1117;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#161b22;stop-opacity:1"/>
+    </linearGradient>
+    <linearGradient id="tubeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#1f6feb;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#58a6ff;stop-opacity:1"/>
+    </linearGradient>
+    <linearGradient id="flameGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" style="stop-color:#f78166;stop-opacity:1"/>
+      <stop offset="60%" style="stop-color:#ffa657;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#ffe57a;stop-opacity:0.8"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+      <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="320" height="100" rx="8" fill="url(#bgGrad)"/>
+  <rect x="12" y="38" width="90" height="24" rx="3" fill="none" stroke="url(#tubeGrad)" stroke-width="2"/>
+  <rect x="10" y="34" width="6" height="32" rx="2" fill="url(#tubeGrad)"/>
+  <rect x="102" y="44" width="10" height="12" rx="1" fill="url(#tubeGrad)"/>
+  <line x1="25" y1="50" x2="90" y2="50" stroke="#58a6ff" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.7"/>
+  <polygon points="90,46 98,50 90,54" fill="#58a6ff" opacity="0.8"/>
+  <path d="M30,37 Q33,30 36,37 Q39,30 42,37" stroke="url(#flameGrad)" stroke-width="1.5" fill="none" filter="url(#glow)"/>
+  <path d="M50,37 Q53,30 56,37 Q59,30 62,37" stroke="url(#flameGrad)" stroke-width="1.5" fill="none" filter="url(#glow)"/>
+  <path d="M70,37 Q73,30 76,37 Q79,30 82,37" stroke="url(#flameGrad)" stroke-width="1.5" fill="none" filter="url(#glow)"/>
+  <path d="M30,63 Q33,70 36,63 Q39,70 42,63" stroke="url(#flameGrad)" stroke-width="1.5" fill="none" filter="url(#glow)"/>
+  <path d="M50,63 Q53,70 56,63 Q59,70 62,63" stroke="url(#flameGrad)" stroke-width="1.5" fill="none" filter="url(#glow)"/>
+  <path d="M70,63 Q73,70 76,63 Q79,70 82,63" stroke="url(#flameGrad)" stroke-width="1.5" fill="none" filter="url(#glow)"/>
+  <circle cx="132" cy="32" r="5" fill="#1f6feb" filter="url(#glow)"/>
+  <circle cx="132" cy="50" r="5" fill="#1f6feb" filter="url(#glow)"/>
+  <circle cx="132" cy="68" r="5" fill="#1f6feb" filter="url(#glow)"/>
+  <circle cx="162" cy="26" r="5" fill="#3fb950" filter="url(#glow)"/>
+  <circle cx="162" cy="42" r="5" fill="#3fb950" filter="url(#glow)"/>
+  <circle cx="162" cy="58" r="5" fill="#3fb950" filter="url(#glow)"/>
+  <circle cx="162" cy="74" r="5" fill="#3fb950" filter="url(#glow)"/>
+  <circle cx="192" cy="36" r="5" fill="#58a6ff" filter="url(#glow)"/>
+  <circle cx="192" cy="54" r="5" fill="#58a6ff" filter="url(#glow)"/>
+  <circle cx="192" cy="70" r="5" fill="#58a6ff" filter="url(#glow)"/>
+  <line x1="137" y1="32" x2="157" y2="26" stroke="#30363d" stroke-width="1"/>
+  <line x1="137" y1="32" x2="157" y2="42" stroke="#30363d" stroke-width="1"/>
+  <line x1="137" y1="32" x2="157" y2="58" stroke="#30363d" stroke-width="1"/>
+  <line x1="137" y1="32" x2="157" y2="74" stroke="#30363d" stroke-width="1"/>
+  <line x1="137" y1="50" x2="157" y2="26" stroke="#30363d" stroke-width="1"/>
+  <line x1="137" y1="50" x2="157" y2="42" stroke="#30363d" stroke-width="1"/>
+  <line x1="137" y1="50" x2="157" y2="58" stroke="#30363d" stroke-width="1"/>
+  <line x1="137" y1="50" x2="157" y2="74" stroke="#30363d" stroke-width="1"/>
+  <line x1="137" y1="68" x2="157" y2="26" stroke="#30363d" stroke-width="1"/>
+  <line x1="137" y1="68" x2="157" y2="42" stroke="#30363d" stroke-width="1"/>
+  <line x1="137" y1="68" x2="157" y2="58" stroke="#30363d" stroke-width="1"/>
+  <line x1="137" y1="68" x2="157" y2="74" stroke="#30363d" stroke-width="1"/>
+  <line x1="167" y1="26" x2="187" y2="36" stroke="#30363d" stroke-width="1"/>
+  <line x1="167" y1="26" x2="187" y2="54" stroke="#30363d" stroke-width="1"/>
+  <line x1="167" y1="26" x2="187" y2="70" stroke="#30363d" stroke-width="1"/>
+  <line x1="167" y1="42" x2="187" y2="36" stroke="#30363d" stroke-width="1"/>
+  <line x1="167" y1="42" x2="187" y2="54" stroke="#30363d" stroke-width="1"/>
+  <line x1="167" y1="42" x2="187" y2="70" stroke="#30363d" stroke-width="1"/>
+  <line x1="167" y1="58" x2="187" y2="36" stroke="#30363d" stroke-width="1"/>
+  <line x1="167" y1="58" x2="187" y2="54" stroke="#30363d" stroke-width="1"/>
+  <line x1="167" y1="58" x2="187" y2="70" stroke="#30363d" stroke-width="1"/>
+  <line x1="167" y1="74" x2="187" y2="36" stroke="#30363d" stroke-width="1"/>
+  <line x1="167" y1="74" x2="187" y2="54" stroke="#30363d" stroke-width="1"/>
+  <line x1="167" y1="74" x2="187" y2="70" stroke="#30363d" stroke-width="1"/>
+  <line x1="112" y1="50" x2="124" y2="50" stroke="#58a6ff" stroke-width="1.5" opacity="0.6"/>
+  <polygon points="122,47 127,50 122,53" fill="#58a6ff" opacity="0.6"/>
+  <text x="207" y="46" font-family="'Segoe UI','SFMono-Regular',monospace" font-size="11" fill="#8b949e" letter-spacing="0.5">open_</text>
+  <text x="205" y="67" font-family="'Segoe UI',Arial,sans-serif" font-size="26" font-weight="700" fill="#f0f6fc" letter-spacing="-0.5">HydrAI</text>
+  <text x="207" y="82" font-family="'Segoe UI',Arial,sans-serif" font-size="8.5" fill="#6e7681" letter-spacing="0.3">ML surrogate · steam cracking · PFR</text>
+</svg>
