@@ -20,7 +20,7 @@ scikit-optimize>=0.10.2
 xgboost>=2.0.0
 joblib>=1.3.0
 
-# ── Deep learning (PyTorch baseline — notebooks/Main_6__train_evaluate_SimpleNN_IO.ipynb) ──
+# ── Deep learning (PyTorch — notebooks/Main_7_train_evaluate_SimpleNN_full_profile.ipynb) ──
 # CPU build works out of the box; for CUDA / ROCm follow the official selector
 torch>=2.0.0
 
@@ -30,9 +30,9 @@ ipykernel>=6.25.0
 nbconvert>=7.10.0
 
 # ── Optional (uncomment as needed) ────────────────────────────────────────────
-# Hyperparameter search for Main_6 Section 6b (IF_HYPERPARAM_TUNING=True).
+# Hyperparameter search for Main_7 Section 6b (IF_HYPERPARAM_TUNING=True).
 optuna>=3.4.0
-# Textual layer-by-layer model summary for Main_6 Section 6c (IF_ARCH_SUMMARY=True).
+# Textual layer-by-layer model summary for Main_7 Section 6c (IF_ARCH_SUMMARY=True).
 torchinfo>=1.8.0
 lightgbm>=3.3.0
 
