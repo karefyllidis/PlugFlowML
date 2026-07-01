@@ -46,7 +46,7 @@ mkdir -p logs
   echo "submit_dir=${SLURM_SUBMIT_DIR:-.}"
   echo "run_root=${run_root}"
   echo "python=${PYTHON}"
-  echo "config=${HYDRAI_ML_CONFIG:-configs/ml/ml_data_generation_config.json}"
+  echo "config=${HYDRAI_ML_CONFIG:-configs/ml/main2_data_generation_config.json}"
 } > logs/RUN_ROOT.txt
 
 # Launch tasks - each runs the Python script with its own task ID

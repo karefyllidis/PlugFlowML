@@ -481,7 +481,7 @@ def main():
     
     if len(sys.argv) < 2:
         print("Usage: python model_training.py <config_file.json>")
-        print("Example: python model_training.py configs/ml/ml_training_config.json")
+        print("Example: python model_training.py configs/ml/model_training_script_config.json")
         sys.exit(1)
     
     config_file = sys.argv[1]

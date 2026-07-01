@@ -1,4 +1,4 @@
-"""PFR physics residuals for PINN training (Main_8).
+"""PFR physics residuals for PINN training (Main_7).
 
 Two residual families:
 
@@ -204,7 +204,7 @@ def build_colloc_input(
 class PFRResiduals:
     """Cantera oracle for PFR ODE RHS evaluation (full species).
 
-    Used when USE_CANTERA_RESIDUALS=True in Main_8 and the PINN is trained on
+    Used when USE_CANTERA_RESIDUALS=True in Main_7 and the PINN is trained on
     raw (unlumped) species mass fractions. For lumped species, use
     compute_algebraic_residuals instead.
 

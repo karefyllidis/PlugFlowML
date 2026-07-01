@@ -1,8 +1,8 @@
-"""Physics-Informed Neural Network for PFR surrogate (Main_8).
+"""Physics-Informed Neural Network for PFR surrogate (Main_7).
 
 Standalone MLP backbone whose forward pass is differentiable with respect to
 inputs, enabling torch.autograd.grad-based physics residuals in the training
-loop without any coupling to the data-only SimpleNN used in Main_6 / Main_7.
+loop without any coupling to the data-only SimpleNN used in Main_6.
 
 N. Karefyllidis 2026
 """
@@ -17,7 +17,7 @@ class PINNPFR(nn.Module):
     """Physics-Informed surrogate for full axial profile prediction.
 
     Identical MLP topology to SimpleNN but kept as a separate class so that
-    Main_8 is self-contained and architectural changes to the PINN do not
+    Main_7 is self-contained and architectural changes to the PINN do not
     affect the data-only models.
 
     Parameters

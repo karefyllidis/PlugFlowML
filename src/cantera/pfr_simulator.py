@@ -100,7 +100,7 @@ def get_project_root():
     return os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 def get_config_path(*parts):
-    """Path under ``configs/`` (e.g. ``get_config_path('simulation', 'reactant_database.json')``)."""
+    """Path under ``configs/`` (e.g. ``get_config_path('simulation', 'main1_reactant_database.json')``)."""
     return os.path.join(get_project_root(), 'configs', *parts)
 
 
@@ -108,20 +108,20 @@ def resolve_heat_flux_file_path(heat_flux_file: str) -> str:
     """
     Resolve ``mechanism.heat_flux_file`` to an absolute path.
 
-    Supports repo-relative ``configs/...`` paths, bare ``heat_flux_profile.json``,
+    Supports repo-relative ``configs/...`` paths, bare ``main1_heat_flux_profile.json``,
     and legacy flat ``configs/heat_flux_profile.json`` (under ``configs/simulation/``).
     """
     root = get_project_root()
     if os.path.isabs(heat_flux_file):
         return heat_flux_file
-    if heat_flux_file == 'heat_flux_profile.json':
-        return get_config_path('simulation', 'heat_flux_profile.json')
+    if heat_flux_file in ('heat_flux_profile.json', 'main1_heat_flux_profile.json'):
+        return get_config_path('simulation', 'main1_heat_flux_profile.json')
     if heat_flux_file.startswith('configs/'):
         path = os.path.normpath(os.path.join(root, heat_flux_file.replace('/', os.sep)))
         if os.path.isfile(path):
             return path
-        if heat_flux_file == 'configs/heat_flux_profile.json':
-            return get_config_path('simulation', 'heat_flux_profile.json')
+        if heat_flux_file in ('configs/heat_flux_profile.json', 'configs/main1_heat_flux_profile.json'):
+            return get_config_path('simulation', 'main1_heat_flux_profile.json')
         return path
     return os.path.join(root, heat_flux_file)
 
@@ -161,11 +161,11 @@ def load_reactant_database():
     Raises:
     -------
     FileNotFoundError
-        If reactant_database.json is not found
+        If main1_reactant_database.json is not found
     json.JSONDecodeError
         If the JSON file is malformed
     """
-    config_path = get_config_path('simulation', 'reactant_database.json')
+    config_path = get_config_path('simulation', 'main1_reactant_database.json')
     with open(config_path, 'r') as f:
         return json.load(f)
 
@@ -202,7 +202,7 @@ def generate_config_for_reactant(reactant_key: str, database: dict) -> dict:
     ValueError
         If the reactant_key is not found in the database
     FileNotFoundError
-        If config_template.json is not found
+        If main1_pfr_run_config_template.json is not found
     cantera.CanteraError
         If the mechanism file cannot be loaded (non-critical, uses fallback values)
     
@@ -220,7 +220,7 @@ def generate_config_for_reactant(reactant_key: str, database: dict) -> dict:
     reactant_info = database['reactants'][reactant_key]
     
     # Load configuration template
-    config_path = get_config_path('simulation', 'config_template.json')
+    config_path = get_config_path('simulation', 'main1_pfr_run_config_template.json')
     with open(config_path, 'r') as f:
         config_template = json.load(f)
     

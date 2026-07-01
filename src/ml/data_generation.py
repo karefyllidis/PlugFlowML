@@ -871,7 +871,7 @@ def main():
     
     if len(sys.argv) < 2:
         print("Usage: python data_generation.py <config_file.json>")
-        print("Example: python data_generation.py configs/ml/ml_data_generation_config.json")
+        print("Example: python data_generation.py configs/ml/main2_data_generation_config.json")
         sys.exit(1)
     
     config_file = sys.argv[1]

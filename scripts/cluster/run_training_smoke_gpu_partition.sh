@@ -1,6 +1,6 @@
 #!/bin/bash
 # Smoke test on a GPU partition: many CPU workers, GPUs idle (Cantera is CPU-only).
-# Uses configs/ml/ml_data_generation_config.smoke.json (tiny LHS sample).
+# Uses configs/ml/main2_data_generation_config.smoke.json (tiny LHS sample).
 #
 # Submit from repo root (batch-style on interactive QoS):
 #   sbatch scripts/cluster/run_training_smoke_gpu_partition.sh
@@ -41,7 +41,7 @@ cd "$workdir" || exit 1
 run_root="$(pwd -P)"
 export HYDRAI_RUN_ROOT="$run_root"
 
-export HYDRAI_ML_CONFIG="${workdir}/configs/ml/ml_data_generation_config.smoke.json"
+export HYDRAI_ML_CONFIG="${workdir}/configs/ml/main2_data_generation_config.smoke.json"
 
 # Must match Slurm task count (SLURM_NTASKS), not CPUs on one pseudo-task.
 # Override: export HYDRAI_NTASKS=16

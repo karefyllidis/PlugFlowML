@@ -1,4 +1,4 @@
-"""Helpers for full-axial profile surrogates (Main_5 / Main_7)."""
+"""Helpers for full-axial profile surrogates (Main_5 / Main_6)."""
 
 from __future__ import annotations
 

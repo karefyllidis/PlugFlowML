@@ -15,7 +15,7 @@ from datetime import datetime
 ROOT = Path(__file__).resolve().parent.parent.parent
 LOG_DIR = ROOT / "logs"
 DATA_DIR = ROOT / "data" / "training"
-CONFIG = ROOT / "configs" / "ml" / "ml_data_generation_config.json"
+CONFIG = ROOT / "configs" / "ml" / "main2_data_generation_config.json"
 
 SLURM_CPUS_DEFAULT = 224
 SLURM_WALL_H = 1.0  # hours from #SBATCH --time=01:00:00

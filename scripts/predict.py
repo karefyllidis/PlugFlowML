@@ -2,8 +2,8 @@
 """HydrAI inference script — run surrogate predictions from the command line.
 
 Supports tree-ensemble models (Main_4 / Main_5) and the PyTorch SimpleNN
-(Main_6 exit-plane, Main_7 full-profile). Pass reactor inlet conditions as
-CLI arguments; results are printed to stdout and optionally saved to CSV.
+(Main_6 full-profile). Pass reactor inlet conditions as CLI arguments;
+results are printed to stdout and optionally saved to CSV.
 
 Usage examples
 --------------
@@ -17,9 +17,9 @@ Full axial profile (NN model, 200 points):
         --T 850 --P 2.5 --L 12 --D 0.032 --mdot 0.07 --q 180000 \\
         --n-points 200 --output profile.csv
 
-MC-Dropout uncertainty (NN only):
+MC-Dropout uncertainty (NN, full profile only):
     python scripts/predict.py \\
-        --model nn --mc-samples 50 \\
+        --model nn --mode full_profile --mc-samples 50 \\
         --T 850 --P 2.5 --L 12 --D 0.032 --mdot 0.07 --q 180000
 
 From JSON (batch of conditions):
@@ -47,19 +47,22 @@ def _load_tree_predictor(models_dir: Path, mode: str, model_key: str):
 
 
 def _load_nn_predictor(models_dir: Path, mode: str):
-    """Load a SimpleNN (Main_6 or Main_7) from exported state_dict + scalers."""
+    """Load the full-profile SimpleNN (Main_6) from exported state_dict + scalers."""
     import joblib
     import torch
     from src.models import SimpleNN
 
-    stem = "simple_nn_full_profile" if mode == "full_profile" else "simple_nn_exit"
+    if mode != "full_profile":
+        raise ValueError("--model nn only supports --mode full_profile (Main_6 SimpleNN).")
+
+    stem = "simple_nn_full_profile"
     manifest_path = models_dir / f"{stem}_manifest.json"
     scalers_path  = models_dir / f"{stem}_scalers.joblib"
     state_path    = models_dir / f"{stem}_state_dict.pt"
 
     if not manifest_path.exists():
         raise FileNotFoundError(
-            f"No manifest at {manifest_path}. Run Main_6 or Main_7 with IF_MODEL_EXPORT=True."
+            f"No manifest at {manifest_path}. Run Main_6 with IF_MODEL_EXPORT=True."
         )
 
     with open(manifest_path) as f:
@@ -82,7 +85,7 @@ def _load_nn_predictor(models_dir: Path, mode: str):
 
 
 def _load_pinn_predictor(models_dir: Path):
-    """Load a PINNPFR (Main_8) from exported state_dict + scalers."""
+    """Load a PINNPFR (Main_7) from exported state_dict + scalers."""
     import joblib
     import torch
     from src.models import PINNPFR
@@ -94,7 +97,7 @@ def _load_pinn_predictor(models_dir: Path):
 
     if not manifest_path.exists():
         raise FileNotFoundError(
-            f"No manifest at {manifest_path}. Run Main_8 with IF_MODEL_EXPORT=True."
+            f"No manifest at {manifest_path}. Run Main_7 with IF_MODEL_EXPORT=True."
         )
 
     with open(manifest_path) as f:
@@ -166,24 +169,21 @@ def predict_nn(args) -> pd.DataFrame:
     feature_cols = manifest.get("inlet_cols") or manifest.get("feature_cols", [])
     target_cols  = manifest.get("target_cols", [])
 
-    if args.mode == "full_profile":
-        z_vals = np.linspace(0.0, args.L, args.n_points)
-        rows = []
-        for z in z_vals:
-            row = {
-                "initial_temperature_K": args.T,
-                "initial_pressure_Pa":   args.P * 1e5,
-                "reactor_length_m":      args.L,
-                "reactor_diameter_m":    args.D,
-                "mass_flow_rate_kgps":   args.mdot,
-                "heat_flux_Wm2":         args.q,
-                "z_position_m":          z,
-                "relative_position":     z / args.L if args.L > 0 else 0.0,
-            }
-            rows.append([row.get(c, 0.0) for c in feature_cols])
-        X_raw = np.array(rows, dtype=float)
-    else:
-        X_raw = _build_inlet_row(args, feature_cols)
+    z_vals = np.linspace(0.0, args.L, args.n_points)
+    rows = []
+    for z in z_vals:
+        row = {
+            "initial_temperature_K": args.T,
+            "initial_pressure_Pa":   args.P * 1e5,
+            "reactor_length_m":      args.L,
+            "reactor_diameter_m":    args.D,
+            "mass_flow_rate_kgps":   args.mdot,
+            "heat_flux_Wm2":         args.q,
+            "z_position_m":          z,
+            "relative_position":     z / args.L if args.L > 0 else 0.0,
+        }
+        rows.append([row.get(c, 0.0) for c in feature_cols])
+    X_raw = np.array(rows, dtype=float)
 
     X_scaled = scaler_X.transform(X_raw)
     X_t = torch.tensor(X_scaled, dtype=torch.float32)
@@ -201,15 +201,14 @@ def predict_nn(args) -> pd.DataFrame:
         y = scaler_y.inverse_transform(y_s) if scaler_y is not None else y_s
         df = pd.DataFrame(y, columns=target_cols)
 
-    if args.mode == "full_profile":
-        df.insert(0, "z_position_m", np.linspace(0.0, args.L, args.n_points))
-        df.insert(1, "relative_position", df["z_position_m"] / args.L)
+    df.insert(0, "z_position_m", z_vals)
+    df.insert(1, "relative_position", df["z_position_m"] / args.L)
 
     return df
 
 
 def predict_pinn(args) -> pd.DataFrame:
-    """PINNPFR full axial profile prediction (Main_8 artefacts)."""
+    """PINNPFR full axial profile prediction (Main_7 artefacts)."""
     import torch
 
     models_dir = PROJECT_ROOT / "models"
@@ -286,9 +285,9 @@ def _build_parser() -> argparse.ArgumentParser:
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     p.add_argument("--model", choices=["tree", "nn", "pinn"], default="tree",
-                   help="Surrogate type: 'tree' (Main_4/5), 'nn' (Main_6/7 SimpleNN), 'pinn' (Main_8 PINNPFR)")
+                   help="Surrogate type: 'tree' (Main_4/5), 'nn' (Main_6 SimpleNN, full_profile only), 'pinn' (Main_7 PINNPFR)")
     p.add_argument("--mode",  choices=["exit", "full_profile"], default="exit",
-                   help="Predict exit-plane only, or full axial profile")
+                   help="Predict exit-plane only, or full axial profile ('nn' model requires full_profile)")
     p.add_argument("--model-key", default=None,
                    help="Tree model key, e.g. 'xgboost', 'gradient_boosting' (tree only)")
 

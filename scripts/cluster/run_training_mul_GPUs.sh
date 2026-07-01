@@ -1,5 +1,5 @@
 #!/bin/bash
-# GPU production run — uses configs/ml/ml_data_generation_config.json (full config).
+# GPU production run — uses configs/ml/main2_data_generation_config.json (full config).
 # For smoke tests use: scripts/cluster/run_training_smoke_gpu_partition.sh
 #
 # Submit from repo root:
@@ -22,7 +22,7 @@ workdir="${SLURM_SUBMIT_DIR:-.}"
 cd "$workdir" || exit 1
 run_root="$(pwd -P)"
 export HYDRAI_RUN_ROOT="$run_root"
-export HYDRAI_ML_CONFIG="${workdir}/configs/ml/ml_data_generation_config.json"
+export HYDRAI_ML_CONFIG="${workdir}/configs/ml/main2_data_generation_config.json"
 numtasks=${HYDRAI_NTASKS:-${SLURM_NTASKS:-1}}
 
 module load rhel7/default-ccl 2>/dev/null || true

@@ -1,4 +1,4 @@
-"""Shared SimpleNN architecture used by Main_6 (exit), Main_7 (full profile), Main_8 (PINN).
+"""Shared SimpleNN architecture used by Main_6 (full profile), Main_7 (PINN).
 
 3 hidden layers + ReLU + Dropout, linear regression head.
 Dropout is active under model.train() and disabled by model.eval(), so test-time

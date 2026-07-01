@@ -123,7 +123,7 @@ def main():
         if not config_file.is_absolute():
             config_file = (project_root / config_file).resolve()
     else:
-        config_file = project_root / "configs" / "ml" / "ml_data_generation_config.json"
+        config_file = project_root / "configs" / "ml" / "main2_data_generation_config.json"
     if not config_file.exists():
         print(f"[ERROR] Config not found: {config_file}", file=sys.stderr)
         sys.exit(1)

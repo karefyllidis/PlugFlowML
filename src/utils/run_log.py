@@ -3,7 +3,7 @@
 Usage (first code cell after imports/paths):
 
     from src.utils.run_log import start_run_log
-    start_run_log('Main_6__train_evaluate_SimpleNN_IO')
+    start_run_log('Main_6_train_evaluate_SimpleNN_full_profile')
 
 Each run overwrites ``outputs/reports/<notebook_name>.txt`` so the latest run is
 always at a stable path. Calling ``start_run_log`` again closes any active tee

@@ -1,4 +1,4 @@
-"""Cap CPU threads for PyTorch / BLAS (Main_6 / Main_7 notebooks)."""
+"""Cap CPU threads for PyTorch / BLAS (Main_6 notebook)."""
 
 from __future__ import annotations
 

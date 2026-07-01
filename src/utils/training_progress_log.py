@@ -1,7 +1,7 @@
 """Append-only training progress CSV and incremental Optuna JSON snapshots.
 
 Log paths are shared with ``scripts/monitor/monitor_nn_training_progress.py``.
-CPU / Optuna ``n_jobs`` settings in Main_7 do not change formats or paths.
+CPU / Optuna ``n_jobs`` settings in Main_6 do not change formats or paths.
 """
 
 from __future__ import annotations
@@ -12,12 +12,11 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Mapping
 
-# Notebook figure/report stems (keep in sync with monitor MAIN_6 / MAIN_7 / MAIN_8 flags).
-MAIN_6_STEM = "Main_6__train_evaluate_SimpleNN_IO"
-MAIN_7_STEM = "Main_7_train_evaluate_SimpleNN_full_profile"
-MAIN_8_STEM = "Main_8_PINN_PFR"
+# Notebook figure/report stems (keep in sync with monitor MAIN_6 / MAIN_7 flags).
+MAIN_6_STEM = "Main_6_train_evaluate_SimpleNN_full_profile"
+MAIN_7_STEM = "Main_7_PINN_PFR"
 
-# Main_6 / Main_7 §8 CSV + §6b Optuna JSON (monitor reads via path helpers below).
+# Main_6 §8 CSV + §6b Optuna JSON (monitor reads via path helpers below).
 DATA_LOGS_DIRNAME = "data/logs"
 
 
@@ -138,7 +137,7 @@ def optuna_snapshot_from_study(
     started_at: str | None = None,
     study_name: str | None = None,
 ) -> dict[str, Any]:
-    """Build the JSON snapshot dict used by Main_6 / Main_7 §6b-ii."""
+    """Build the JSON snapshot dict used by Main_6 §6b-ii."""
     completed = [t for t in study.trials if t.value is not None]
     vals = [float(t.value) for t in completed]
     snap: dict[str, Any] = {
