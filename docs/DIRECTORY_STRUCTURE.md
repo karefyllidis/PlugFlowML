@@ -72,17 +72,23 @@ HydrAI/
 │   │                                    # e.g. *_20260507_DEVEL.* (smoke), *_20260507_095243.* (full)
 │   ├── processed/                       # features_targets_*.pkl (Main_3 export)
 │   └── logs/                            # Main_6/7 §8 CSV + §6b Optuna JSON → monitor
-├── models/                              # Trained ML models (generated; overwrite on each run)
-│   ├── tree_models_exit.joblib            # Main_4 baseline tree bundle
-│   ├── tree_model_tuned_exit_full.joblib  # Main_5 tuned exit + optional full-profile
-│   ├── simple_nn_full_profile_state_dict.pt   # Main_6 full-profile PyTorch state_dict
-│   ├── simple_nn_full_profile_scalers.joblib  # Main_6 X/y scalers + label encoder
-│   ├── simple_nn_full_profile_manifest.json   # Main_6 manifest (feature_cols incl. relative_position; run_level_split)
-│   ├── simple_nn_full_profile_per_target_metrics.csv
-│   ├── simple_nn_full_profile_group_metrics.csv
-│   ├── pinn_pfr_state_dict.pt              # Main_7 PINNPFR state_dict
-│   ├── pinn_pfr_scalers.joblib             # Main_7 X/y scalers
-│   └── pinn_pfr_manifest.json              # Main_7 manifest (architecture, loss weights, training)
+├── models/                              # Trained ML models (generated; one subfolder per notebook, overwrite on each run)
+│   ├── tree_baseline/                      # Main_4
+│   │   └── tree_models_exit.joblib
+│   ├── tree_tuned/                         # Main_5
+│   │   └── tree_model_tuned_exit_full.joblib
+│   ├── simple_nn_full_profile/             # Main_6
+│   │   ├── simple_nn_full_profile_state_dict.pt   # PyTorch state_dict
+│   │   ├── simple_nn_full_profile_scalers.joblib  # X/y scalers + label encoder
+│   │   ├── simple_nn_full_profile_manifest.json   # Manifest (feature_cols incl. relative_position; run_level_split)
+│   │   ├── simple_nn_full_profile_per_target_metrics.csv
+│   │   └── simple_nn_full_profile_group_metrics.csv
+│   ├── pinn_pfr/                           # Main_7
+│   │   ├── pinn_pfr_state_dict.pt          # PINNPFR state_dict
+│   │   ├── pinn_pfr_scalers.joblib         # X/y scalers
+│   │   └── pinn_pfr_manifest.json          # Manifest (architecture, loss weights, training)
+│   ├── sr_full_profile/                    # Main_8, teacher=simple_nn_full_profile
+│   └── sr_pinn/                            # Main_8, teacher=pinn_pfr
 ├── outputs/                              # Simulation outputs
 │   ├── results/                         # CSV and summary files
 │   ├── figures/                         # Generated plots (per-notebook subdirs)
@@ -144,8 +150,8 @@ See **Version control** in `README.md` and root `.gitignore` for the authoritati
 | **Step 3 Exploration** | `notebooks/Main_3_data_exploration_feature_engineering.ipynb` | Present | OK |
 | **Step 4 Tree ML** | `notebooks/Main_4_train_and_evaluate_tree_models_IO.ipynb` | Baseline tree evaluation (RF, GB, XGBoost, AdaBoost; exit-plane only); optional BayesSearchCV tuning (§7, off by default) | OK |
 | **Step 5 Tuning + PFR Evolution** | `notebooks/Main_5_train_evaluate_tune_tree_model_evolution.ipynb` | One-tree-model `BayesSearchCV` tuning on exit plane; reuses params for full PFR evolution | OK |
-| **Step 6 PyTorch full profile** | `notebooks/Main_6_train_evaluate_SimpleNN_full_profile.ipynb` | PyTorch `SimpleNN` (3 hidden layers); full axial rows with `relative_position`; **run-level** test holdout (§4); optional Optuna §6b on **val rows from train** (test blind); §8 LR-on-plateau (test R²), early stopping, best-checkpoint restore; optional `FULL_PROFILE_MAX_ROWS`; monitor `scripts/monitor/monitor_nn_training_progress.py` (`MAIN_6`, optional `LIVE`); `USE_CUDA_AMP` / `USE_TORCH_COMPILE` / `OPTUNA_N_JOBS`; §9b axial overlays; §10 4-column parity; exports `simple_nn_full_profile_*` + figure PNGs. See `docs/ML_CONFIG_GUIDE.md`. | OK |
-| **Step 7 PINN PFR** | `notebooks/Main_7_train_evaluate_PINN_full_profile.ipynb` | Physics-informed `PINNPFR`; same arch as Main_6 + composite loss: `λ_data·MSE + λ_phys·L_physics`; algebraic constraints (EOS, mass, species sum/nonneg) + energy ODE via `torch.autograd.grad`; curriculum warmup; collocation points (N unlabelled z/L per batch); reads `pinn.*` + `neural_network.*`; §13 physics-residual-along-z diagnostic; exports `pinn_pfr_*`; monitor via same training progress CSV (`MAIN_7`). | OK |
+| **Step 6 PyTorch full profile** | `notebooks/Main_6_train_evaluate_SimpleNN_full_profile.ipynb` | PyTorch `SimpleNN` (3 hidden layers); full axial rows with `relative_position`; **run-level** test holdout (§4); optional Optuna §6b on **val rows from train** (test blind); §8 LR-on-plateau (test R²), early stopping, best-checkpoint restore; optional `FULL_PROFILE_MAX_ROWS`; monitor `scripts/monitor/monitor_nn_training_progress.py` (`MAIN_6`, optional `LIVE`); `USE_CUDA_AMP` / `USE_TORCH_COMPILE` / `OPTUNA_N_JOBS`; §9b axial overlays; §10 4-column parity; exports `models/simple_nn_full_profile/simple_nn_full_profile_*` + figure PNGs. See `docs/ML_CONFIG_GUIDE.md`. | OK |
+| **Step 7 PINN PFR** | `notebooks/Main_7_train_evaluate_PINN_full_profile.ipynb` | Physics-informed `PINNPFR`; same arch as Main_6 + composite loss: `λ_data·MSE + λ_phys·L_physics`; algebraic constraints (EOS, mass, species sum/nonneg) + energy ODE via `torch.autograd.grad`; curriculum warmup; collocation points (N unlabelled z/L per batch); reads `pinn.*` + `neural_network.*`; §13 physics-residual-along-z diagnostic; exports `models/pinn_pfr/pinn_pfr_*`; monitor via same training progress CSV (`MAIN_7`). | OK |
 | **Step 8 Symbolic Regression** | `notebooks/Main_8_symbolic_regression_SR.ipynb` | PySR distillation of any NN teacher (Main_6 or Main_7) → closed-form equations | OK |
 | **Step 9 Comparison** | `notebooks/Main_9_compare_cantera_pinn_sr.ipynb` | Cantera vs PINN vs SR comparison/validation | OK |
 | **Step 10 Bayesian Optimisation** | `notebooks/Main_10_optimisation_BO_surrogate_vs_cantera.ipynb` | Optuna GP-BO on the SR surrogate; Cantera validation | OK |
@@ -236,8 +242,8 @@ SIMULATION COMPLETED SUCCESSFULLY!
 | `notebooks/Main_3_data_exploration_feature_engineering.ipynb` | Step 3: Data exploration and feature engineering (Jupyter notebook) | Working |
 | `notebooks/Main_4_train_and_evaluate_tree_models_IO.ipynb` | Step 4: Baseline tree evaluation (exit-plane); optional BayesSearchCV tuning (§7, off by default) | OK |
 | `notebooks/Main_5_train_evaluate_tune_tree_model_evolution.ipynb` | Step 5: One-model tuning and full PFR evolution | OK |
-| `notebooks/Main_6_train_evaluate_SimpleNN_full_profile.ipynb` | Step 6: full-profile `SimpleNN`; run-level split; optional Optuna; §9b axial (state+species); §10 parity/residuals; optional row cap for smoke runs; exports `simple_nn_full_profile_*` + figures under `outputs/figures/Main_6_train_evaluate_SimpleNN_full_profile/` | OK |
-| `notebooks/Main_7_train_evaluate_PINN_full_profile.ipynb` | Step 7: `PINNPFR` with PFR ODE residuals; exports `pinn_pfr_*` | OK |
+| `notebooks/Main_6_train_evaluate_SimpleNN_full_profile.ipynb` | Step 6: full-profile `SimpleNN`; run-level split; optional Optuna; §9b axial (state+species); §10 parity/residuals; optional row cap for smoke runs; exports `models/simple_nn_full_profile/simple_nn_full_profile_*` + figures under `outputs/figures/Main_6_train_evaluate_SimpleNN_full_profile/` | OK |
+| `notebooks/Main_7_train_evaluate_PINN_full_profile.ipynb` | Step 7: `PINNPFR` with PFR ODE residuals; exports `models/pinn_pfr/pinn_pfr_*` | OK |
 | `notebooks/Main_8_symbolic_regression_SR.ipynb` | Step 8: PySR distillation of Main_6/Main_7 teacher | OK |
 | `notebooks/Main_9_compare_cantera_pinn_sr.ipynb` | Step 9: Cantera vs PINN vs SR comparison/validation | OK |
 | `notebooks/Main_10_optimisation_BO_surrogate_vs_cantera.ipynb` | Step 10: Optuna GP-BO on SR surrogate; Cantera validation | OK |

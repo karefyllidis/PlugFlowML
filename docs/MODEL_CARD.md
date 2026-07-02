@@ -59,9 +59,14 @@
 - Inputs: inlet/geometry/process columns (`initial_temperature_K`, `initial_pressure_Pa`, `reactor_length_m`, `reactor_diameter_m`, `mass_flow_rate_kgps`, `heat_flux_Wm2`, `reactant_type` if present) plus `z_position_m` and `relative_position`.
 - Outputs: state/thermo/aero targets (temperature, pressure, velocity, density, MW, Cp/Cv, enthalpy, thermal conductivity) plus lumped species (`Y_lump_*`, or raw `Y_*` if lumping wasn't exported).
 - Run-level train/test split (`train_test_split` over unique `run_id` groups, not rows) — no axial-profile leakage.
+- Row cap for smoke/dev runs (notebook-only `SUBSAMPLE_ROWS` flag gates `runtime.subsample_max_rows`): samples **whole `run_id` groups** up to the row budget, not individual rows, so a capped run is always a complete axial profile rather than a partial one. *(Fixed 2026-07-02 — the prior implementation called `DataFrame.sample()` on individual post-split rows, which scattered `(run, z)` points across many runs and left most kept runs with gaps in their axial profile; see `docs/CHANGELOG.md`.)*
 - `StandardScaler` fit on training rows only for both `X` and `y`; test rows are `transform`-only.
-- Optional Optuna (TPE + median pruner) architecture/hyperparameter search (`neural_network.tuning.*`), validated on a fold carved from **train** rows only (held-out test runs are never touched by tuning).
-- Training uses `ReduceLROnPlateau` keyed on periodic held-out test R², early stopping, and restores the best test-R² checkpoint before evaluation/export.
+- Optional Optuna hyperparameter search (Section 6b, `IF_HYPERPARAM_TUNING=True`):
+  - Sampler: TPE with a median pruner; budget from `neural_network.tuning.*` (`n_trials`, `epochs_per_trial`, `validation_fraction`, `timeout_seconds`).
+  - Search space: `h1 ∈ [32,256]`, `h2 ∈ [16,128]`, `h3 ∈ [8,64]` (step-quantized ints), `dropout ∈ [0.0,0.3]`, `learning_rate ∈ [1e-4,1e-2]` (log-scale), `batch_size ∈ {64,128,256,512}`.
+  - Objective: validation R² (uniform average, physical units) on a fold carved from **train** rows only (`validation_fraction`) — held-out test runs are never touched by tuning.
+  - Best trial's hyperparameters overwrite the notebook-level `H1/H2/H3/DROPOUT/LEARNING_RATE/BATCH_SIZE`; the production model is rebuilt and training/evaluation/export proceed unchanged on the tuned net. Recorded in the export manifest's `tuning.*` block (`enabled`, `n_trials_completed`, `best_val_r2`, `best_params`).
+- Training uses `ReduceLROnPlateau` keyed on periodic held-out test R², runs the full configured `epochs` (no early stopping), and restores the best test-R² checkpoint before evaluation/export.
 - Overfitting controls: dropout, run-level held-out test set, train-only scaler fit, shuffled minibatches. Deliberately not used: weight decay, k-fold CV, data augmentation.
 - MC-Dropout uncertainty (`predict_with_uncertainty`) is available on this architecture but not exercised inside the notebook; see `scripts/predict.py --model nn --mode full_profile --mc-samples N`.
 
@@ -69,6 +74,8 @@
 
 - `PINNPFR` (`src/models/pinn.py`): same MLP topology as `SimpleNN`, kept as a dedicated class so PINN-specific changes never affect the data-only Main_6 model.
 - Same run-level split, scaling, and inputs/outputs convention as Main_6 (feature/target column keys match so Main_8/Main_9 can load either teacher through one code path).
+- Row cap for smoke/dev runs (top-level `full_profile_max_rows` config key, applied in Section 3 before the run-level split): keeps **whole, randomly-selected `run_id` groups** budgeted by average rows/run. *(Fixed 2026-07-02 — the prior implementation sliced `df.iloc[:N]`, taking rows in raw file order; this truncated whichever run straddled row N mid-profile and produced a non-random, order-biased subset of the design space rather than a representative sample. See `docs/CHANGELOG.md`.)*
+- Optional Optuna hyperparameter search (Section 6b, `IF_HYPERPARAM_TUNING=True`, off by default): reuses Main_6's architecture/optimizer search space and TPE + median-pruner setup, but each trial trains on **data loss only** (no physics/collocation terms) for `epochs_per_trial` epochs — a proxy search over architecture/optimizer hyperparameters, not over `pinn.loss_weights.*`. Production training (Section 10) always uses `H1/H2/H3/DROPOUT/LEARNING_RATE` from `main7_pinn_config.json` regardless of this flag; physics loss weights are set directly in the config and are not tuned by Section 6b.
 - Composite loss `L = λ_data·MSE + λ_phys·L_physics`; curriculum warmup (`curriculum_warmup_epochs`, default 20) trains on data loss only before physics terms are switched on.
 - Physics constraints (default weights in `configs/ml/main7_pinn_config.json → pinn.loss_weights`):
   - Algebraic: ideal-gas EOS, mass conservation (`ρuA = ṁ`), species mass fractions sum to 1, species ≥ 0.
@@ -124,6 +131,7 @@
 - Treat low-abundance species/lumps carefully because percentage errors can be unstable near zero.
 - For the PINN, review the §13 physics-residual diagnostic before trusting a model for physically-sensitive use; a good test-set R² does not by itself confirm conservation-law compliance.
 - For SR, re-check equations against Cantera (Main_8 §8, and again in Main_9) whenever the teacher NN is retrained — the equations are not automatically refreshed and can silently go stale relative to a newer teacher.
+- If a Main_6/Main_7 artifact was trained with row-capped data (`SUBSAMPLE_ROWS=True` or `full_profile_max_rows` set) **before 2026-07-02**, re-train it: the row cap used per-row sampling (Main_6) or a raw positional slice (Main_7) instead of whole `run_id` profiles, so capped runs could have gaps in or truncated axial profiles rather than the complete pipe profile the model card now assumes.
 
 ## Reproducibility Pointers
 
@@ -135,8 +143,9 @@
 - SimpleNN notebook/config: `notebooks/Main_6_train_evaluate_SimpleNN_full_profile.ipynb`, `configs/ml/main6_simplenn_config.json`
 - PINN notebook/config: `notebooks/Main_7_train_evaluate_PINN_full_profile.ipynb`, `configs/ml/main7_pinn_config.json`
 - SR notebook/config: `notebooks/Main_8_symbolic_regression_SR.ipynb`, `configs/ml/main8_symbolic_regression_config.json`
-- Generated model artifacts: `models/` (normally git-ignored)
-  - Tree models: `models/*.joblib` (Main_4/Main_5 stems)
-  - SimpleNN: `models/simple_nn_full_profile_{state_dict.pt,scalers.joblib,manifest.json,per_target_metrics.csv,group_metrics.csv}`
-  - PINN: `models/pinn_pfr_{state_dict.pt,scalers.joblib,manifest.json,per_target_metrics.csv}`
-  - SR: `models/sr_full_profile/` (SimpleNN teacher) or `models/sr_pinn/` (PINN teacher) — each with `*_manifest.json`, `*_equations.py`, `*_metrics.csv`
+- Generated model artifacts: `models/` (normally git-ignored; each subfolder below is explicitly un-ignored via `.gitignore` so it stays present, empty, in a fresh clone)
+  - Tree baseline (Main_4): `models/tree_baseline/tree_models_exit.joblib`
+  - Tree tuned (Main_5): `models/tree_tuned/tree_model_tuned_exit_full.joblib`
+  - SimpleNN (Main_6): `models/simple_nn_full_profile/simple_nn_full_profile_{state_dict.pt,scalers.joblib,manifest.json,per_target_metrics.csv,group_metrics.csv}`
+  - PINN (Main_7): `models/pinn_pfr/pinn_pfr_{state_dict.pt,scalers.joblib,manifest.json,per_target_metrics.csv}`
+  - SR (Main_8): `models/sr_full_profile/` (SimpleNN teacher) or `models/sr_pinn/` (PINN teacher) — each with `*_manifest.json`, `*_equations.py`, `*_metrics.csv`

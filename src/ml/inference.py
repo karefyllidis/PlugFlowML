@@ -45,7 +45,7 @@ class MLPFRPredictor:
 
     Examples
     --------
-    >>> predictor = MLPFRPredictor('models/', model_key='xgboost', mode='exit')
+    >>> predictor = MLPFRPredictor('models/tree_baseline/', model_key='xgboost', mode='exit')
     >>> result = predictor.predict_exit(
     ...     initial_temperature_K=1050,
     ...     initial_pressure_Pa=2e5,

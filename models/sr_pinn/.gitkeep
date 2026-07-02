@@ -1,0 +1,2 @@
+# This file ensures the directory is tracked by git
+# Main_8 symbolic-regression artifacts distilled from the Main_7 PINNPFR teacher (sr_pinn_*) are stored here but ignored by .gitignore

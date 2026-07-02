@@ -1,16 +1,16 @@
 {
-  "_comment": "Main_6_train_evaluate_SimpleNN_full_profile.ipynb — PyTorch SimpleNN, full axial profile. Keys consumed: top-level test_size/random_state; runtime.* (read early, Section 2, before neural_network.*/tuning.* which are read in Section 3); neural_network.* (architecture + training); neural_network.tuning.* (Optuna Section 6b, only when IF_HYPERPARAM_TUNING=True). See docs/ML_CONFIG_GUIDE.md.",
+  "_comment": "Main_6_train_evaluate_SimpleNN_full_profile.ipynb — PyTorch SimpleNN, full axial profile. Keys consumed: top-level test_size/random_state; runtime.* (read early, Section 2, before neural_network.*/tuning.* which are read in Section 3); neural_network.* (architecture + training); neural_network.tuning.* (Optuna Section 6b, only when IF_HYPERPARAM_TUNING=True); evaluation.* (physics-aware diagnostics, read in Section 3, used in Sections 9c/9d/10d/10e). See docs/ML_CONFIG_GUIDE.md.",
   "test_size": 0.2,
   "random_state": 42,
   "runtime": {
     "_comment": "Read in Section 2 (Paths & Flags), ahead of the main config load, because thread pools must be configured before any data operations. subsample_max_rows: cap when SUBSAMPLE_ROWS=True. n_cpu_cores: null = use all logical CPUs. optuna_n_jobs: parallel Optuna trials in Section 6b (keep 1 on a single GPU).",
-    "subsample_max_rows": 1000,
+    "subsample_max_rows": 10000,
     "n_cpu_cores": 10,
     "optuna_n_jobs": 10
   },
   "neural_network": {
     "_comment": "h1-h3: hidden layer widths. Omitted keys use notebook fallbacks.",
-    "epochs": 400,
+    "epochs": 500,
     "batch_size": 256,
     "learning_rate": 0.001,
     "h1": 128,
@@ -20,9 +20,17 @@
     "tuning": {
       "_comment": "Optuna (Section 6b) when IF_HYPERPARAM_TUNING=True. n_trials / epochs_per_trial / validation_fraction / timeout_seconds (null = no cap).",
       "n_trials": 15,
-      "epochs_per_trial": 25,
+      "epochs_per_trial": 50,
       "validation_fraction": 0.2,
       "timeout_seconds": null
     }
+  },
+  "evaluation": {
+    "_comment": "Physics-aware diagnostics read in Section 3. axial_stations: x/L fractions for the NRMSE station bars (9b overlays + 10e); nrmse_good_pct / nrmse_acceptable_pct: green / yellow acceptance bands on those bars; mc_dropout_samples: stochastic forward passes for the MC-Dropout uncertainty bands (9d); exit_station_tol: x/L tolerance used when isolating exit-plane rows for the joint panels (10d).",
+    "axial_stations": [0.25, 0.5, 0.75, 1.0],
+    "nrmse_good_pct": 5.0,
+    "nrmse_acceptable_pct": 15.0,
+    "mc_dropout_samples": 50,
+    "exit_station_tol": 0.02
   }
 }

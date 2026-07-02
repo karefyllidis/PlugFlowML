@@ -1,0 +1,2 @@
+# This file ensures the directory is tracked by git
+# Main_4 baseline tree artifacts (tree_models_exit.joblib) are stored here but ignored by .gitignore

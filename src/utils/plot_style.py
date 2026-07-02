@@ -16,6 +16,29 @@ import matplotlib
 from pathlib import Path
 from typing import Dict, Any, Optional, Union
 
+# Core series colours (see docs/HYDRAI_PROJECT_CONVENTIONS.md §5.10 and the NESP
+# sibling utils/plot_style.py, which mirrors these same HydrAI conventions).
+COLOR_CANTERA = "b"
+COLOR_MODEL = "r"
+COLOR_TRAIN = "b"
+COLOR_VAL = "r"
+COLOR_GAP = "lime"
+
+# Hatch textures for white-fill + coloured-edge bar charts.
+HATCH_DIAG = "///"
+HATCH_BACK = "\\\\"
+HATCH_FWD = "////"
+HATCH_VERT = "\\\\\\"
+
+# x/L station bars: white fill + coloured edge + hatch, one style per station.
+AXIAL_STATION_STYLES = [
+    (0.25, {"facecolor": "white", "edgecolor": "magenta", "hatch": HATCH_DIAG, "linewidth": 1.0}),
+    (0.50, {"facecolor": "white", "edgecolor": "blue", "hatch": HATCH_BACK, "linewidth": 1.0}),
+    (0.75, {"facecolor": "white", "edgecolor": "red", "hatch": HATCH_FWD, "linewidth": 1.0}),
+    (1.00, {"facecolor": "white", "edgecolor": "black", "hatch": HATCH_VERT, "linewidth": 1.0}),
+]
+AXIAL_STATION_LABELS = ["x/L = 0.25", "x/L = 0.50", "x/L = 0.75", "x/L = 1.00"]
+
 
 def setup_matplotlib(ax: Union[None, "matplotlib.axes.Axes", np.ndarray] = None) -> None:
     """

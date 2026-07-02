@@ -727,11 +727,12 @@ for _, g in df_data[subset_cols].groupby(run_cols):
 - `training_data_task_{task_id}.pkl` (individual task)
 - `training_data_consolidated.pkl` (merged dataset)
 
-**ML Models** (stable, overwrite-each-run paths — no embedded timestamps):
-- `models/tree_models_exit.joblib` — Main_4 baseline bundle (RF / GB / XGBoost / AdaBoost + scaler, label encoder, splits, config). Payload carries an ISO `run_at` field.
-- `models/tree_model_tuned_exit_full.joblib` — Main_5 bundle: tuned exit-plane model plus, when trained, the full-profile model and scaler.
-- `models/simple_nn_full_profile_state_dict.pt` + `models/simple_nn_full_profile_scalers.joblib` + `models/simple_nn_full_profile_manifest.json` — Main_6 PyTorch artefacts (state dict, X/y scalers + label encoder, JSON manifest with **3-hidden-layer** architecture `h1`–`h3`, training settings including **`early_stopped`**, **`best_test_r2_checkpoint`**, **`best_test_r2_epoch`**, headline + **state/thermo vs species** `metrics`, **`chemistry_groups`**, **`metrics_by_group`**, **`auxiliary_exports`**, a compact `tuning` block when Optuna ran, plus **`workflow`**, **`run_level_split`**, **`feature_cols`** including **`relative_position`**, and **`run_cols`**). Companion CSVs: **`simple_nn_full_profile_per_target_metrics.csv`**, **`simple_nn_full_profile_group_metrics.csv`**.
-- `models/pinn_pfr_state_dict.pt` + `models/pinn_pfr_scalers.joblib` + `models/pinn_pfr_manifest.json` — Main_7 `PINNPFR` artefacts (same architecture keys as Main_6 plus `pinn.loss_weights.*` / `pinn.training.*`).
+**ML Models** (stable, overwrite-each-run paths — no embedded timestamps; one subfolder per notebook under `models/`):
+- `models/tree_baseline/tree_models_exit.joblib` — Main_4 baseline bundle (RF / GB / XGBoost / AdaBoost + scaler, label encoder, splits, config). Payload carries an ISO `run_at` field.
+- `models/tree_tuned/tree_model_tuned_exit_full.joblib` — Main_5 bundle: tuned exit-plane model plus, when trained, the full-profile model and scaler.
+- `models/simple_nn_full_profile/simple_nn_full_profile_state_dict.pt` + `..._scalers.joblib` + `..._manifest.json` — Main_6 PyTorch artefacts (state dict, X/y scalers + label encoder, JSON manifest with **3-hidden-layer** architecture `h1`–`h3`, training settings including **`early_stopped`**, **`best_test_r2_checkpoint`**, **`best_test_r2_epoch`**, headline + **state/thermo vs species** `metrics`, **`chemistry_groups`**, **`metrics_by_group`**, **`auxiliary_exports`**, a compact `tuning` block when Optuna ran, plus **`workflow`**, **`run_level_split`**, **`feature_cols`** including **`relative_position`**, and **`run_cols`**). Companion CSVs in the same subfolder: **`simple_nn_full_profile_per_target_metrics.csv`**, **`simple_nn_full_profile_group_metrics.csv`**.
+- `models/pinn_pfr/pinn_pfr_state_dict.pt` + `..._scalers.joblib` + `..._manifest.json` — Main_7 `PINNPFR` artefacts (same architecture keys as Main_6 plus `pinn.loss_weights.*` / `pinn.training.*`).
+- `models/sr_full_profile/` (teacher=`simple_nn_full_profile`) and `models/sr_pinn/` (teacher=`pinn_pfr`) — Main_8 PySR distillation: `*_manifest.json`, `*_equations.py`, `*_metrics.csv`.
 
 Each run overwrites these files. To compare runs, archive them externally (e.g. `models/archive/<date>_<note>/`) before re-running.
 

@@ -6,10 +6,11 @@
   "full_profile_max_rows": null,
   "random_forest": {
     "n_estimators": 100,
-    "max_depth": 20
+    "max_depth": 20,
+    "min_samples_leaf": 1
   },
   "xgboost": {
-    "n_estimators": 100,
+    "n_estimators": 150,
     "max_depth": 6,
     "learning_rate": 0.3,
     "subsample": 1.0,
@@ -19,7 +20,8 @@
   },
   "gradient_boosting": {
     "n_estimators": 150,
-    "max_depth": 5
+    "max_depth": 5,
+    "min_samples_leaf": 1
   },
   "adaboost": {
     "n_estimators": 200,

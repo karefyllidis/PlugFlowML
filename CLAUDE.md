@@ -47,7 +47,7 @@ Each notebook that reads a JSON config owns a dedicated, descriptively-named fil
 | `main3_eda_feature_engineering_config.json` | Main_3 | EDA/export flags, species lumping, run-stamp pinning |
 | `main4_tree_baseline_config.json` | Main_4 | `test_size`, `random_state`, `models_to_train`, tree-model blocks (`random_forest`, `xgboost`, `gradient_boosting`, `adaboost`), `tuning.*` (BayesSearchCV budget, §7 only) |
 | `main5_tree_tuning_config.json` | Main_5 | Same shape as Main_4's file plus `model_to_tune`, `full_profile_max_rows`; independent copy so tuning Main_5 never changes Main_4's baseline |
-| `main6_simplenn_config.json` | Main_6 | `test_size`, `random_state`, `runtime.*` (CPU/Optuna-job/subsample-row counts, read early in §2), `neural_network.*` (architecture + training + `tuning.*`) |
+| `main6_simplenn_config.json` | Main_6 | `test_size`, `random_state`, `runtime.*` (CPU/Optuna-job/subsample-row counts, read early in §2), `neural_network.*` (architecture + training + `tuning.*`), `evaluation.*` (physics-aware diagnostics §9c/§9d/§10d/§10e: `axial_stations`, NRMSE bands, `mc_dropout_samples`) |
 | `main7_pinn_config.json` | Main_7 | `test_size`, `random_state`, `full_profile_max_rows`, `neural_network.*` (self-contained, same architecture as Main_6, + `tuning.*` for the optional §6b data-loss proxy search), `pinn.loss_weights.*`, `pinn.training.*` |
 | `main8_symbolic_regression_config.json` | Main_8 | PySR budget, `teacher_stem`, distillation sample count |
 | `main9_compare_cantera_pinn_sr_config.json` | Main_9 | `sr_teacher_stem`, `n_comparison_runs` |
@@ -67,7 +67,7 @@ Each notebook that reads a JSON config owns a dedicated, descriptively-named fil
 - Physics constraints: EOS (ideal gas), mass conservation `ρuA = ṁ`, species sum = 1, species ≥ 0, energy ODE via `torch.autograd.grad` on `relative_position`.
 - Collocation points: inlet conditions from training data + random z/L; no labels required.
 - §13 diagnostic: compare trained vs untrained physics residuals along z/L.
-- Exports: `models/pinn_pfr_state_dict.pt`, `pinn_pfr_scalers.joblib`, `pinn_pfr_manifest.json`.
+- Exports (under `models/pinn_pfr/`): `pinn_pfr_state_dict.pt`, `pinn_pfr_scalers.joblib`, `pinn_pfr_manifest.json`.
 
 ## SR specifics (Main_8)
 

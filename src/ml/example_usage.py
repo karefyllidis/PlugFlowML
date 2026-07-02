@@ -9,7 +9,7 @@ using trained tree-based surrogate models.
 Prerequisites
 -------------
 Run notebooks/Main_4_train_and_evaluate_tree_models_IO.ipynb first with IF_MODEL_EXPORT=True
-so that ``models/tree_models_exit.joblib`` exists.
+so that ``models/tree_baseline/tree_models_exit.joblib`` exists.
 
 Usage
 -----
@@ -46,7 +46,7 @@ def example_exit_prediction():
     print("=" * 60)
 
     predictor = MLPFRPredictor(
-        artifact_path = project_root / "models",
+        artifact_path = project_root / "models" / "tree_baseline",
         model_key     = "xgboost",   # or 'random_forest', 'gradient_boosting', 'adaboost'
         mode          = "exit",
     )
@@ -67,7 +67,7 @@ def example_full_profile():
     print("=" * 60)
 
     predictor = MLPFRPredictor(
-        artifact_path = project_root / "models",
+        artifact_path = project_root / "models" / "tree_baseline",
         model_key     = "xgboost",
         mode          = "exit",
     )
@@ -94,7 +94,7 @@ def example_compare_models():
     print("Example 3: Compare all models in the artifact")
     print("=" * 60)
 
-    predictor = MLPFRPredictor(artifact_path=project_root / "models", mode="exit")
+    predictor = MLPFRPredictor(artifact_path=project_root / "models" / "tree_baseline", mode="exit")
 
     print(f"\n  Available models: {predictor.available_models()}\n")
     print(f"  {'Model':<22} {'T_out [K]':>10} {'P_out [bar]':>14}")

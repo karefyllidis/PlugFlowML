@@ -168,7 +168,7 @@ If `sampling_method` is `"random"` or `"latin"`, only `max_combinations_per_reac
 - Reports species-lump error by chemistry/carbon group using **Normalized MAE (%)**
 - Reports state / thermo / aero target error using **Normalized MAE (%)** for targets such as exit temperature, pressure, velocity, density, Cp/Cv, enthalpy, and thermal conductivity
 - Reports ML inference speed and optional Cantera/PFR speedup when `CANTERA_EXIT_SECONDS_PER_RUN` is set from a measured baseline
-- Exports baseline models to `models/tree_models_exit.joblib` (overwritten each run)
+- Exports baseline models to `models/tree_baseline/tree_models_exit.joblib` (overwritten each run)
 
 Loads the latest `data/processed/features_targets_*.pkl`. If Main_3 used **`EXPORT_SPECIES_AS=lumped_chemistry`** (or `lumped_carbon`), targets are already **`Y_lump_*`** mass-fraction lumps; the notebook trains on those (far fewer outputs than hundreds of species).
 
@@ -182,7 +182,7 @@ Loads the latest `data/processed/features_targets_*.pkl`. If Main_3 used **`EXPO
 - `FULL_PROFILE_MAX_ROWS` can be set for a quick full-profile training smoke test on large datasets
 - **Inlet BC anchoring (§8):** after full-profile `predict`, `src/utils/profile_predictions.anchor_inlet_profile_predictions()` sets each test run’s prediction at **min `relative_position`** to match Cantera truth so axial overlay plots (§9) start at the same inlet state. Same helper is used in **Main_6 §9**.
 - Reports tuned ML inference speed for exit-plane and full-profile prediction; set `CANTERA_EXIT_SECONDS_PER_RUN` / `CANTERA_FULL_PROFILE_SECONDS_PER_RUN` to print speedup factors against measured Cantera timings
-- Exports tuned exit and full-profile artifacts to `models/tree_model_tuned_exit_full.joblib` (overwritten each run)
+- Exports tuned exit and full-profile artifacts to `models/tree_tuned/tree_model_tuned_exit_full.joblib` (overwritten each run)
 - Adds axial diagnostics and regime diagnostics:
   - `full_profile_cantera_vs_ml_axial_evolution.png` (Main_5 full-profile trees: Cantera vs ML along `x/L` at selected stations)
   - `full_profile_cantera_vs_nn_axial_evolution.png` (Main_6 §9b: Cantera / test vs PyTorch NN; preferred state columns plus all `species_cols` present in `target_cols`, same `x/L` grid)
@@ -193,22 +193,36 @@ Loads the latest `data/processed/features_targets_*.pkl`. If Main_3 used **`EXPO
 
 **Every Main notebook that reads JSON owns its own dedicated config file** — no file is shared across two Main_N notebooks. This keeps "which config changes which notebook" unambiguous; see the table in `CLAUDE.md` § Config structure for the full list.
 
-**File**: `configs/ml/main4_tree_baseline_config.json` (Main_4) / `configs/ml/main5_tree_tuning_config.json` (Main_5) — same shape, independent files:
+**File**: `configs/ml/main4_tree_baseline_config.json` (Main_4):
 
 ```json
 {
     "test_size": 0.2,
     "random_state": 42,
     "models_to_train": ["random_forest", "gradient_boosting", "xgboost", "adaboost"],
-    "random_forest": { "n_estimators": 100, "max_depth": 20 },
-    "xgboost": { "n_estimators": 100, "max_depth": 6, "learning_rate": 0.3, "subsample": 1.0, "colsample_bytree": 1.0, "reg_alpha": 0.0, "reg_lambda": 1.0 },
-    "gradient_boosting": { "n_estimators": 150, "max_depth": 5 },
+    "random_forest": { "n_estimators": 100, "max_depth": 20, "min_samples_leaf": 1 },
+    "xgboost": { "n_estimators": 150, "max_depth": 6, "learning_rate": 0.1, "reg_alpha": 0.0, "reg_lambda": 1.0 },
+    "gradient_boosting": { "n_estimators": 150, "max_depth": 5, "min_samples_leaf": 1 },
     "adaboost": { "n_estimators": 200, "learning_rate": 0.1, "max_depth": 6 },
     "tuning": { "n_iter": 60, "patience": 10, "min_delta": 0.0005, "cv": 3, "scoring": "neg_mean_absolute_error" }
 }
 ```
 
-Main_5's file additionally has `model_to_tune` (string, default `"xgboost"`) and `full_profile_max_rows` (int or `null`) at the top level.
+**File**: `configs/ml/main5_tree_tuning_config.json` (Main_5):
+
+```json
+{
+    "test_size": 0.2,
+    "random_state": 42,
+    "model_to_tune": "xgboost",
+    "full_profile_max_rows": null,
+    "random_forest": { "n_estimators": 100, "max_depth": 20, "min_samples_leaf": 1 },
+    "xgboost": { "n_estimators": 100, "max_depth": 6, "learning_rate": 0.3, "subsample": 1.0, "colsample_bytree": 1.0, "reg_alpha": 0.0, "reg_lambda": 1.0 },
+    "gradient_boosting": { "n_estimators": 150, "max_depth": 5, "min_samples_leaf": 1 },
+    "adaboost": { "n_estimators": 200, "learning_rate": 0.1, "max_depth": 6 },
+    "tuning": { "n_iter": 60, "patience": 10, "min_delta": 0.0005, "cv": 3, "scoring": "neg_mean_absolute_error" }
+}
+```
 
 **Usage (baseline notebook):** `jupyter notebook notebooks/Main_4_train_and_evaluate_tree_models_IO.ipynb` — reads `main4_tree_baseline_config.json` in cell 3. `IF_HYPERPARAM_TUNING` (off by default) is the only notebook-only flag; when `True`, Section 7 runs `BayesSearchCV` on every model in `models_to_train` using the `tuning.*` budget.
 
@@ -228,7 +242,7 @@ Main_5's file additionally has `model_to_tune` (string, default `"xgboost"`) and
         "optuna_n_jobs": 10
     },
     "neural_network": {
-        "epochs": 400,
+        "epochs": 200,
         "batch_size": 256,
         "learning_rate": 0.001,
         "h1": 128,
@@ -237,10 +251,17 @@ Main_5's file additionally has `model_to_tune` (string, default `"xgboost"`) and
         "dropout": 0.1,
         "tuning": {
             "n_trials": 15,
-            "epochs_per_trial": 25,
+            "epochs_per_trial": 50,
             "validation_fraction": 0.2,
             "timeout_seconds": null
         }
+    },
+    "evaluation": {
+        "axial_stations": [0.25, 0.5, 0.75, 1.0],
+        "nrmse_good_pct": 5.0,
+        "nrmse_acceptable_pct": 15.0,
+        "mc_dropout_samples": 50,
+        "exit_station_tol": 0.02
     }
 }
 ```
@@ -262,7 +283,15 @@ Main_5's file additionally has `model_to_tune` (string, default `"xgboost"`) and
 
 The tuning search space (`h1 ∈ [32,256] step 32`, `h2 ∈ [16,128] step 16`, `h3 ∈ [8,64] step 8`, `dropout ∈ [0.0,0.3]`, `learning_rate ∈ [1e-4,1e-2]` log, `batch_size ∈ {64,128,256,512}`) is defined in the notebook objective function. The objective maximises validation R² (uniform average across all targets, physical units). Requires `pip install optuna`.
 
-**Main_6 production training (Section 8):** `ReduceLROnPlateau` stepped on periodic **test** R² checkpoints, **early stopping** if test R² fails to improve across several consecutive checkpoints, then **reload the best test-R² weights** before Section 9 metrics and Section 11 export. Exports `models/simple_nn_full_profile_manifest.json` (plus `workflow`, `run_level_split`, `feature_cols` incl. `relative_position`, `run_cols`, row/run counts, `chemistry_groups`, `metrics_by_group`, `auxiliary_exports`) and `simple_nn_full_profile_{per_target,group}_metrics.csv`.
+**`evaluation` parameters (physics-aware diagnostics, read in Section 3; used in Sections 9c/9d/10d/10e):**
+- `axial_stations` (list of float): x/L fractions along the reactor at which the §10e NRMSE% station bars (and §9b overlay guide lines) are evaluated; the largest value is treated as the exit plane for the §9c species-sum exit check.
+- `nrmse_good_pct` / `nrmse_acceptable_pct` (float): green (<good) and yellow (<acceptable) acceptance bands drawn on the §10e NRMSE% bars.
+- `mc_dropout_samples` (int): stochastic forward passes for the §9d MC-Dropout ±σ uncertainty bands (`SimpleNN.predict_with_uncertainty`).
+- `exit_station_tol` (float): x/L tolerance reserved for isolating exit-plane rows in the §10d joint panels (exit rows default to each test run's maximum `relative_position`).
+
+Each diagnostic is gated by a Section 2 boolean (`IF_EXCLUDE_INLET_ROW`, `IF_SPECIES_SUM_CHECK`, `IF_MC_DROPOUT`, `IF_EXIT_JOINT_PANELS`, `IF_AXIAL_STATION_BARS`); the core train/eval/export pipeline runs whether they are on or off. Diagnostic helpers live in `src/utils/profile_evaluation.py`.
+
+**Main_6 production training (Section 8):** `ReduceLROnPlateau` stepped on periodic **test** R² checkpoints, **early stopping** if test R² fails to improve across several consecutive checkpoints, then **reload the best test-R² weights** before Section 9 metrics and Section 11 export. Exports `models/simple_nn_full_profile/simple_nn_full_profile_manifest.json` (plus `workflow`, `run_level_split`, `inlet_row_excluded`, `feature_cols` incl. `relative_position`, `run_cols`, row/run counts, `chemistry_groups`, `metrics_by_group`, an `evaluation` block, `species_sum` and `mc_dropout` diagnostic summaries, and `auxiliary_exports`) and `simple_nn_full_profile_{per_target,group}_metrics.csv` in the same subfolder. When `IF_AXIAL_STATION_BARS` is on it also writes `simple_nn_full_profile_axial_station_metrics.csv`. The per-target/group CSVs are written once (Section 11); Section 9 no longer duplicates them.
 
 **Main_6 notebook-only controls (booleans and paths only; everything else lives in the JSON config above):**
 
@@ -270,7 +299,9 @@ The tuning search space (`h1 ∈ [32,256] step 32`, `h2 ∈ [16,128] step 16`, `
 - **CPU parallelism:** `N_CPU_CORES` is config-driven (`runtime.n_cpu_cores`, `null` = all logical CPUs). Thread limits via `src/utils/cpu_threads.py`.
 - **External monitor** (`scripts/monitor/monitor_nn_training_progress.py`): picks the newest mtime in `data/logs/` (Optuna JSON vs training CSV); `LIVE` flag toggles one-shot vs refresh-until-idle. Details: [`data/logs/README.md`](../data/logs/README.md).
 - **Inlet BC anchoring (§9):** `src/utils/profile_predictions.anchor_inlet_profile_predictions()` sets each test run's prediction at min `relative_position` to match Cantera truth, so axial overlay plots start at the same inlet state. Same helper used in Main_5 §8.
-- **Data splits and overfitting:** §4 test runs (~`test_size` of simulation runs) are held out for §8 checkpoints, LR scheduler, early stopping, and best-weight restore, and are never used in Optuna; §6b validation rows come from the **train** split only. Growing train R² − test R² gap at §8 checkpoints → raise `dropout` or shrink `h1`–`h3`.
+- **Inlet-row exclusion (§4):** `IF_EXCLUDE_INLET_ROW` (default `True`) drops each run's x/L≈0 row from train/test — the τ=0 state is trivially known from the inputs, so keeping it flatters metrics; the inlet is still anchored at inference (above). §4 also asserts `run_cols` are constant within each run (the intent of the reference's `enforce_inlet_bc`, redundant here since runs are defined by `groupby(run_cols)`).
+- **Physics-aware diagnostics (§9c/9d/10d/10e):** `IF_SPECIES_SUM_CHECK`, `IF_MC_DROPOUT`, `IF_EXIT_JOINT_PANELS`, `IF_AXIAL_STATION_BARS` gate the species-sum closure, MC-Dropout ±σ bands, exit-plane joint panels, and axial NRMSE% station bars respectively. Numeric controls live in `evaluation.*` (above); helpers in `src/utils/profile_evaluation.py`.
+- **Data splits and overfitting:** §4 test runs (~`test_size` of simulation runs) are held out for §8 checkpoints, LR scheduler, and best-weight restore (training always runs the full `epochs`, no early stopping), and are never used in Optuna; §6b validation rows come from the **train** split only. Growing train R² − test R² gap at §8 checkpoints → raise `dropout` or shrink `h1`–`h3`.
 - **Row cap, axial parity:** `FULL_PROFILE_MAX_ROWS` is derived from `runtime.subsample_max_rows` when `SUBSAMPLE_ROWS=True` (the notebook boolean); it caps total train+test rows after the run-level split. §9b `AXIAL_PROFILE_N_RUNS`, `AXIAL_PROFILE_RUNS_RANDOM`. §10 `PARITY_HEXBIN_MIN_POINTS` selects hexbin vs scatter.
 
 Any missing key falls back to the inline notebook defaults. Edit the JSON and re-run Section 3 in Main_6 — no kernel restart needed.

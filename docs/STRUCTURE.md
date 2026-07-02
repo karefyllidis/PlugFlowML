@@ -54,17 +54,29 @@ HydrAI/
 │   ├── processed/                # Feature-engineered data (generated)
 │   └── logs/                     # Main_6/7 training progress CSV + Optuna JSON (monitor)
 │
-├── models/                       # Trained ML models (generated, git-ignored)
-│   ├── tree_models_exit.joblib            # Main_4 baseline bundle (overwritten each run)
-│   ├── tree_model_tuned_exit_full.joblib  # Main_5 tuned exit + optional full-profile bundle
-│   ├── simple_nn_full_profile_state_dict.pt   # Main_6 full-profile PyTorch state_dict
-│   ├── simple_nn_full_profile_scalers.joblib  # Main_6 X/y scalers + label encoder
-│   ├── simple_nn_full_profile_manifest.json   # Main_6 manifest (includes feature_cols, run_level_split, groups)
-│   ├── simple_nn_full_profile_per_target_metrics.csv
-│   ├── simple_nn_full_profile_group_metrics.csv
-│   ├── pinn_pfr_state_dict.pt             # Main_7 PINNPFR state_dict
-│   ├── pinn_pfr_scalers.joblib            # Main_7 X/y scalers
-│   └── pinn_pfr_manifest.json             # Main_7 manifest (architecture, loss weights, training)
+├── models/                       # Trained ML models (generated, git-ignored except .gitkeep per subfolder)
+│   ├── tree_baseline/                     # Main_4
+│   │   └── tree_models_exit.joblib        # Baseline bundle (overwritten each run)
+│   ├── tree_tuned/                        # Main_5
+│   │   └── tree_model_tuned_exit_full.joblib  # Tuned exit + optional full-profile bundle
+│   ├── simple_nn_full_profile/            # Main_6
+│   │   ├── simple_nn_full_profile_state_dict.pt   # PyTorch state_dict
+│   │   ├── simple_nn_full_profile_scalers.joblib  # X/y scalers + label encoder
+│   │   ├── simple_nn_full_profile_manifest.json   # Manifest (feature_cols, run_level_split, groups)
+│   │   ├── simple_nn_full_profile_per_target_metrics.csv
+│   │   └── simple_nn_full_profile_group_metrics.csv
+│   ├── pinn_pfr/                          # Main_7
+│   │   ├── pinn_pfr_state_dict.pt         # PINNPFR state_dict
+│   │   ├── pinn_pfr_scalers.joblib        # X/y scalers
+│   │   └── pinn_pfr_manifest.json         # Manifest (architecture, loss weights, training)
+│   ├── sr_full_profile/                   # Main_8, teacher=simple_nn_full_profile
+│   │   ├── sr_full_profile_equations.py
+│   │   ├── sr_full_profile_manifest.json
+│   │   └── sr_full_profile_metrics.csv
+│   └── sr_pinn/                           # Main_8, teacher=pinn_pfr
+│       ├── sr_pinn_equations.py
+│       ├── sr_pinn_manifest.json
+│       └── sr_pinn_metrics.csv
 │
 ├── outputs/                      # Simulation outputs
 │   ├── results/                  # CSV results and summaries
@@ -218,10 +230,10 @@ jupyter notebook notebooks/Main_5_train_evaluate_tune_tree_model_evolution.ipynb
 jupyter notebook notebooks/Main_6_train_evaluate_SimpleNN_full_profile.ipynb
 jupyter notebook notebooks/Main_7_train_evaluate_PINN_full_profile.ipynb
 ```
-- Main_4 trains baseline trees (RF, Gradient Boosting, XGBoost, AdaBoost) and saves them to `models/tree_models_exit.joblib` (overwritten each run); optional `IF_HYPERPARAM_TUNING` (§7) runs BayesSearchCV per model before the export.
-- Main_5 tunes one tree model and, when enabled, also fits the full-profile model; both are bundled into `models/tree_model_tuned_exit_full.joblib`.
-- Main_6 trains the `SimpleNN` on **all axial rows** with **`relative_position`**, **run-level** train/test split (§4), optional Optuna §6b on **validation rows from train data only**, and §8 **ReduceLROnPlateau** / **early stopping** / **best test-R² checkpoint restore**. Overfitting during tuning = validation R² across trials; during production training = **train vs test R²** (and gap) at §8 checkpoints. Optional **`FULL_PROFILE_MAX_ROWS`** for smoke runs; exports **`models/simple_nn_full_profile_*`** + CSVs. §9b: **`full_profile_cantera_vs_nn_axial_evolution.png`**. §10: **four columns**, shared hexbin colorbar or scatter (`PARITY_HEXBIN_MIN_POINTS`). Monitor: `scripts/monitor/monitor_nn_training_progress.py` (`MAIN_6=True`); see `docs/ML_CONFIG_GUIDE.md`.
-- Main_7 trains `PINNPFR` with the composite data + physics loss; exports `models/pinn_pfr_*`. Monitor: same script with `MAIN_7=True`.
+- Main_4 trains baseline trees (RF, Gradient Boosting, XGBoost, AdaBoost) and saves them to `models/tree_baseline/tree_models_exit.joblib` (overwritten each run); optional `IF_HYPERPARAM_TUNING` (§7) runs BayesSearchCV per model before the export.
+- Main_5 tunes one tree model and, when enabled, also fits the full-profile model; both are bundled into `models/tree_tuned/tree_model_tuned_exit_full.joblib`.
+- Main_6 trains the `SimpleNN` on **all axial rows** with **`relative_position`**, **run-level** train/test split (§4), optional Optuna §6b on **validation rows from train data only**, and §8 **ReduceLROnPlateau** / **early stopping** / **best test-R² checkpoint restore**. Overfitting during tuning = validation R² across trials; during production training = **train vs test R²** (and gap) at §8 checkpoints. Optional **`FULL_PROFILE_MAX_ROWS`** for smoke runs; exports **`models/simple_nn_full_profile/simple_nn_full_profile_*`** + CSVs. §9b: **`full_profile_cantera_vs_nn_axial_evolution.png`**. §10: **four columns**, shared hexbin colorbar or scatter (`PARITY_HEXBIN_MIN_POINTS`). Monitor: `scripts/monitor/monitor_nn_training_progress.py` (`MAIN_6=True`); see `docs/ML_CONFIG_GUIDE.md`.
+- Main_7 trains `PINNPFR` with the composite data + physics loss; exports `models/pinn_pfr/pinn_pfr_*`. Monitor: same script with `MAIN_7=True`.
 - Each notebook also tees its terminal output to `outputs/reports/<NotebookName>.txt` via `src.utils.run_log.start_run_log` (stable path, **overwritten on every run**).
 
 **Alternative (all model types including neural network):**

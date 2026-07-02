@@ -56,9 +56,10 @@ def _load_nn_predictor(models_dir: Path, mode: str):
         raise ValueError("--model nn only supports --mode full_profile (Main_6 SimpleNN).")
 
     stem = "simple_nn_full_profile"
-    manifest_path = models_dir / f"{stem}_manifest.json"
-    scalers_path  = models_dir / f"{stem}_scalers.joblib"
-    state_path    = models_dir / f"{stem}_state_dict.pt"
+    stem_dir = models_dir / stem
+    manifest_path = stem_dir / f"{stem}_manifest.json"
+    scalers_path  = stem_dir / f"{stem}_scalers.joblib"
+    state_path    = stem_dir / f"{stem}_state_dict.pt"
 
     if not manifest_path.exists():
         raise FileNotFoundError(
@@ -91,9 +92,10 @@ def _load_pinn_predictor(models_dir: Path):
     from src.models import PINNPFR
 
     stem = "pinn_pfr"
-    manifest_path = models_dir / f"{stem}_manifest.json"
-    scalers_path  = models_dir / f"{stem}_scalers.joblib"
-    state_path    = models_dir / f"{stem}_state_dict.pt"
+    stem_dir = models_dir / stem
+    manifest_path = stem_dir / f"{stem}_manifest.json"
+    scalers_path  = stem_dir / f"{stem}_scalers.joblib"
+    state_path    = stem_dir / f"{stem}_state_dict.pt"
 
     if not manifest_path.exists():
         raise FileNotFoundError(
@@ -135,7 +137,7 @@ def _build_inlet_row(args, feature_cols: list[str]) -> np.ndarray:
 # ── Prediction routines ───────────────────────────────────────────────────────
 
 def predict_tree(args) -> pd.DataFrame:
-    models_dir = PROJECT_ROOT / "models"
+    models_dir = PROJECT_ROOT / "models" / "tree_baseline"
     pred = _load_tree_predictor(models_dir, mode=args.mode, model_key=args.model_key)
 
     if args.mode == "full_profile":
@@ -163,7 +165,7 @@ def predict_tree(args) -> pd.DataFrame:
 def predict_nn(args) -> pd.DataFrame:
     import torch
 
-    models_dir = PROJECT_ROOT / "models"
+    models_dir = PROJECT_ROOT / "models"  # _load_nn_predictor resolves the stem subfolder
     model, scaler_X, scaler_y, manifest = _load_nn_predictor(models_dir, mode=args.mode)
 
     feature_cols = manifest.get("inlet_cols") or manifest.get("feature_cols", [])
@@ -211,7 +213,7 @@ def predict_pinn(args) -> pd.DataFrame:
     """PINNPFR full axial profile prediction (Main_7 artefacts)."""
     import torch
 
-    models_dir = PROJECT_ROOT / "models"
+    models_dir = PROJECT_ROOT / "models"  # _load_pinn_predictor resolves the stem subfolder
     model, scaler_X, scaler_y, manifest = _load_pinn_predictor(models_dir)
 
     feature_cols = manifest.get("feature_cols") or manifest.get("inlet_cols", [])

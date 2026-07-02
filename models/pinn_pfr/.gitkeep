@@ -1,0 +1,2 @@
+# This file ensures the directory is tracked by git
+# Main_7 PINNPFR artifacts (pinn_pfr_*) are stored here but ignored by .gitignore
