@@ -7,7 +7,7 @@ Use this as the `README.md` inside a Hugging Face model repository.
 This model is part of **HydrAI**: a physics-grounded steam-cracking simulation framework with machine-learning surrogates for fast reactor screening and design.
 
 - **Model type:** Multi-output regression surrogate
-- **Base methods:** Tree ensembles (e.g., XGBoost / Random Forest / Gradient Boosting)
+- **Base method:** *(fill in for the specific release — one of: tree ensemble [RF/GBM/XGBoost/AdaBoost, Main_4/5]; `SimpleNN` PyTorch MLP, full axial profile [Main_6]; `PINNPFR` physics-informed MLP [Main_7]; PySR symbolic equations distilled from a NN teacher [Main_8])*
 - **Primary domain:** Steam cracking plug-flow reactors
 
 ## Intended Uses
