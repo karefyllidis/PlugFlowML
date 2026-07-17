@@ -5,7 +5,7 @@
             "formula": "CH4/O2/N2",
             "mechanism_file": "mechanisms/gri30.yaml",
             "feed_species": "CH4:1, O2:2, N2:7.52",
-            "diluent": "N2",
+            "diluent": "AR",
             "diluent_ratio": 0,
             "target_products": ["CO2", "H2O", "CO", "H2"],
             "product_names": ["CO2", "H2O", "CO", "H2"],

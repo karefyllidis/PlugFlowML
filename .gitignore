@@ -197,11 +197,12 @@ temp_*.csv
 .env
 .env.local
 
-# Cantera kinetic mechanisms — large / environment-specific; keep folder via .gitkeep only
+# Cantera kinetic mechanisms — confidential / environment-specific; keep folder via .gitkeep.
 # Obtain YAML files separately (see README "Required External Files").
-# To version mechanisms in your fork, remove the two lines below and git add the YAMLs.
+# Exception: gri30.yaml is openly licensed (BSD-3-Clause, bundled with Cantera) and is versioned.
 mechanisms/*
 !mechanisms/.gitkeep
+!mechanisms/gri30.yaml
 
 # Browser-download leftovers
 *.crdownload
