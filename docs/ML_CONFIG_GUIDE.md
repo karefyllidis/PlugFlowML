@@ -143,7 +143,7 @@ If `sampling_method` is `"random"` or `"latin"`, only `max_combinations_per_reac
 **File**: `configs/ml/main3_eda_feature_engineering_config.json` — loaded in cell 4 ("Load config"); every key below falls back to the inline default shown if the file or key is missing. Edit the JSON and re-run cell 4 — no kernel restart needed.
 
 - **`IF_PIN_SPECIFIC_FILES`**: If `True`, load pinned files from `data/training/` instead of the newest `training_data_complete_*.pkl`.
-- **`RUN_STAMP_DEVEL` / `RUN_STAMP_FULL`**: Filename stamps — e.g. `20260507_DEVEL` (small smoke-test campaign) vs `20260507_095243` (full production set). Set `RUN_STAMP = RUN_STAMP_DEVEL` for fast pipeline checks; use `RUN_STAMP_FULL` or `IF_PIN_SPECIFIC_FILES = False` for full data. Files: `training_data_complete_<stamp>.pkl` and `metadata_<stamp>.json`.
+- **`use_run_stamp` / `run_stamp_<key>`**: Which stamp to pin — the notebook resolves `run_stamp_{use_run_stamp}` generically. Shipped keys: `run_stamp_sample` (`sample150`, the course release dataset — the default), `run_stamp_full` (research campaign), `run_stamp_devel` (smoke-test set). Files: `training_data_complete_<stamp>.pkl` and `metadata_<stamp>.json`.
 - **`IF_SAVE_EDA_PLOTS`**: If `True`, EDA figures are saved to `outputs/figures/Main_3_data_exploration_feature_engineering/eda/`.
 - **`IF_SEPARATE_SPECIES_BY_CARBON`**: If `True`, species are grouped by carbon-number lumps (`C1`, `C2`, `C3`, ... and `inert`) for dimensionality reduction.
 - **`IF_CATEGORIZE_BY_CHEMISTRY`**: If `True`, species are grouped by process-role lumps (`olefins`, `aromatics`, `paraffins`, `coke_precursors`, `radicals`, `feedstock`, `hydrogen`, `diluent`, `other`).
@@ -159,6 +159,8 @@ If `sampling_method` is `"random"` or `"latin"`, only `max_combinations_per_reac
 - **Methodology model card (species lumping):** [`docs/SPECIES_LUMPING_MODEL_CARD.md`](SPECIES_LUMPING_MODEL_CARD.md) — carbon vs chemistry taxonomy, sum-of-`Y_*` aggregation, export column names, limitations.
 
 ### 2. ML Model Training
+
+**Course-scale defaults & `processed_stem` (Main_4–Main_10).** All model-training configs ship with budgets sized for free Google Colab (each lesson finishes in minutes); the research-scale values they replaced are recorded in `_comment` keys beside each knob. Every config also carries **`processed_stem`** (default `"sample150"`), which pins the input to `data/processed/features_targets_training_data_complete_<stem>.pkl` — set it to `null` to fall back to the newest `features_targets_*.pkl` (e.g. after exporting your own Main_3 campaign).
 
 **Baseline notebook:** `notebooks/Main_4_train_and_evaluate_tree_models_IO.ipynb` — fast workflow for **inlet→outlet** (exit-plane) baseline comparison:
 - Trains default RF, Gradient Boosting, XGBoost, and optionally AdaBoost

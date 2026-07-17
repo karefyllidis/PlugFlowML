@@ -4,6 +4,16 @@
 
 ML surrogate models for plug flow reactor (PFR) simulations. Cantera-generated data → tree models → SimpleNN → PINN → symbolic regression → Bayesian optimisation.
 
+**The repo doubles as an open 10-lesson course** ("ML surrogates for physical simulation") for graduate students: notebooks carry a tutorial layer — lesson headers with objectives, Colab bootstrap cells (section 0), concept boxes, exercises with collapsed solutions. All tutorial cells follow `docs/COURSE_STYLE_GUIDE.md` (mandatory templates); the course blueprint is `docs/TUTORIAL_COURSE_PLAN.md`.
+
+## Course rules
+
+- Lessons 1–2 (Main_1/Main_2) are **read-along**: the kinetic mechanism is proprietary and never committed/published; their executed outputs ARE committed (`.gitattributes` exempts them from nbstripout). All other notebooks stay output-stripped.
+- Hands-on lessons (3–10) must run top-to-bottom on free Colab against the **sample150 dataset** (GitHub Release `sample-data-v1`; provenance: `configs/ml/main2_sample_dataset_config.json`, card: `docs/SAMPLE_DATASET_CARD.md`).
+- Config defaults are Colab-scale; research-scale values live in `_comment` keys beside each knob — don't silently re-inflate them.
+- Data resolution is pinned: Main_3 via `use_run_stamp`/`run_stamp_sample`, Main_4–10 via `processed_stem` (null = glob-latest fallback).
+- Exercise scaffolds must execute cleanly as shipped and operate on copies — never mutate pipeline state.
+
 ## Notebook pipeline
 
 | # | File | Task |

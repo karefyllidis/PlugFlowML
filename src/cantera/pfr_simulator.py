@@ -51,6 +51,11 @@ import pandas as pd
 import json
 import argparse
 import warnings
+
+# numpy >=2.0 renamed trapz -> trapezoid and removed trapz outright in >=2.4;
+# a ternary picks the right one lazily (an eager getattr(np, ..., np.trapz)
+# default would itself raise AttributeError once np.trapz no longer exists).
+_trapz = np.trapezoid if hasattr(np, "trapezoid") else np.trapz
 import sys
 from typing import Tuple, List, Dict, Any, Optional
 from datetime import datetime
@@ -871,7 +876,7 @@ def create_summary_file(config, reactant_info, conversion, yields, states1, T_0,
         f.write(f"# Temperature Rise: {states1.T[-1] - T_0:.1f} K\n")
         f.write(f"# Final Pressure: {states1.P[-1]/1e5:.2f} bar\n")
         f.write(f"# Pressure Drop: {(p_0 - states1.P[-1])/1e5:.2f} bar\n")
-        f.write(f"# Residence Time: {np.trapz(1/states1.velocity, states1.z):.3f} s\n")
+        f.write(f"# Residence Time: {_trapz(1/states1.velocity, states1.z):.3f} s\n")
         f.write("#\n")
         f.write("# CONVERSION AND YIELDS\n")
         f.write("# =====================\n")
@@ -959,7 +964,7 @@ def main():
     print(f"[OK] {reactant_info['name']} conversion: {conversion:.1f}%")
     print(f"[OK] Temperature rise: {states1.T[-1] - T_0:.1f} K")
     print(f"[OK] Pressure drop: {(p_0 - states1.P[-1])/1e5:.2f} bar")
-    print(f"[OK] Residence time: {np.trapz(1/states1.velocity, states1.z):.3f} s")
+    print(f"[OK] Residence time: {_trapz(1/states1.velocity, states1.z):.3f} s")
     print(f"[OK] Files generated:")
     print(f"  - fig/*.png: Visualization plots")
     print(f"  - results/*.csv: Simulation data")
