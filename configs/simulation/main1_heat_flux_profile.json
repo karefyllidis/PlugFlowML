@@ -3,7 +3,7 @@
   "_units": "position: relative (0.0=inlet, 1.0=outlet), heat_flux: W/m²",
   "_interpolation": "Step-wise interpolation between data points",
   "heat_flux_profile": {
-    "interpolation_method": "step",
+    "interpolation_method": "linear",
     "_interpolation_options": ["linear", "step"],
     "data_points": [
       {
