@@ -4,6 +4,8 @@
   "if_plot_export": true,
   "if_export_report": true,
   "sr_teacher_stem": "pinn_pfr",
+  "processed_stem": "sample150",
+  "_processed_stem_comment": "Pins data/processed/features_targets_training_data_complete_<stem>.pkl (course default: the sample150 release dataset). Set to null for the newest features_targets_*.pkl.",
   "n_comparison_runs": 6,
   "random_state": 42
 }

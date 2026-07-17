@@ -1,7 +1,10 @@
 {
   "_comment": "Main_10_optimisation_BO_surrogate_vs_cantera.ipynb — Optuna GP-BO over the Main_8 SR surrogate, validated against Cantera. See docs/ML_CONFIG_GUIDE.md.",
   "opt_target": "Y_lump_olefins",
-  "n_trials": 150,
+  "processed_stem": "sample150",
+  "_processed_stem_comment": "Pins data/processed/features_targets_training_data_complete_<stem>.pkl (course default: the sample150 release dataset). Set to null for the newest features_targets_*.pkl.",
+  "n_trials": 60,
+  "_n_trials_comment": "Course default sized for free Colab (GPSampler refits grow with trial count); research-scale value was 150.",
   "random_state": 42,
   "reactant_key": "n-hexane",
   "if_plot_shown": true,

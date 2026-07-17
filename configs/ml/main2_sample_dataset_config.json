@@ -1,0 +1,32 @@
+{
+    "_comment": "Sample-dataset generation config for the tutorial course. Produces the ~150-run 'sample150' dataset shipped as a GitHub Release asset (see docs/SAMPLE_DATASET_CARD.md). Same parameter domain as main2_data_generation_config.json but a distinct LHS seed, so the sample is NOT a subset of the research dataset. Run: HYDRAI_ML_CONFIG=configs/ml/main2_sample_dataset_config.json python scripts/local/run_main2_local_parallel.py --ntasks 8, then consolidate with scripts/dev/consolidate_training_data.py --base-dir data/training_sample.",
+
+    "reactants": ["n-hexane"],
+    "max_combinations_per_reactant": 150,
+    "output_dir": "data/training_sample",
+    "save_interval": 10,
+    "sampling_method": "latin",
+    "lhs_seed": 7,
+    "n_jobs": 1,
+    "save_complete_csv": false,
+
+    "random_sample_bounds": {
+        "_comment": "Parameter bounds [min, max] — identical to the research config so lessons match the README data card.",
+        "temperature_K": [800, 900],
+        "pressure_bar": [1.5, 3.5],
+        "length_m": [10.0, 15.0],
+        "diameter_mm": [25.0, 40.0],
+        "mass_flow_rate_kgps": [0.05, 0.10],
+        "heat_flux_Wm2": [100000, 250000]
+    },
+
+    "parameter_ranges": {
+        "_comment": "For grid/structured_grid/full_grid: [min, max, n_points]. Total runs = product of n_points",
+        "temperature_K": [800, 900, 10],
+        "pressure_bar": [1.5, 3.5, 10],
+        "length_m": [10.0, 15.0, 10],
+        "diameter_mm": [25.0, 40.0, 10],
+        "mass_flow_rate_kgps": [0.05, 0.10, 10],
+        "heat_flux_Wm2": [100000, 250000, 10]
+    }
+}

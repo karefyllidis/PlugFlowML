@@ -5,3 +5,8 @@
 *.bat text eol=crlf
 *.ipynb filter=nbstripout
 *.ipynb diff=ipynb
+
+# Lessons 1-2 are read-along (the kinetic mechanism is not redistributable, so
+# students can't execute them). Their executed outputs stay committed.
+notebooks/Main_1_run_pfr.ipynb -filter
+notebooks/Main_2_generate_training_data.ipynb -filter

@@ -12,6 +12,8 @@
   "if_pin_specific_files": true,
   "run_stamp_devel": "20260507_DEVEL",
   "run_stamp_full": "20260507_095243",
-  "use_run_stamp": "full",
-  "if_export_features_targets": false
+  "run_stamp_sample": "sample150",
+  "use_run_stamp": "sample",
+  "_use_run_stamp_comment": "Course default is 'sample' (the 150-run release dataset the Colab bootstrap downloads). Research users: switch to 'full' (or 'devel') to point at your own Main_2 campaign.",
+  "if_export_features_targets": true
 }

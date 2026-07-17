@@ -42,6 +42,10 @@ def main() -> None:
         env = os.environ.copy()
         env["TASK_ID"] = str(i)
         env["NTASKS"] = str(args.ntasks)
+        # Windows consoles default to cp1252 when output is redirected; the
+        # generator's progress glyphs (✓) then crash the worker mid-sweep.
+        env.setdefault("PYTHONIOENCODING", "utf-8")
+        env.setdefault("PYTHONUTF8", "1")
         procs.append(
             subprocess.Popen(
                 [sys.executable, str(script)],

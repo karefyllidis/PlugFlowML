@@ -1,0 +1,32 @@
+name: "Lesson bug"
+description: "A lesson notebook fails or behaves unexpectedly"
+title: "[Lesson N] short description"
+labels: ["bug", "lesson"]
+body:
+  - type: dropdown
+    id: lesson
+    attributes:
+      label: Lesson
+      options: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "other / repo-level"]
+    validations:
+      required: true
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Where were you running it?
+      options: ["Google Colab (free)", "Google Colab (Pro)", "Local — Windows", "Local — macOS", "Local — Linux", "Other"]
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: "Which cell/section failed, what you expected, and the full error message (paste the traceback)."
+      placeholder: "Section 5, the training cell raised …"
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Anything you changed first?
+      description: "Config edits, exercise cells you modified, re-run order — 'nothing, fresh run' is a fine answer."

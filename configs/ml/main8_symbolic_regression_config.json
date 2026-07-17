@@ -4,11 +4,14 @@
   "if_plot_export": true,
   "if_sr_export": true,
   "teacher_stem": "simple_nn_full_profile",
-  "n_distill_samples": 5000,
+  "processed_stem": "sample150",
+  "_processed_stem_comment": "Pins data/processed/features_targets_training_data_complete_<stem>.pkl (course default: the sample150 release dataset). Set to null for the newest features_targets_*.pkl.",
+  "n_distill_samples": 3000,
   "random_state": 42,
-  "sr_n_iterations": 100,
-  "sr_populations": 30,
+  "sr_n_iterations": 40,
+  "sr_populations": 15,
   "sr_population_size": 33,
-  "sr_maxsize": 25,
-  "sr_procs": 0
+  "sr_maxsize": 20,
+  "sr_procs": 0,
+  "_budget_comment": "Course defaults sized for free Colab (PySR's Julia backend dominates the first-run cost). Research-scale values: n_distill_samples=5000, sr_n_iterations=100, sr_populations=30, sr_maxsize=25."
 }

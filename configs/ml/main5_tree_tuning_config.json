@@ -2,8 +2,11 @@
   "_comment": "Main_5_train_evaluate_tune_tree_model_evolution.ipynb — tuned tree (BayesSearchCV) + full axial profile. Keys consumed: top-level test_size/random_state/model_to_tune/full_profile_max_rows; random_forest, xgboost, gradient_boosting, adaboost blocks (used as untuned defaults when IF_HYPERPARAM_TUNING=False); tuning.*. See docs/ML_CONFIG_GUIDE.md.",
   "test_size": 0.2,
   "random_state": 42,
+  "processed_stem": "sample150",
+  "_processed_stem_comment": "Pins data/processed/features_targets_training_data_complete_<stem>.pkl (course default: the sample150 release dataset). Set to null for the newest features_targets_*.pkl.",
   "model_to_tune": "xgboost",
-  "full_profile_max_rows": null,
+  "full_profile_max_rows": 60000,
+  "_full_profile_max_rows_comment": "Row cap for the axial-profile model. 60000 covers the whole sample150 course dataset (~30k rows) and keeps Colab responsive; research-scale value was null (no cap).",
   "random_forest": {
     "n_estimators": 100,
     "max_depth": 20,
@@ -29,8 +32,8 @@
     "max_depth": 6
   },
   "tuning": {
-    "_comment": "BayesSearchCV budget for the exit-plane model_to_tune, only used when IF_HYPERPARAM_TUNING=True.",
-    "n_iter": 60,
+    "_comment": "BayesSearchCV budget for the exit-plane model_to_tune, only used when IF_HYPERPARAM_TUNING=True. Course default n_iter=25 fits free Colab; research-scale value was 60.",
+    "n_iter": 25,
     "patience": 10,
     "min_delta": 0.0005,
     "cv": 3,

@@ -1,0 +1,28 @@
+cff-version: 1.2.0
+message: "If you use this course or pipeline in teaching or research, please cite it as below."
+title: "HydrAI: ML surrogates for physical simulation — a hands-on course on a chemical reactor"
+type: software
+authors:
+  - family-names: Karefyllidis
+    given-names: Nikolas
+    orcid: "https://orcid.org/0000-0000-0000-0000"  # TODO: replace with real ORCID or delete this line
+repository-code: "https://github.com/karefyllidis/open_HydrAI"
+url: "https://github.com/karefyllidis/open_HydrAI"
+abstract: >-
+  A ten-lesson open-source course teaching machine-learning surrogate
+  modelling for expensive physical simulations: tree ensembles, neural
+  networks, physics-informed neural networks, symbolic-regression
+  distillation, and Bayesian optimisation, taught hands-on against
+  Cantera-generated plug-flow-reactor data.
+keywords:
+  - surrogate modeling
+  - physics-informed neural networks
+  - symbolic regression
+  - Bayesian optimization
+  - scientific machine learning
+  - chemical kinetics
+  - education
+license: MIT
+version: 1.0.0
+date-released: 2026-07-17
+# doi: 10.5281/zenodo.XXXXXXX  # TODO: uncomment after archiving a release on Zenodo

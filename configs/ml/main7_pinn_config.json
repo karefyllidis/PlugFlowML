@@ -2,10 +2,13 @@
   "_comment": "Main_7_train_evaluate_PINN_full_profile.ipynb — PINNPFR with PFR ODE residuals. Keys consumed: top-level test_size/random_state; neural_network.* (same architecture as Main_6, self-contained here); pinn.loss_weights.*; pinn.training.*. See docs/ML_CONFIG_GUIDE.md.",
   "test_size": 0.2,
   "random_state": 42,
-  "full_profile_max_rows": null,
+  "processed_stem": "sample150",
+  "_processed_stem_comment": "Pins data/processed/features_targets_training_data_complete_<stem>.pkl (course default: the sample150 release dataset). Set to null for the newest features_targets_*.pkl.",
+  "full_profile_max_rows": 60000,
+  "_full_profile_max_rows_comment": "60000 covers the whole sample150 course dataset; research-scale value was null (no cap).",
   "neural_network": {
-    "_comment": "h1-h3: hidden layer widths. Omitted keys use notebook fallbacks.",
-    "epochs": 400,
+    "_comment": "h1-h3: hidden layer widths. Omitted keys use notebook fallbacks. Course defaults are sized for free Colab (epochs=150, n_trials=8, n_colloc_per_batch=128); research-scale values were epochs=400, n_trials=15, n_colloc_per_batch=256.",
+    "epochs": 150,
     "batch_size": 256,
     "learning_rate": 0.001,
     "h1": 128,
@@ -14,8 +17,8 @@
     "dropout": 0.1,
     "tuning": {
       "_comment": "Optuna (Section 6b) when IF_HYPERPARAM_TUNING=True (off by default). Each trial trains on the data loss only (no physics/collocation terms) for epochs_per_trial epochs, so this is a proxy search over architecture/optimiser hyperparameters, not the physics loss weights.",
-      "n_trials": 15,
-      "epochs_per_trial": 25,
+      "n_trials": 8,
+      "epochs_per_trial": 15,
       "validation_fraction": 0.2,
       "timeout_seconds": null
     }
@@ -35,7 +38,7 @@
     "training": {
       "_comment": "Curriculum and collocation settings. curriculum_warmup_epochs: data-only phase before physics loss is switched on. n_colloc_per_batch: unlabelled z/L collocation points per training step. phys_loss_freq: apply physics loss every N steps (1 = every step).",
       "curriculum_warmup_epochs": 20,
-      "n_colloc_per_batch": 256,
+      "n_colloc_per_batch": 128,
       "phys_loss_freq": 1,
       "use_cantera_residuals": false
     }

@@ -1,0 +1,21 @@
+name: "Question"
+description: "Something in a lesson is unclear (consider GitHub Discussions for open-ended questions)"
+title: "[Question] short description"
+labels: ["question"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        For open-ended questions (adapting the pipeline to your field, method discussions),
+        [GitHub Discussions](../../discussions) is usually the better place — more people will see it.
+  - type: input
+    id: lesson
+    attributes:
+      label: Lesson / file
+      placeholder: "Lesson 7, concept box on collocation points"
+  - type: textarea
+    id: question
+    attributes:
+      label: Your question
+    validations:
+      required: true

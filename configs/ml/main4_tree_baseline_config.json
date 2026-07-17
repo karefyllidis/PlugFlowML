@@ -2,6 +2,8 @@
   "_comment": "Main_4_train_and_evaluate_tree_models_IO.ipynb — exit-plane tree baselines; optional BayesSearchCV tuning (off by default). Keys consumed: top-level test_size/random_state/models_to_train; random_forest, xgboost, gradient_boosting, adaboost blocks; tuning.*. See docs/ML_CONFIG_GUIDE.md.",
   "test_size": 0.2,
   "random_state": 42,
+  "processed_stem": "sample150",
+  "_processed_stem_comment": "Pins data/processed/features_targets_training_data_complete_<stem>.pkl (course default: the sample150 release dataset). Set to null to fall back to the newest features_targets_*.pkl, e.g. after exporting your own Main_3 campaign.",
   "models_to_train": ["random_forest", "gradient_boosting", "xgboost", "adaboost"],
   "random_forest": {
     "n_estimators": 100,
@@ -26,8 +28,8 @@
     "max_depth": 6
   },
   "tuning": {
-    "_comment": "BayesSearchCV budget for Section 7, only used when IF_HYPERPARAM_TUNING=True (off by default).",
-    "n_iter": 60,
+    "_comment": "BayesSearchCV budget for Section 7, only used when IF_HYPERPARAM_TUNING=True (off by default). Course default n_iter=20 fits free Colab; research-scale value was 60.",
+    "n_iter": 20,
     "patience": 10,
     "min_delta": 0.0005,
     "cv": 3,
