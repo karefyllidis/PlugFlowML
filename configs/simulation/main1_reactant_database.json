@@ -45,7 +45,7 @@
             "description": "Naphtha steam cracking for petrochemicals production"
         },
         "n-hexane": {
-            "name": "n-Hexane (educational example mechanism)",
+            "name": "n-Hexane",
             "formula": "C6H14",
             "mechanism_file": "mechanisms/naptha_example.yaml",
             "feed_species": "C6H14(nuig):1",
@@ -56,7 +56,7 @@
             "description": "n-Hexane steam cracking (pyrolysis regime, no O2 fed) using mechanisms/naptha_example.yaml -- an openly-licensed, reduced mechanism built for this course. Not a research-grade reproduction; see the file's own header for provenance and the educational-use disclaimer. This is the course default: every config with reactant_key='n-hexane' now uses this mechanism and can run end-to-end without a confidential mechanism file."
         },
         "n-hexane-proprietary": {
-            "name": "n-Hexane (proprietary, local-only)",
+            "name": "n-Hexane-full-mechanism",
             "formula": "C6H14",
             "mechanism_file": "mechanisms/n-Hexane_Kinetic-Model_species_153.yaml",
             "feed_species": "C6H14(1):1",
