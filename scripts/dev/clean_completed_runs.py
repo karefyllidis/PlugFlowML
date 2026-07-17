@@ -208,7 +208,7 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    print("HydrAI completed-run cleaner")
+    print("PlugFlowML completed-run cleaner")
     print(f"Project root: {ROOT}")
     print(f"Mode: {'APPLY' if args.apply else 'DRY-RUN'}")
 

@@ -16,8 +16,8 @@ import matplotlib
 from pathlib import Path
 from typing import Dict, Any, Optional, Union
 
-# Core series colours (see docs/HYDRAI_PROJECT_CONVENTIONS.md §5.10 and the NESP
-# sibling utils/plot_style.py, which mirrors these same HydrAI conventions).
+# Core series colours (see docs/PLUGFLOWML_PROJECT_CONVENTIONS.md §5.10 and the NESP
+# sibling utils/plot_style.py, which mirrors these same PlugFlowML conventions).
 COLOR_CANTERA = "b"
 COLOR_MODEL = "r"
 COLOR_TRAIN = "b"

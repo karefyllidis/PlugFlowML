@@ -1,4 +1,4 @@
-# HydrAI Surrogate Model Card
+# PlugFlowML Surrogate Model Card
 
 ## Model Details
 

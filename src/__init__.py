@@ -1,5 +1,5 @@
 """
-HydrAI: Generalized Plug Flow Reactor Simulation System
+PlugFlowML: Generalized Plug Flow Reactor Simulation System
 ========================================================
 
 A comprehensive simulation framework for modeling steam cracking reactions

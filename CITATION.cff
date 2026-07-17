@@ -1,13 +1,13 @@
 cff-version: 1.2.0
 message: "If you use this course or pipeline in teaching or research, please cite it as below."
-title: "HydrAI: ML surrogates for physical simulation — a hands-on course on a chemical reactor"
+title: "PlugFlowML: ML surrogates for physical simulation — a hands-on course on a chemical reactor"
 type: software
 authors:
   - family-names: Karefyllidis
     given-names: Nikolas
     orcid: "https://orcid.org/0000-0000-0000-0000"  # TODO: replace with real ORCID or delete this line
-repository-code: "https://github.com/karefyllidis/open_HydrAI"
-url: "https://github.com/karefyllidis/open_HydrAI"
+repository-code: "https://github.com/karefyllidis/PlugFlowML"
+url: "https://github.com/karefyllidis/PlugFlowML"
 abstract: >-
   A ten-lesson open-source course teaching machine-learning surrogate
   modelling for expensive physical simulations: tree ensembles, neural

@@ -1,4 +1,4 @@
-# HydrAI — Project dependencies
+# PlugFlowML — Project dependencies
 # ==============================
 # Run: pip install -r requirements.txt
 

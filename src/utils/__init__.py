@@ -1,5 +1,5 @@
 """
-Utility modules for HydrAI.
+Utility modules for PlugFlowML.
 """
 
 from .plot_style import (

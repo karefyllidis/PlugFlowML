@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""HydrAI inference script — run surrogate predictions from the command line.
+"""PlugFlowML inference script — run surrogate predictions from the command line.
 
 Supports tree-ensemble models (Main_4 / Main_5) and the PyTorch SimpleNN
 (Main_6 full-profile). Pass reactor inlet conditions as CLI arguments;
@@ -283,7 +283,7 @@ def predict_from_json(args) -> pd.DataFrame:
 
 def _build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
-        description="HydrAI surrogate inference. Predict PFR outlet or full axial profile.",
+        description="PlugFlowML surrogate inference. Predict PFR outlet or full axial profile.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     p.add_argument("--model", choices=["tree", "nn", "pinn"], default="tree",

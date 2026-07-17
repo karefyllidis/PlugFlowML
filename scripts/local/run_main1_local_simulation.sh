@@ -1,5 +1,5 @@
 #!/bin/bash
-# HydrAI Simulation Runner Script
+# PlugFlowML Simulation Runner Script
 # ===============================
 # Launches Jupyter with Main_1 (same behaviour as scripts/notebook/run_simulation.sh).
 # Usage from repo root:
@@ -22,7 +22,7 @@ if ! python3 -c "import jupyter" 2>/dev/null; then
 fi
 
 # Launch Jupyter notebook
-echo "Launching Jupyter notebook for HydrAI simulations..."
+echo "Launching Jupyter notebook for PlugFlowML simulations..."
 echo "========================================================================"
 echo "Opening: notebooks/Main_1_run_pfr.ipynb"
 echo "========================================================================"

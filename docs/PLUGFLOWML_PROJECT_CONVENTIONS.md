@@ -1,6 +1,6 @@
-# HydrAI Project Conventions and Standards
+# PlugFlowML Project Conventions and Standards
 
-This document captures all agreed-upon conventions, architectural decisions, and standards for the HydrAI machine learning surrogate modeling project. These rules apply throughout the codebase and should be followed for all future development.
+This document captures all agreed-upon conventions, architectural decisions, and standards for the PlugFlowML machine learning surrogate modeling project. These rules apply throughout the codebase and should be followed for all future development.
 
 ## Table of Contents
 
@@ -266,7 +266,7 @@ CANTERA_FULL_PROFILE_SECONDS_PER_RUN = None
 
 ### 4.4 Main_1 through Main_6 architecture map
 
-**Reference**: `docs/HYDRAI_PROJECT_CONVENTIONS.md` §4.4 — pipeline order (Mermaid), per-notebook roles, config ownership (`neural_network.*` → **Main_6** and **Main_6** PyTorch notebooks only; ignored by Main_4), and **section-by-section maps** for each `Main_*.ipynb`. Update that file whenever you add a new pipeline step or rename major notebook sections.
+**Reference**: `docs/PLUGFLOWML_PROJECT_CONVENTIONS.md` §4.4 — pipeline order (Mermaid), per-notebook roles, config ownership (`neural_network.*` → **Main_6** and **Main_6** PyTorch notebooks only; ignored by Main_4), and **section-by-section maps** for each `Main_*.ipynb`. Update that file whenever you add a new pipeline step or rename major notebook sections.
 
 ---
 
@@ -494,7 +494,7 @@ If a title genuinely needs more visual weight, use a larger `fontsize` instead o
 
 #### Extending the palette (more plots / more colours)
 
-If **`k` / `b` / `r` / `m` / `lime`** are exhausted for discrete series: add **`c`**, then hexes from **`figure_aesthetics.json`** in order **`secondary` → `tertiary` → `quinary`** (`#ff7f0e`, `#2ca02c`, `#9467bd`) before ad hoc colours. Use **greyscale `0.15`–`0.85`** for non-semantic support (bands, faint lines). For **extra bar series**, keep **white** faces and vary **`hatch`** (`''`, `'///'`, `'...'`, `'xxx'`, `'||'`, `'--'`) and **`edgecolor`** before coloured fills. For **continuous** data reuse **`Blues`+log**, **`magma`/`inferno`**, or **`coolwarm`**; one scale per axis group; **no `jet`**. For **many classes**, prefer facets or hatch over rainbow fills; if colour is required use **`tab20`** / **`Set2`** + legend. When a new pattern is used twice or more, **record it** in `HYDRAI_NOTEBOOK_PLOT_COLORS.mdc` and here. Full ladder: **§5.10 of this file → “Extending the palette”**.
+If **`k` / `b` / `r` / `m` / `lime`** are exhausted for discrete series: add **`c`**, then hexes from **`figure_aesthetics.json`** in order **`secondary` → `tertiary` → `quinary`** (`#ff7f0e`, `#2ca02c`, `#9467bd`) before ad hoc colours. Use **greyscale `0.15`–`0.85`** for non-semantic support (bands, faint lines). For **extra bar series**, keep **white** faces and vary **`hatch`** (`''`, `'///'`, `'...'`, `'xxx'`, `'||'`, `'--'`) and **`edgecolor`** before coloured fills. For **continuous** data reuse **`Blues`+log**, **`magma`/`inferno`**, or **`coolwarm`**; one scale per axis group; **no `jet`**. For **many classes**, prefer facets or hatch over rainbow fills; if colour is required use **`tab20`** / **`Set2`** + legend. When a new pattern is used twice or more, **record it** in `PLUGFLOWML_NOTEBOOK_PLOT_COLORS.mdc` and here. Full ladder: **§5.10 of this file → “Extending the palette”**.
 
 ---
 
@@ -964,7 +964,7 @@ torch>=2.0                # PyTorch baseline in Main_6
 ```python
 def setup_matplotlib(ax=None):
     """
-    Configure matplotlib with HydrAI project aesthetics.
+    Configure matplotlib with PlugFlowML project aesthetics.
     
     Call at start of notebook to set global style.
     Optionally pass axes to apply per-axis styling.
@@ -1111,7 +1111,7 @@ joblib.dump({'model': model, 'scaler': scaler_X}, 'model_artifact.joblib')
 **Implementation**:
 ```python
 #!/usr/bin/env python3
-"""Run the HydrAI ML pipeline. Run Main_1-3 manually first to generate training data."""
+"""Run the PlugFlowML ML pipeline. Run Main_1-3 manually first to generate training data."""
 import subprocess, sys
 
 NOTEBOOKS = [
@@ -1206,17 +1206,17 @@ for nb in NOTEBOOKS:
   - `src.utils.run_log.start_run_log` overwrites the per-notebook `.txt`; speed-report banners shortened in Main_4 / Main_5.
 
 - **v1.5** (2026-05-14): Cross-notebook plot colour catalog.
-  - New **§5.10** documents colours used in Main_1–Main_6 and shared `src/utils/plot_*.py` helpers; new Cursor rule **`.cursor/rules/HYDRAI_NOTEBOOK_PLOT_COLORS.mdc`** (globs: notebooks + plot helpers).
+  - New **§5.10** documents colours used in Main_1–Main_6 and shared `src/utils/plot_*.py` helpers; new Cursor rule **`.cursor/rules/PLUGFLOWML_NOTEBOOK_PLOT_COLORS.mdc`** (globs: notebooks + plot helpers).
   - **§5.3** NMAE reference-line snippet aligned with **Main_4 / Main_5** (green / blue / red dashed at 5 %, 10 %, 20 %).
 
 - **v1.6** (2026-05-14): Preferred plot palette.
-  - **§5.10** + **`HYDRAI_NOTEBOOK_PLOT_COLORS.mdc`**: owner-preferred accents **`k`, `b`, `r`, `m`, `lime`**; bar charts default to **white** fill with **`///` hatch** (and `''` hatch on a companion series) plus visible edges; new bar work should follow this before ad hoc colours.
+  - **§5.10** + **`PLUGFLOWML_NOTEBOOK_PLOT_COLORS.mdc`**: owner-preferred accents **`k`, `b`, `r`, `m`, `lime`**; bar charts default to **white** fill with **`///` hatch** (and `''` hatch on a companion series) plus visible edges; new bar work should follow this before ad hoc colours.
 
 - **v1.7** (2026-05-14): Palette extension ladder.
-  - **§5.10** + **`HYDRAI_NOTEBOOK_PLOT_COLORS.mdc`**: how to add more discrete colours, bar hatches, continuous colormaps, and high-cardinality categories while staying on-style; cross-linked between the two files.
+  - **§5.10** + **`PLUGFLOWML_NOTEBOOK_PLOT_COLORS.mdc`**: how to add more discrete colours, bar hatches, continuous colormaps, and high-cardinality categories while staying on-style; cross-linked between the two files.
 
 - **v1.8** (2026-05-14): Notebook architecture map.
-  - **§4.4** + **`docs/HYDRAI_PROJECT_CONVENTIONS.md`**: Main_1–Main_6 pipeline, artefacts, and in-notebook section maps for agents and contributors.
+  - **§4.4** + **`docs/PLUGFLOWML_PROJECT_CONVENTIONS.md`**: Main_1–Main_6 pipeline, artefacts, and in-notebook section maps for agents and contributors.
 
 ---
 

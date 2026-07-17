@@ -1,7 +1,7 @@
 """Physics-aware evaluation helpers for full-axial-profile PFR surrogates.
 
 Adapted from the axial-station / exit-plane diagnostics in the NESP MLP reference
-(``main_MLP_PFR_profiles.py``) to HydrAI's ``features_targets_*.pkl`` schema, where
+(``main_MLP_PFR_profiles.py``) to PlugFlowML's ``features_targets_*.pkl`` schema, where
 the axial coordinate is ``relative_position`` (x/L in [0, 1]) rather than
 ``residence_time_s``. Shared by Main_6 (SimpleNN) and reusable by Main_7 (PINN).
 

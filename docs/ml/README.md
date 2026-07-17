@@ -360,11 +360,11 @@ FileNotFoundError: Model not found: models/xgboost_primary.pkl
 If you use the ML Surrogate Models in your research, please cite:
 
 ```
-HydrAI: ML Surrogate Models for Plug Flow Reactor Simulation
+PlugFlowML: ML Surrogate Models for Plug Flow Reactor Simulation
 Nikolas Karefyllidis, PhD
 2025
 ```
 
 ## License
 
-Same as main HydrAI project (MIT License).
+Same as main PlugFlowML project (MIT License).

@@ -1,8 +1,8 @@
-# HydrAI v3.0.0 - Major Updates
+# PlugFlowML v3.0.0 - Major Updates
 
 ## Overview
 
-Version 3.0.0 represents a major restructuring and enhancement of the HydrAI project, introducing ML Surrogate Models, improved organization, and enhanced usability.
+Version 3.0.0 represents a major restructuring and enhancement of the PlugFlowML project, introducing ML Surrogate Models, improved organization, and enhanced usability.
 
 ## Major Changes
 
@@ -80,7 +80,7 @@ Version 3.0.0 represents a major restructuring and enhancement of the HydrAI pro
 - Replaces direct execution of `Main_GeneralizedPFR.py`
 
 **Updated Scripts (`scripts/`):**
-- **`scripts/cluster/`** — `run_main2_slurm_chunk.py` (set `TASK_ID`, `NTASKS`, optional `HYDRAI_ML_CONFIG`); `run_training_mul_CPUs.sh`; `run_training_smoke_gpu_partition.sh` (+ typo duplicates for legacy `sbatch` names).
+- **`scripts/cluster/`** — `run_main2_slurm_chunk.py` (set `TASK_ID`, `NTASKS`, optional `PLUGFLOWML_ML_CONFIG`); `run_training_mul_CPUs.sh`; `run_training_smoke_gpu_partition.sh` (+ typo duplicates for legacy `sbatch` names).
 - **`scripts/local/`** — `run_main2_local_parallel.py` (multi-process Main_2 on one host); `run_main1_local_simulation.sh` (open Main_1 in Jupyter).
 - **`scripts/notebook/`** — `run_simulation.sh` / `run_simulation_ipynb.sh` (same as above).
 - **`scripts/dev/`** — `check_complete_runs.py`, `consolidate_training_data.py`, `monitor_cluster_jobs.sh` (under `scripts/monitor/`), `sbatch_safe.sh`, `clean_completed_runs.py` (optional task archive).

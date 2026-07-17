@@ -1,4 +1,4 @@
-# HydrAI Directory Structure Analysis
+# PlugFlowML Directory Structure Analysis
 ## Complete Project Structure and Compatibility Report
 
 **Date:** February 2026  
@@ -11,7 +11,7 @@
 ## Complete Directory Tree (Core Structure)
 
 ```
-HydrAI/
+PlugFlowML/
 ├── .gitignore                           # Git ignore file
 ├── LICENSE                              # MIT License
 ├── README.md                            # Main documentation
@@ -207,7 +207,7 @@ Each script starts Jupyter and opens `notebooks/Main_1_run_pfr.ipynb`.
 ### **SLURM / cluster (Main_2 sweeps)**
 
 Submit batch scripts from the repo root (see `README.md` § HPC). Override config for smoke tests:
-`export HYDRAI_ML_CONFIG=$PWD/configs/ml/main2_data_generation_config.smoke.json`.  
+`export PLUGFLOWML_ML_CONFIG=$PWD/configs/ml/main2_data_generation_config.smoke.json`.  
 Monitor: `tail -f logs/data_generation_progress_task_0.json` (use the task id of your worker).
 Current `scripts/cluster/*.sh` values are tuned for the University of Cambridge **CSD3** environment; adjust account/partition/QoS/modules for other SLURM clusters.
 
@@ -292,4 +292,4 @@ SIMULATION COMPLETED SUCCESSFULLY!
 
 ---
 
-**Conclusion**: Your HydrAI project directory structure is **perfectly compatible** with the README specifications and fully functional. The system is ready for use with all supported reactants.
+**Conclusion**: Your PlugFlowML project directory structure is **perfectly compatible** with the README specifications and fully functional. The system is ready for use with all supported reactants.

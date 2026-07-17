@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This document defines the **data generation protocol** used to produce HydrAI training datasets for downstream notebooks and surrogate model training.
+This document defines the **data generation protocol** used to produce PlugFlowML training datasets for downstream notebooks and surrogate model training.
 
 It is a process model card (how data is produced), not a trained-model performance card.
 

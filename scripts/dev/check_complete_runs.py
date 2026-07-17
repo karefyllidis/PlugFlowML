@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Check training data: how many simulations ran, how many are needed, how long to finish.
-Run from HydrAI project root:  python scripts/dev/check_complete_runs.py
+Run from PlugFlowML project root:  python scripts/dev/check_complete_runs.py
 """
 
 import csv
@@ -37,7 +37,7 @@ def _load_run_root_values():
 
 def main():
     print("\n" + "=" * 55)
-    print("  HydrAI Training Data Check")
+    print("  PlugFlowML Training Data Check")
     print("=" * 55)
 
     # ---- 1. Read config to know what was intended ----
@@ -281,7 +281,7 @@ def main():
     report_path.parent.mkdir(parents=True, exist_ok=True)
     # Write summary to file
     with open(report_path, "w") as f:
-        f.write(f"HydrAI Training Data Check - {datetime.now().strftime('%Y-%m-%d %H:%M')}\n")
+        f.write(f"PlugFlowML Training Data Check - {datetime.now().strftime('%Y-%m-%d %H:%M')}\n")
         f.write(f"{'=' * 55}\n")
         f.write(f"Reactants: {reactants}\n")
         f.write(f"Method: {method}\n")

@@ -1,5 +1,5 @@
 blank_issues_enabled: true
 contact_links:
   - name: "Course Q&A (Discussions)"
-    url: "https://github.com/karefyllidis/open_HydrAI/discussions"
+    url: "https://github.com/karefyllidis/PlugFlowML/discussions"
     about: "Conceptual questions, adapting the methods to your own field, feedback on the course."

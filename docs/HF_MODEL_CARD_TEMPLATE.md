@@ -1,10 +1,10 @@
-# Hugging Face Model Card Template (HydrAI)
+# Hugging Face Model Card Template (PlugFlowML)
 
 Use this as the `README.md` inside a Hugging Face model repository.
 
 ## Model Description
 
-This model is part of **HydrAI**: a physics-grounded steam-cracking simulation framework with machine-learning surrogates for fast reactor screening and design.
+This model is part of **PlugFlowML**: a physics-grounded steam-cracking simulation framework with machine-learning surrogates for fast reactor screening and design.
 
 - **Model type:** Multi-output regression surrogate
 - **Base method:** *(fill in for the specific release — one of: tree ensemble [RF/GBM/XGBoost/AdaBoost, Main_4/5]; `SimpleNN` PyTorch MLP, full axial profile [Main_6]; `PINNPFR` physics-informed MLP [Main_7]; PySR symbolic equations distilled from a NN teacher [Main_8])*
@@ -29,7 +29,7 @@ This model is part of **HydrAI**: a physics-grounded steam-cracking simulation f
 ## Evaluation
 
 - Report project-specific metrics here (R², RMSE, MAPE, MBE).
-- Example from HydrAI experiments: mean test **R² ~ 0.97–0.99** on key targets (dataset-dependent).
+- Example from PlugFlowML experiments: mean test **R² ~ 0.97–0.99** on key targets (dataset-dependent).
 
 ## Risks and Limitations
 
@@ -48,9 +48,9 @@ Provide minimal inference code and expected input schema in this section.
 
 ## Citation
 
-If you use this model, cite the HydrAI repository:
+If you use this model, cite the PlugFlowML repository:
 
-- <https://github.com/karefyllidis/HydrAI>
+- <https://github.com/karefyllidis/PlugFlowML>
 
 ## Model Maintainer
 

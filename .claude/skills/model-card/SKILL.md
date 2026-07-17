@@ -1,6 +1,6 @@
 ---
 name: model-card
-description: Write or update a HydrAI model card (docs/MODEL_CARD.md and docs/HF_MODEL_CARD_TEMPLATE.md) for a trained surrogate. Use after exporting artifacts from Main_4 through Main_8 (tree ensemble, SimpleNN, PINN, or SR) — architecture, training-data lineage, metrics, intended use, and limitations — before sharing a model or publishing to Hugging Face.
+description: Write or update a PlugFlowML model card (docs/MODEL_CARD.md and docs/HF_MODEL_CARD_TEMPLATE.md) for a trained surrogate. Use after exporting artifacts from Main_4 through Main_8 (tree ensemble, SimpleNN, PINN, or SR) — architecture, training-data lineage, metrics, intended use, and limitations — before sharing a model or publishing to Hugging Face.
 license: MIT
 ---
 
@@ -31,7 +31,7 @@ Cross-reference instead of duplicating:
 - Data-generation protocol → `docs/TRAINING_DATA_GENERATION_PROTOCOL_MODEL_CARD.md`
 - Column-level schema of the training data itself → a dataset card for `features_targets_*.pkl`, not this model card.
 
-## HydrAI-specific pitfalls
+## PlugFlowML-specific pitfalls
 
 - `docs/MODEL_CARD.md` currently documents only Main_4/Main_5 (tree ensembles). Before assuming it already covers a model, check — it may have gone stale relative to Main_6 (SimpleNN), Main_7 (PINN), or Main_8 (SR), which have no card sections yet.
 - Don't restate dataset columns/units/provenance here — that's a dataset-card's job, not a model card's.

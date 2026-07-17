@@ -1,4 +1,4 @@
-# HydrAI — Claude Code Guidelines
+# PlugFlowML — Claude Code Guidelines
 
 ## Project overview
 
@@ -118,5 +118,5 @@ Sections use the `# ══ N. TITLE ══` banner pattern. Keep step numbers pa
 
 - `nbstripout` is registered as a git filter via `.gitattributes`. Cell outputs are stripped before commit.
 - Model artefacts are overwritten each run (stable stems); see `docs/STRUCTURE.md` §10.2.
-- Full project conventions: `docs/HYDRAI_PROJECT_CONVENTIONS.md`.
+- Full project conventions: `docs/PLUGFLOWML_PROJECT_CONVENTIONS.md`.
 - Architecture detail: `docs/STRUCTURE.md`, `docs/DIRECTORY_STRUCTURE.md`.

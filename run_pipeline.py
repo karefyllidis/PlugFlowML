@@ -1,4 +1,4 @@
-"""Run HydrAI workflow"""
+"""Run PlugFlowML workflow"""
 import subprocess, sys
 
 #subprocess.run([sys.executable, "-m", "nbconvert", "--to", "notebook", "--execute", "notebooks/Main_1_data_acquisition.ipynb"], check=True)

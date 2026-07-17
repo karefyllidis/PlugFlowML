@@ -1,4 +1,4 @@
-# HydrAI Reports
+# PlugFlowML Reports
 
 Use this folder for concise run summaries and important findings from the `Main_*`
 notebooks. Keep generated figures in `outputs/figures/`, trained artifacts in

@@ -80,7 +80,7 @@ def start_run_log(
     log_file = open(log_path, "w", encoding="utf-8", buffering=1)
     t0 = datetime.now().isoformat(timespec="seconds")
     py = sys.version.split()[0]
-    log_file.write(f"# HydrAI | {notebook_name} | {t0} | Python {py}\n")
+    log_file.write(f"# PlugFlowML | {notebook_name} | {t0} | Python {py}\n")
     log_file.flush()
 
     _ORIGINAL_STDOUT = sys.stdout

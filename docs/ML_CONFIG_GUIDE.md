@@ -38,7 +38,7 @@ All ML scripts now use JSON configuration files instead of command-line argument
 python src/ml/data_generation.py configs/ml/main2_data_generation_config.json
 ```
 
-**Optional — SLURM chunk runner** (`scripts/cluster/run_main2_slurm_chunk.py`): set `HYDRAI_ML_CONFIG` to a JSON path (absolute or relative to repo root) to override the default `configs/ml/main2_data_generation_config.json`. For a minimal test workload use `configs/ml/main2_data_generation_config.smoke.json`. Each task writes live status to `logs/data_generation_progress_task_<TASK_ID>.json`. See `README.md` (HPC / SLURM).
+**Optional — SLURM chunk runner** (`scripts/cluster/run_main2_slurm_chunk.py`): set `PLUGFLOWML_ML_CONFIG` to a JSON path (absolute or relative to repo root) to override the default `configs/ml/main2_data_generation_config.json`. For a minimal test workload use `configs/ml/main2_data_generation_config.smoke.json`. Each task writes live status to `logs/data_generation_progress_task_<TASK_ID>.json`. See `README.md` (HPC / SLURM).
 
 **Post-run consolidation (parallel runs):**
 

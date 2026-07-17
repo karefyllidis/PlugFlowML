@@ -6,7 +6,7 @@
 #   sbatch scripts/cluster/run_training_smoke_gpu_partition.sh
 #
 # Or get an interactive allocation first, then from repo root:
-#   salloc -J hydrai-smoke -A YOUR-SLURM-ACCOUNT-GPU -p ampere \
+#   salloc -J plugflowml-smoke -A YOUR-SLURM-ACCOUNT-GPU -p ampere \
 #     --nodes=1 --ntasks=32 --cpus-per-task=1 --gres=gpu:1 \
 #     --time=00:10:00 --qos=INTR
 #   ./scripts/cluster/run_training_smoke_gpu_partition.sh
@@ -20,7 +20,7 @@
 #
 # Production CPU runs: scripts/cluster/run_training_mul_CPUs.sh
 
-#SBATCH -J hydrai-smoke
+#SBATCH -J plugflowml-smoke
 #SBATCH -A YOUR-SLURM-ACCOUNT-GPU
 #SBATCH -p ampere
 # CSD3 ampere: max 32 CPUs per 1 GPU. Use 32 Slurm tasks × 1 CPU so
@@ -39,27 +39,27 @@ set -euo pipefail
 workdir="${SLURM_SUBMIT_DIR:-.}"
 cd "$workdir" || exit 1
 run_root="$(pwd -P)"
-export HYDRAI_RUN_ROOT="$run_root"
+export PLUGFLOWML_RUN_ROOT="$run_root"
 
-export HYDRAI_ML_CONFIG="${workdir}/configs/ml/main2_data_generation_config.smoke.json"
+export PLUGFLOWML_ML_CONFIG="${workdir}/configs/ml/main2_data_generation_config.smoke.json"
 
 # Must match Slurm task count (SLURM_NTASKS), not CPUs on one pseudo-task.
-# Override: export HYDRAI_NTASKS=16
-numtasks=${HYDRAI_NTASKS:-${SLURM_NTASKS:-1}}
+# Override: export PLUGFLOWML_NTASKS=16
+numtasks=${PLUGFLOWML_NTASKS:-${SLURM_NTASKS:-1}}
 
 module load rhel7/default-ccl 2>/dev/null || true
 
 # Safety guard: hard-stop srun if it hangs, so nodes are released quickly.
-# Override if needed, e.g. export HYDRAI_SRUN_TIMEOUT=600s
-SRUN_TIMEOUT="${HYDRAI_SRUN_TIMEOUT:-570s}"  # 9m30s for a 10m smoke job
+# Override if needed, e.g. export PLUGFLOWML_SRUN_TIMEOUT=600s
+SRUN_TIMEOUT="${PLUGFLOWML_SRUN_TIMEOUT:-570s}"  # 9m30s for a 10m smoke job
 
 # ---------------------------------------------------------------------------
-# Python interpreter: respect HYDRAI_PYTHON if set, otherwise use the python3
+# Python interpreter: respect PLUGFLOWML_PYTHON if set, otherwise use the python3
 # that is active in the current environment (conda/venv/system).
 # To pin a specific interpreter, set before submitting:
-#   export HYDRAI_PYTHON=/path/to/your/python3
+#   export PLUGFLOWML_PYTHON=/path/to/your/python3
 # ---------------------------------------------------------------------------
-PYTHON="${HYDRAI_PYTHON:-$(which python3)}"
+PYTHON="${PLUGFLOWML_PYTHON:-$(which python3)}"
 echo "Python: $PYTHON  ($(${PYTHON} --version 2>&1))"
 
 echo "JobID: ${SLURM_JOB_ID:-local}"
@@ -68,7 +68,7 @@ echo "Host: $(hostname)"
 echo "Dir:  ${run_root}"
 echo "Tasks: $numtasks"
 echo "SLURM_CPUS_ON_NODE=${SLURM_CPUS_ON_NODE:-unknown}"
-echo "HYDRAI_ML_CONFIG=$HYDRAI_ML_CONFIG"
+echo "PLUGFLOWML_ML_CONFIG=$PLUGFLOWML_ML_CONFIG"
 echo "Per-task progress: logs/data_generation_progress_task_*.json"
 echo ""
 
@@ -79,7 +79,7 @@ mkdir -p logs
   echo "submit_dir=${SLURM_SUBMIT_DIR:-.}"
   echo "run_root=${run_root}"
   echo "python=${PYTHON}"
-  echo "config=${HYDRAI_ML_CONFIG}"
+  echo "config=${PLUGFLOWML_ML_CONFIG}"
   echo "SLURM_NTASKS=${SLURM_NTASKS:-}"
   echo "SLURM_CPUS_ON_NODE=${SLURM_CPUS_ON_NODE:-}"
   echo "SLURM_CPUS_PER_TASK=${SLURM_CPUS_PER_TASK:-}"
@@ -91,8 +91,8 @@ if [[ -n "${SLURM_JOB_ID:-}" ]]; then
   if ! timeout "$SRUN_TIMEOUT" srun --ntasks="$numtasks" bash -c "
     export TASK_ID=\$SLURM_PROCID
     export NTASKS=\$SLURM_NTASKS
-    export HYDRAI_RUN_ROOT='${HYDRAI_RUN_ROOT}'
-    export HYDRAI_ML_CONFIG='${HYDRAI_ML_CONFIG}'
+    export PLUGFLOWML_RUN_ROOT='${PLUGFLOWML_RUN_ROOT}'
+    export PLUGFLOWML_ML_CONFIG='${PLUGFLOWML_ML_CONFIG}'
     ${PYTHON} scripts/cluster/run_main2_slurm_chunk.py >> logs/main2_task_\${SLURM_PROCID}.log 2>&1
   " 2>> logs/srun_step.err; then
     srun_ec=$?

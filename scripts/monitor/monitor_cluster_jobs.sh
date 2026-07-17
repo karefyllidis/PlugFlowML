@@ -1,5 +1,5 @@
 #!/bin/bash
-# Live snapshot of HydrAI SLURM data-generation cluster jobs (Main_2 chunks).
+# Live snapshot of PlugFlowML SLURM data-generation cluster jobs (Main_2 chunks).
 # Run from repo root at any time during or after a job:
 #   bash scripts/monitor/monitor_cluster_jobs.sh
 #
@@ -13,7 +13,7 @@ SEP="============================================================"
 # ── Root and config ──────────────────────────────────────────
 echo ""
 echo "$SEP"
-echo "  HydrAI cluster job monitor  ($(date))"
+echo "  PlugFlowML cluster job monitor  ($(date))"
 echo "$SEP"
 
 if [[ -f logs/RUN_ROOT.txt ]]; then

@@ -18,7 +18,7 @@ Usage (from SLURM script):
   python scripts/cluster/run_main2_slurm_chunk.py
 
 Optional:
-  export HYDRAI_ML_CONFIG=/path/to/smoke_or_custom.json
+  export PLUGFLOWML_ML_CONFIG=/path/to/smoke_or_custom.json
 Progress file (updated after each simulation for this task):
   logs/data_generation_progress_task_<TASK_ID>.json
 """
@@ -117,7 +117,7 @@ def main():
     task_id = int(os.environ.get("TASK_ID", "0"))
     ntasks = int(os.environ.get("NTASKS", "1"))
 
-    cfg_override = (os.environ.get("HYDRAI_ML_CONFIG") or "").strip()
+    cfg_override = (os.environ.get("PLUGFLOWML_ML_CONFIG") or "").strip()
     if cfg_override:
         config_file = Path(cfg_override)
         if not config_file.is_absolute():

@@ -1,4 +1,4 @@
-# HydrAI Course Style Guide
+# PlugFlowML Course Style Guide
 
 Authoring rules for the tutorial layer inside `notebooks/Main_1–10`. Every
 lesson must follow these templates so the course reads as one voice.
@@ -51,9 +51,9 @@ Replace the existing title cell with:
 ```markdown
 # Lesson N — <Course title>
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/karefyllidis/open_HydrAI/blob/main/notebooks/<FILENAME>.ipynb)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/karefyllidis/PlugFlowML/blob/main/notebooks/<FILENAME>.ipynb)
 
-*Part of the [HydrAI course](../README.md): machine-learning surrogates for physical simulation, taught on a chemical reactor.*
+*Part of the [PlugFlowML course](../README.md): machine-learning surrogates for physical simulation, taught on a chemical reactor.*
 
 **Mode:** hands-on (Colab-ready) · **Runtime:** ~X min on free Colab · **Builds on:** Lesson M
 
@@ -89,10 +89,10 @@ from pathlib import Path
 if "google.colab" in sys.modules:
     if Path.cwd().name != "notebooks":            # fresh Colab VM
         subprocess.run(["git", "clone", "--depth", "1",
-                        "https://github.com/karefyllidis/open_HydrAI.git"], check=True)
-        %cd open_HydrAI/notebooks
+                        "https://github.com/karefyllidis/PlugFlowML.git"], check=True)
+        %cd PlugFlowML/notebooks
     %pip install -q <LESSON EXTRAS>               # omit line if none
-    _REL = "https://github.com/karefyllidis/open_HydrAI/releases/download/sample-data-v1"
+    _REL = "https://github.com/karefyllidis/PlugFlowML/releases/download/sample-data-v1"
     import urllib.request, zipfile
     for _f, _d in [<ASSET LIST>]:                 # e.g. ("features_targets_training_data_complete_sample150.pkl", "../data/processed")
         _p = Path(_d); _p.mkdir(parents=True, exist_ok=True)
@@ -169,7 +169,7 @@ never mutate state that downstream pipeline cells rely on.
 4. Exercise/solution/concept cells must not require packages outside the
    lesson's §2 extras column.
 5. Respect project data rules (mass fractions only; run-level splits) and
-   plotting rules (`docs/HYDRAI_PROJECT_CONVENTIONS.md`, CLAUDE.md) in any code
+   plotting rules (`docs/PLUGFLOWML_PROJECT_CONVENTIONS.md`, CLAUDE.md) in any code
    you add — including exercise solutions.
 6. Notebooks are edited cell-by-cell (NotebookEdit); nbstripout keeps outputs
    out of git for hands-on lessons — do not fight it.

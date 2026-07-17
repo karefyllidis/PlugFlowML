@@ -1,6 +1,6 @@
-# Model card: Species separation, grouping, and lumping (HydrAI)
+# Model card: Species separation, grouping, and lumping (PlugFlowML)
 
-This document describes the **methodology** used in HydrAI to reduce hundreds of tracked species to a smaller set of **mass-fraction-based** features and targets for ML. It is **not** a surrogate model card for a trained predictor; it documents the **preprocessing taxonomy and aggregation rules**.
+This document describes the **methodology** used in PlugFlowML to reduce hundreds of tracked species to a smaller set of **mass-fraction-based** features and targets for ML. It is **not** a surrogate model card for a trained predictor; it documents the **preprocessing taxonomy and aggregation rules**.
 
 **Source of truth (implementation):** `notebooks/Main_3_data_exploration_feature_engineering.ipynb` (functions `_extract_carbon_count`, `_classify_species_chemistry`, `organize_data_columns`, `_build_lumped_species_columns`, export merge).
 
@@ -146,4 +146,4 @@ where each \(Y_k\) is a species **mass fraction**. This is appropriate because m
 
 ## Maintainer
 
-HydrAI project maintainers; keep this card synchronized when editing `_classify_species_chemistry` or `_extract_carbon_count` in Main_3.
+PlugFlowML project maintainers; keep this card synchronized when editing `_classify_species_chemistry` or `_extract_carbon_count` in Main_3.

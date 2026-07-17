@@ -189,7 +189,7 @@ class MLModelTrainer:
         """
         Train a neural network surrogate.
 
-        The previous TensorFlow/Keras path was removed. HydrAI will standardize on PyTorch
+        The previous TensorFlow/Keras path was removed. PlugFlowML will standardize on PyTorch
         for deep models; wire torch.nn + multi-output regression here when ready.
         """
         _ = (X_train, X_test, y_train, y_test, target_names, target_type, epochs, batch_size)

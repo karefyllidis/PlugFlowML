@@ -1,4 +1,4 @@
-# Contributing to HydrAI
+# Contributing to PlugFlowML
 
 Thanks for helping make this course better. Contributions of all sizes are
 welcome — fixing a typo in a concept box counts.
@@ -18,7 +18,7 @@ welcome — fixing a typo in a concept box counts.
    on the sample dataset with the shipped configs, on free Colab.
 2. **Style is documented, not debated.** Course cells follow
    `docs/COURSE_STYLE_GUIDE.md`; code follows
-   `docs/HYDRAI_PROJECT_CONVENTIONS.md` (mass fractions only, run-level
+   `docs/PLUGFLOWML_PROJECT_CONVENTIONS.md` (mass fractions only, run-level
    splits, plotting rules, config-driven numbers).
 3. **Notebook hygiene.** `nbstripout` is registered via `.gitattributes`
    (`nbstripout --install` after cloning if you commit notebooks). Lessons 1–2
@@ -30,8 +30,8 @@ welcome — fixing a typo in a concept box counts.
 ## Dev setup
 
 ```bash
-git clone https://github.com/karefyllidis/open_HydrAI.git
-cd open_HydrAI
+git clone https://github.com/karefyllidis/PlugFlowML.git
+cd PlugFlowML
 pip install -r requirements.txt
 nbstripout --install   # respect the .gitattributes filter
 ```
@@ -45,6 +45,6 @@ jupyter nbconvert --to notebook --execute notebooks/Main_4_train_and_evaluate_tr
 
 ## Questions
 
-Use [GitHub Discussions](https://github.com/karefyllidis/open_HydrAI/discussions)
+Use [GitHub Discussions](https://github.com/karefyllidis/PlugFlowML/discussions)
 for anything that isn't a bug: conceptual questions about the methods,
 adapting the pipeline to your own simulator, course feedback.

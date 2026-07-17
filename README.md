@@ -1,9 +1,9 @@
-# HydrAI — ML surrogates for physical simulation, taught on a real reactor
+# PlugFlowML — ML surrogates for physical simulation, taught on a real reactor
 
 **A free, 10-lesson course for graduate students in any simulation-heavy field.** You'll take an expensive physics simulator and learn, hands-on, how to replace it with machine-learning surrogates: tree ensembles → neural networks → physics-informed neural networks → symbolic-regression equations → Bayesian optimisation over the result. The worked example is a chemical plug-flow reactor, but every method is taught as a transferable tool — if your field runs stiff ODEs, CFD, climate kernels, or battery models, this pipeline maps onto it.
 
 [![Python](https://img.shields.io/badge/Python-3.8%2B-blue?logo=python&logoColor=white)](https://www.python.org/)
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/karefyllidis/open_HydrAI/blob/main/notebooks/Main_3_data_exploration_feature_engineering.ipynb)
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/karefyllidis/PlugFlowML/blob/main/notebooks/Main_3_data_exploration_feature_engineering.ipynb)
 [![Cantera](https://img.shields.io/badge/Cantera-3.2.0%2B-green)](https://cantera.org/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.0%2B-orange?logo=pytorch&logoColor=white)](https://pytorch.org/)
 [![scikit-learn](https://img.shields.io/badge/scikit--learn-1.3%2B-orange?logo=scikit-learn&logoColor=white)](https://scikit-learn.org/)
@@ -16,13 +16,13 @@
 
 **No install needed.** Every hands-on lesson runs on free Google Colab: open it, run the bootstrap cell (it fetches the code and a 150-run sample dataset), and you're working within a minute.
 
-👉 **[Open Lesson 3 in Colab](https://colab.research.google.com/github/karefyllidis/open_HydrAI/blob/main/notebooks/Main_3_data_exploration_feature_engineering.ipynb)** — the first hands-on lesson.
+👉 **[Open Lesson 3 in Colab](https://colab.research.google.com/github/karefyllidis/PlugFlowML/blob/main/notebooks/Main_3_data_exploration_feature_engineering.ipynb)** — the first hands-on lesson.
 
 Or run locally:
 
 ```bash
-git clone https://github.com/karefyllidis/open_HydrAI.git
-cd open_HydrAI
+git clone https://github.com/karefyllidis/PlugFlowML.git
+cd PlugFlowML
 pip install -r requirements.txt
 jupyter lab notebooks/
 ```
@@ -70,7 +70,7 @@ Steam cracking of n-hexane in a plug-flow reactor, simulated with [Cantera](http
 | Targets | 9 state/thermo variables + 9 lumped species mass fractions |
 | Split | 80/20 at run level (no profile leakage) |
 
-Distributed as a [GitHub Release](https://github.com/karefyllidis/open_HydrAI/releases) asset; full details in [docs/SAMPLE_DATASET_CARD.md](docs/SAMPLE_DATASET_CARD.md). The research campaign behind the original project used the same domain at 46 000 runs — the lessons' methods are identical, only budgets differ.
+Distributed as a [GitHub Release](https://github.com/karefyllidis/PlugFlowML/releases) asset; full details in [docs/SAMPLE_DATASET_CARD.md](docs/SAMPLE_DATASET_CARD.md). The research campaign behind the original project used the same domain at 46 000 runs — the lessons' methods are identical, only budgets differ.
 
 ## What's under the hood
 
@@ -83,7 +83,7 @@ The course runs on a research-grade pipeline you can reuse directly:
 - **Cantera PFR wrapper** ([src/cantera/pfr_simulator.py](src/cantera/pfr_simulator.py)) and SLURM-ready parallel data generation ([scripts/](scripts/)) for building your own campaigns.
 
 ```
-open_HydrAI/
+PlugFlowML/
 ├── notebooks/          # the course: Main_1 → Main_10
 ├── src/                # cantera wrapper, models, physics residuals, ml utils
 ├── configs/            # per-lesson JSON configs (Colab-scale defaults)
@@ -94,7 +94,7 @@ open_HydrAI/
 └── docs/               # guides, model cards, course style guide
 ```
 
-Full tree: [docs/STRUCTURE.md](docs/STRUCTURE.md) · conventions: [docs/HYDRAI_PROJECT_CONVENTIONS.md](docs/HYDRAI_PROJECT_CONVENTIONS.md) · config keys: [docs/ML_CONFIG_GUIDE.md](docs/ML_CONFIG_GUIDE.md)
+Full tree: [docs/STRUCTURE.md](docs/STRUCTURE.md) · conventions: [docs/PLUGFLOWML_PROJECT_CONVENTIONS.md](docs/PLUGFLOWML_PROJECT_CONVENTIONS.md) · config keys: [docs/ML_CONFIG_GUIDE.md](docs/ML_CONFIG_GUIDE.md)
 
 ## Adapting this to your own system
 
@@ -102,8 +102,8 @@ The course is designed to be forked. To point the pipeline at your own simulator
 
 ## Questions, bugs, contributions
 
-- **Questions** → [GitHub Discussions](https://github.com/karefyllidis/open_HydrAI/discussions)
-- **Something broken in a lesson** → [open an issue](https://github.com/karefyllidis/open_HydrAI/issues/new/choose)
+- **Questions** → [GitHub Discussions](https://github.com/karefyllidis/PlugFlowML/discussions)
+- **Something broken in a lesson** → [open an issue](https://github.com/karefyllidis/PlugFlowML/issues/new/choose)
 - **Fixes and improvements welcome** → see [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ## Citing

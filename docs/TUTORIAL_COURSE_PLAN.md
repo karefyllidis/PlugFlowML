@@ -1,7 +1,7 @@
-# HydrAI → Open Tutorial Course — Transformation Plan
+# PlugFlowML → Open Tutorial Course — Transformation Plan
 
 Agreed 2026-07-17 (interview with repo owner). This document is the blueprint for
-repositioning open_HydrAI as a 10-lesson open-source course:
+repositioning PlugFlowML as a 10-lesson open-source course:
 **"ML surrogates for physical simulation"** — taught for a generic *ML-for-science*
 graduate audience, with the plug-flow reactor as the worked example rather than
 the subject.
@@ -20,7 +20,7 @@ the subject.
 | Mechanism | The 153-species kinetic mechanism **cannot be shared**. `Main_1` and `Main_2` become **read-along lessons** with committed, pre-executed outputs. Hands-on work starts at `Main_3`. |
 | Sensitivity line | Only the mechanism YAML is sensitive. Simulated (derived) data, heat-flux/reactant configs, parameter ranges, and HPC docs are all publishable. |
 | Runtime | **Colab-first**: every notebook gets an "Open in Colab" badge and is tested on free-tier Colab. Config defaults sized so each hands-on lesson finishes in minutes, not hours. |
-| Positioning | Same repo (`open_HydrAI`), **course-first README**: lead with the 10-lesson course; research framing and authorship retained below. |
+| Positioning | Same repo (`PlugFlowML`), **course-first README**: lead with the 10-lesson course; research framing and authorship retained below. |
 | Citation | `CITATION.cff` + Zenodo-archived release (DOI). No JOSE paper for now. |
 | Community | Light infrastructure: issue templates ("bug in lesson N" / "question"), GitHub Discussions for Q&A, short `CONTRIBUTING.md` welcoming typo/exercise fixes. |
 
@@ -62,7 +62,7 @@ hands-on track is self-sufficient from there.
    - Write a dataset card (columns, units, provenance, sampling, license) — the
      `dataset-card` skill exists for this.
 2. **Packaging for Colab**
-   - Add minimal `pyproject.toml` so `pip install git+https://github.com/karefyllidis/open_HydrAI`
+   - Add minimal `pyproject.toml` so `pip install git+https://github.com/karefyllidis/PlugFlowML`
      provides `src/` imports; bootstrap cell = pip install + data download + config load.
 3. **nbstripout exemption**
    - `.gitattributes`: unset the filter for `Main_1`/`Main_2` so their executed

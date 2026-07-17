@@ -1,6 +1,6 @@
 # Sample Dataset Card — `sample150`
 
-The dataset every hands-on lesson (3–10) of the HydrAI course uses. Small
+The dataset every hands-on lesson (3–10) of the PlugFlowML course uses. Small
 enough to download in seconds, real enough to teach honest surrogate modelling.
 
 ## Files (GitHub Release `sample-data-v1`)
