@@ -8,7 +8,7 @@ ML surrogate models for plug flow reactor (PFR) simulations. Cantera-generated d
 
 ## Course rules
 
-- Lessons 1–2 (Main_1/Main_2) are **read-along**: the kinetic mechanism is proprietary and never committed/published; their executed outputs ARE committed (`.gitattributes` exempts them from nbstripout). All other notebooks stay output-stripped.
+- All lessons are hands-on, including Main_1/Main_2: they run a real Cantera simulation live using `mechanisms/naptha_example.yaml`, an openly-licensed, reduced pyrolysis mechanism built for this course (not the research-grade mechanism used to generate the sample150 dataset — that one stays proprietary/local-only, see `configs/simulation/main1_reactant_database.json`'s `n-hexane-proprietary` entry). Never reference that proprietary entry or other unavailable reactants (ethane/propane/naphtha) in student-facing notebook/doc content.
 - Hands-on lessons (3–10) must run top-to-bottom on free Colab against the **sample150 dataset** (GitHub Release `sample-data-v1`; provenance: `configs/ml/main2_sample_dataset_config.json`, card: `docs/SAMPLE_DATASET_CARD.md`).
 - Config defaults are Colab-scale; research-scale values live in `_comment` keys beside each knob — don't silently re-inflate them.
 - Data resolution is pinned: Main_3 via `use_run_stamp`/`run_stamp_sample`, Main_4–10 via `processed_stem` (null = glob-latest fallback).

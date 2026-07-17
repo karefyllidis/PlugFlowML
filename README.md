@@ -33,8 +33,8 @@ jupyter lab notebooks/
 
 | Lesson | Notebook | You learn | Mode |
 |---|---|---|---|
-| 1 | [Main_1](notebooks/Main_1_run_pfr.ipynb) | Simulation as a data source — why stiff ODE ground truth is expensive | read-along |
-| 2 | [Main_2](notebooks/Main_2_generate_training_data.ipynb) | Design of experiments: Latin-Hypercube sampling, parallel batch generation | read-along |
+| 1 | [Main_1](notebooks/Main_1_run_pfr.ipynb) | Simulation as a data source — why stiff ODE ground truth is expensive | **hands-on** |
+| 2 | [Main_2](notebooks/Main_2_generate_training_data.ipynb) | Design of experiments: Latin-Hypercube sampling, parallel batch generation | **hands-on** |
 | 3 | [Main_3](notebooks/Main_3_data_exploration_feature_engineering.ipynb) | EDA on simulation data; domain-driven dimensionality reduction (species lumping) | **hands-on** |
 | 4 | [Main_4](notebooks/Main_4_train_and_evaluate_tree_models_IO.ipynb) | Tree-ensemble baselines and honest per-target metrics | **hands-on** |
 | 5 | [Main_5](notebooks/Main_5_train_evaluate_tune_tree_model_evolution.ipynb) | Bayesian hyperparameter tuning; predicting full spatial profiles | **hands-on** |
@@ -46,7 +46,7 @@ jupyter lab notebooks/
 
 Each lesson opens with learning objectives, teaches concepts in short boxes at the point of use, and ends sections with exercises (solutions included, collapsed). Default configs are sized for free Colab — minutes per lesson, not hours; every budget is a config knob you can turn up (`configs/ml/`, research-scale values documented inline).
 
-**Why are Lessons 1–2 read-along?** They drive the simulator through a detailed kinetic mechanism (153 species / 2 146 reactions) that we cannot redistribute. Their executed outputs are committed, so you can follow every step; if you have your own Cantera mechanism, they run end-to-end. Everything from Lesson 3 onward is fully hands-on via the sample dataset.
+Every lesson is fully hands-on — Lessons 1–2 run a real Cantera simulation live, using an openly-licensed n-hexane pyrolysis mechanism ([mechanisms/naptha_example.yaml](mechanisms/naptha_example.yaml)) built for this course; everything from Lesson 3 onward works off the sample dataset instead.
 
 ## Who this is for
 
@@ -71,6 +71,8 @@ Steam cracking of n-hexane in a plug-flow reactor, simulated with [Cantera](http
 | Split | 80/20 at run level (no profile leakage) |
 
 Distributed as a [GitHub Release](https://github.com/karefyllidis/PlugFlowML/releases) asset; full details in [docs/SAMPLE_DATASET_CARD.md](docs/SAMPLE_DATASET_CARD.md). The research campaign behind the original project used the same domain at 46 000 runs — the lessons' methods are identical, only budgets differ.
+
+*Note: this dataset was generated with a research-grade mechanism, separate from the smaller open mechanism Lessons 1–2 run live — see [mechanisms/naptha_example.yaml](mechanisms/naptha_example.yaml) for that one's own provenance.*
 
 ## What's under the hood
 

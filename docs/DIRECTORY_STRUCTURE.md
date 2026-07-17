@@ -170,11 +170,10 @@ See **Version control** in `README.md` and root `.gitignore` for the authoritati
 | **ML Models** | `src/ml/` modules | Present | OK |
 | **Aesthetics** | `configs/style/figure_aesthetics.json` | Present | OK |
 
-### **All 4 Reactants Supported**
-- **Ethane** - 35 species, 135 reactions
-- **Propane** - 53 species, 325 reactions  
-- **Naphtha** - 1,951 species, 82,557 reactions
-- **n-Hexane** - 153 species, 2,146 reactions
+### **Reactants configured** (`configs/simulation/main1_reactant_database.json`)
+- **n-hexane** (course default) - 113 species, 300 reactions (`mechanisms/naptha_example.yaml`, openly-licensed, committed)
+- **n-hexane-proprietary** (local-only, not for redistribution) - 153 species, 2,146 reactions
+- Ethane, Propane, Naphtha entries also exist but use proprietary mechanism files (git-ignored, local-only)
 
 ---
 

@@ -22,8 +22,8 @@ Companion blueprint: `docs/TUTORIAL_COURSE_PLAN.md`.
 
 | Lesson | Notebook | Course title | Mode | Colab extras (`%pip install -q …`) | Release assets to download |
 |---|---|---|---|---|---|
-| 1 | Main_1 | Simulation as a data source | read-along | — | — |
-| 2 | Main_2 | Design of experiments & batch data generation | read-along | — | — |
+| 1 | Main_1 | Simulation as a data source | hands-on | `cantera` | — |
+| 2 | Main_2 | Design of experiments & batch data generation | hands-on | `cantera` | — |
 | 3 | Main_3 | Exploring simulation data & feature engineering | hands-on | — | raw sample → `data/training/` |
 | 4 | Main_4 | Tree-ensemble baselines | hands-on | `xgboost scikit-optimize` | processed sample → `data/processed/` |
 | 5 | Main_5 | Hyperparameter tuning & full-profile prediction | hands-on | `xgboost scikit-optimize` | processed sample |
@@ -33,14 +33,19 @@ Companion blueprint: `docs/TUTORIAL_COURSE_PLAN.md`.
 | 9 | Main_9 | Validating surrogates against ground truth | hands-on | — | processed sample + pretrained models zip |
 | 10 | Main_10 | Bayesian optimisation over a surrogate | hands-on | `optuna cantera` | processed sample + pretrained models zip |
 
-- Read-along lessons (1–2) require the proprietary kinetic mechanism, which is
-  **not redistributable**. They ship with executed outputs committed
-  (`.gitattributes` exempts them from nbstripout) and open with the read-along
-  banner (§3.2) instead of a bootstrap cell.
-- Any section that needs the mechanism at runtime (e.g. Main_10's Cantera
-  validation) must be guarded: check the mechanism file exists, else print a
-  clear "read-along only — mechanism not available" message and skip without
-  raising errors.
+- All ten lessons are hands-on. Lessons 1–2 run a real Cantera simulation live
+  using `mechanisms/naptha_example.yaml`, an openly-licensed, reduced pyrolysis
+  mechanism built for this course — never mention in student-facing content
+  that a different (proprietary, unavailable) mechanism generated the sample
+  dataset used from Lesson 3 onward; that distinction belongs in maintainer
+  docs (README's sample-dataset footnote, CLAUDE.md), not in a lesson.
+- The **read-along template** below (§3.1 variant, §3.2 banner) is kept for
+  future use if a lesson ever needs to present unshareable data/results again
+  — it is not currently used by any lesson.
+- Any section that needs a mechanism file at runtime (e.g. Main_10's Cantera
+  validation) should still guard on the file's existence and skip gracefully
+  rather than raising, since a shallow/partial clone could still be missing
+  it — see Main_10 §6b for the pattern.
 
 ## 3. Cell templates
 

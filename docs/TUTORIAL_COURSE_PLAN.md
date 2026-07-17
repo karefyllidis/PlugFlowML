@@ -17,7 +17,7 @@ the subject.
 | Format | Enrich `Main_1–10` **in place** — no parallel Tutorial_N set. Single source of truth. |
 | Pedagogy | Per notebook: learning objectives + prerequisites header, "concept boxes" (short theory markdown at point of use), inline exercises with solutions. No checkpoint quizzes or capstones (for now). |
 | Data access | Ship a small **sample dataset as a GitHub Release asset**; notebooks download it in a bootstrap cell. Full 23 GB dataset stays local/unpublished. |
-| Mechanism | The 153-species kinetic mechanism **cannot be shared**. `Main_1` and `Main_2` become **read-along lessons** with committed, pre-executed outputs. Hands-on work starts at `Main_3`. |
+| Mechanism | The 153-species kinetic mechanism **cannot be shared**. `Main_1` and `Main_2` become **read-along lessons** with committed, pre-executed outputs. Hands-on work starts at `Main_3`. *(Superseded — see §8: an open substitute mechanism was found, Main_1/2 are hands-on too now.)* |
 | Sensitivity line | Only the mechanism YAML is sensitive. Simulated (derived) data, heat-flux/reactant configs, parameter ranges, and HPC docs are all publishable. |
 | Runtime | **Colab-first**: every notebook gets an "Open in Colab" badge and is tested on free-tier Colab. Config defaults sized so each hands-on lesson finishes in minutes, not hours. |
 | Positioning | Same repo (`PlugFlowML`), **course-first README**: lead with the 10-lesson course; research framing and authorship retained below. |
@@ -33,8 +33,8 @@ Each lesson keeps its `Main_N` identity but gains a course title stressing the
 
 | Lesson | Notebook | Method taught | Mode |
 |---|---|---|---|
-| 1 | Main_1 | Physics simulation as data source (stiff ODE ground truth) | read-along |
-| 2 | Main_2 | Design of experiments: LHS sampling, batch data generation | read-along |
+| 1 | Main_1 | Physics simulation as data source (stiff ODE ground truth) | hands-on *(was read-along, see §8)* |
+| 2 | Main_2 | Design of experiments: LHS sampling, batch data generation | hands-on *(was read-along, see §8)* |
 | 3 | Main_3 | EDA + feature engineering for simulation data; dimensionality lumping | hands-on |
 | 4 | Main_4 | Tree-ensemble baselines; honest metrics | hands-on |
 | 5 | Main_5 | Hyperparameter tuning; predicting full spatial profiles | hands-on |
@@ -139,3 +139,29 @@ Decisions that changed from §3–5 during implementation:
 - **Sync burden**: exercises live inside the pipeline notebooks; any pipeline change
   must keep exercise cells runnable. Add a CI smoke-run (papermill on the sample
   data) if maintenance becomes real.
+
+## 8. Addendum (2026-07-17): Lessons 1–2 are no longer read-along
+
+§1's "mechanism cannot be shared" premise is superseded for Main_1/Main_2
+specifically. Found and validated a genuinely open substitute: the
+n-hexane-NUIG-2015 oxidation mechanism bundled with every Cantera install
+(explicit provenance, not proprietary), reduced from 1268 species/5336
+reactions down to 113/300 (Cantera's own documented rate-of-progress
+reduction technique, validated against the full mechanism and against a
+less-aggressive 600-reaction candidate) so a 200-step PFR run takes ~8-9s —
+comparable cost to the original mechanism. Committed as
+`mechanisms/naptha_example.yaml`; wired up as the default via
+`configs/simulation/main1_reactant_database.json`'s `n-hexane` entry, so
+every existing config needs no changes. Species renamed (chemistry
+unchanged) to match Main_3's classifier rules exactly (verified against
+the real code, not assumed).
+
+Main_1/2 are now hands-on like every other lesson (Colab bootstrap installs
+`cantera` via pip; no read-along banner; nbstripout no longer exempted).
+The original proprietary mechanism is preserved as `n-hexane-proprietary`
+in the same config file for local-only use — never referenced in
+student-facing content. The sample150 dataset used from Lesson 3 onward was
+*not* regenerated with the new mechanism (out of scope here); it's still
+sourced from the original proprietary campaign, and the two mechanisms'
+species/reaction counts now legitimately differ — README carries a short
+footnote so this doesn't read as an inconsistency.
