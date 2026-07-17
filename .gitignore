@@ -203,6 +203,7 @@ temp_*.csv
 mechanisms/*
 !mechanisms/.gitkeep
 !mechanisms/gri30.yaml
+!mechanisms/naptha_example.yaml
 
 # Browser-download leftovers
 *.crdownload
