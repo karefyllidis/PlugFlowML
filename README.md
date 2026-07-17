@@ -74,6 +74,10 @@ Distributed as a [GitHub Release](https://github.com/karefyllidis/PlugFlowML/rel
 
 *Note: this dataset was generated with a research-grade mechanism, separate from the smaller open mechanism Lessons 1–2 run live — see [mechanisms/naptha_example.yaml](mechanisms/naptha_example.yaml) for that one's own provenance.*
 
+### Full processed dataset (optional, research-scale)
+
+Don't want to run Lessons 1–3 yourself just to get a processed feature/target set? The full research campaign behind this course — 45 932 runs, ~9.2M rows, same 6-parameter domain and mechanism as the sample above — is available for direct download: [full processed dataset](https://onedrive.live.com/my?id=%2Fpersonal%2F3e111f055e5954cc%2FDocuments%2FPlugFlowML&viewid=53d5a810%2Dc8e2%2D4884%2D9c42%2De2eb4d2f9471). Drop the `.pkl` into `data/processed/` and Lessons 4–10 will pick it up via each lesson's `processed_stem` config. This is far heavier than free-Colab budgets are tuned for — the course itself is designed and tested against the 150-run sample above.
+
 ## What's under the hood
 
 The course runs on a research-grade pipeline you can reuse directly:
